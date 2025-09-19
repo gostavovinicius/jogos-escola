@@ -1,12 +1,21 @@
-/* --- ESTILOS GERAIS PARA CRIANÇAS --- */
+/*------------------------------------*
+  #ESTILOS GERAIS
+\*------------------------------------*/
+
 body {
-  /* Usamos a nova fonte Nunito. Se não carregar, usa Arial */
+  /* Define a fonte principal com um fallback seguro. */
   font-family: "Nunito", Arial, sans-serif;
-  /* Um fundo amarelo bem clarinho, como um dia de sol */
+
+  /* Fundo suave e lúdico com um padrão de estrelas para um visual amigável. */
   background-color: #fffde7;
+  background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Cpath d="M50 0L61.8 34.5H97.5L69.1 55.9L80.9 90.5L50 71.6L19.1 90.5L30.9 55.9L2.5 34.5H38.2L50 0Z" fill="%23fff176" opacity="0.1"/%3E%3C/svg%3E');
+  background-repeat: repeat;
+
+  /* Cor de texto principal para garantir boa legibilidade. */
+  color: #444;
+
   margin: 0;
   padding: 20px;
-  color: #444; /* Cor de texto escura, mas não preta */
 }
 
 header {
@@ -14,90 +23,169 @@ header {
   margin-bottom: 40px;
 }
 
+/* Título principal com grande destaque visual para atrair a atenção. */
 header h1 {
-  /* Um azul vibrante e divertido para o título principal */
-  color: #0077cc;
-  font-size: 3.5em; /* Título bem grande */
-  font-weight: 900; /* A versão mais "gordinha" da fonte */
-  text-shadow: 2px 2px 0px #e3f2fd; /* Sombra sutil para destacar */
+  font-size: 4em;
+  font-weight: 900;
+
+  /* Aplica um gradiente de azul ao texto para um efeito mais vibrante. */
+  background: linear-gradient(to right, #0077cc, #00b0ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* Sombra e brilho para destacar o título do fundo. */
+  text-shadow: 3px 3px 0px #df6060, 0 0 10px rgba(0, 119, 204, 0.5);
+
+  /* Animação sutil para dar vida ao título. */
+  animation: bounce 2s infinite;
 }
 
+/* Define a animação de "pulo" para o título. */
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Subtítulo com estilo para complementar o título principal. */
 header p {
-  font-size: 1.2em;
+  font-size: 1.4em;
   color: #555;
+  font-style: italic;
 }
 
-/* --- ESTILOS DA PÁGINA PRINCIPAL (LOBBY) --- */
+/*------------------------------------*
+  #PÁGINA PRINCIPAL (LOBBY)
+\*------------------------------------*/
+
+/* Estiliza os títulos de cada categoria de jogo. */
 .category-section h2 {
-  font-size: 2.5em;
-  font-weight: 700;
-  border: none; /* Removemos a borda antiga */
+  font-size: 3em;
+  font-weight: 800;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative; /* Necessário para os pseudo-elementos ::before e ::after. */
 }
 
-/* Cores para cada título de categoria */
+/* Adiciona elementos decorativos (estrelas) ao redor do título da categoria. */
+.category-section h2::before,
+.category-section h2::after {
+  content: "⭐ ";
+  font-size: 1.2em;
+}
+.category-section h2::after {
+  content: " ⭐";
+}
+
+/* Define cores vibrantes e distintas para cada título de categoria. */
 #syllables-title {
-  color: #e65100;
-} /* Laranja escuro */
+  color: #ff5722;
+}
 #letters-title {
-  color: #2e7d32;
-} /* Verde escuro */
+  color: #4caf50;
+}
 #numbers-title {
-  color: #1565c0;
-} /* Azul escuro */
+  color: #2196f3;
+}
 
 .game-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 30px; /* Aumentamos o espaço entre os cards */
+  gap: 40px;
   justify-content: center;
 }
 
+/* Estilo base para os cards de jogo. O design é arredondado e interativo. */
 .game-card {
   background-color: white;
-  border-radius: 20px; /* Bordas bem mais arredondadas */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  width: 280px; /* Card bem maior! */
+  border-radius: 30px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  width: 320px;
   text-align: center;
   text-decoration: none;
   color: #333;
-  padding: 20px;
-  transition: transform 0.2s, box-shadow 0.2s;
-  border-bottom: 10px solid; /* Borda grossa e colorida na base */
+  padding: 25px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden; /* Essencial para conter os efeitos internos, como o brilho. */
+  border-bottom: 12px solid; /* Borda inferior colorida para associação com a categoria. */
 }
 
-/* Cores da borda para cada categoria */
-.category-syllables {
-  border-color: #fb8c00;
-} /* Laranja */
-.category-letters {
-  border-color: #43a047;
-} /* Verde */
-.category-numbers {
-  border-color: #1e88e5;
-} /* Azul */
+/* Efeito de brilho que aparece ao passar o mouse. */
+.game-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+}
 
+/* Ativa o efeito de brilho no hover. */
+.game-card:hover::before {
+  opacity: 1;
+}
+
+/* Efeito de zoom e rotação no hover para feedback visual. */
 .game-card:hover {
-  transform: translateY(-10px); /* Efeito de levantar o card mais pronunciado */
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  transform: scale(1.1) rotate(2deg);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Associa a cor da borda do card à sua respectiva categoria. */
+.category-syllables {
+  border-color: #ff9800;
+}
+.category-letters {
+  border-color: #66bb6a;
+}
+.category-numbers {
+  border-color: #42a5f5;
 }
 
 .game-card img {
   max-width: 100%;
-  height: 180px; /* Imagem maior */
+  height: 200px;
   object-fit: cover;
-  border-radius: 12px;
-  border: 2px solid #eee;
+  border-radius: 20px;
+  border: 3px solid #f5f5f5;
+  transition: transform 0.3s;
+}
+
+/* Efeito de zoom na imagem ao passar o mouse sobre o card. */
+.game-card:hover img {
+  transform: scale(1.05);
 }
 
 .game-card h3 {
-  margin-top: 15px;
-  font-size: 1.5em; /* Nome do jogo maior */
-  font-weight: 700;
+  margin-top: 20px;
+  font-size: 1.8em;
+  font-weight: 800;
+  color: inherit;
 }
 
-/* --- ESTILOS DA PÁGINA DE JOGO INDIVIDUAL --- */
+/*------------------------------------*
+  #PÁGINA DE JOGO INDIVIDUAL
+\*------------------------------------*/
+
 .game-page-container {
   display: flex;
   flex-direction: column;
@@ -105,28 +193,54 @@ header p {
   width: 100%;
 }
 
+/* Estilo para o iframe que carrega o jogo. */
 .game-page-container iframe {
   max-width: 100%;
-  border-radius: 15px;
-  margin: 20px 0;
-  border: 5px solid white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  margin: 30px 0;
+  border: 6px solid white;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
+/* Botão de "voltar" com estilo chamativo e efeito 3D sutil. */
 .back-button {
   display: inline-block;
-  background-color: #ffca28; /* Amarelo ouro */
+  background-color: #ffeb3b;
   color: #333;
-  padding: 15px 30px;
-  border-radius: 15px;
+  padding: 18px 35px;
+  border-radius: 20px;
   text-decoration: none;
-  font-weight: 700;
-  font-size: 1.2em;
-  transition: background-color 0.3s, transform 0.2s;
-  border-bottom: 4px solid #f57f17; /* Sombra 3D para o botão */
+  font-weight: 800;
+  font-size: 1.4em;
+  transition: background-color 0.3s, transform 0.3s;
+  border-bottom: 5px solid #f9a825;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Efeito de destaque no hover para indicar interatividade. */
 .back-button:hover {
-  background-color: #ffd65c;
-  transform: translateY(-2px);
+  background-color: #fff59d;
+  transform: scale(1.05) translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/*------------------------------------*
+  #RESPONSIVIDADE
+\*------------------------------------*/
+
+/* Ajustes para tablets e dispositivos móveis. */
+@media (max-width: 768px) {
+  /* Cards ocupam a largura total em telas menores para melhor toque. */
+  .game-card {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  header h1 {
+    font-size: 3em;
+  }
+
+  .category-section h2 {
+    font-size: 2.5em;
+  }
 }
