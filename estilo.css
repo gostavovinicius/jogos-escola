@@ -1,185 +1,143 @@
 /*------------------------------------*
-  #ESTILOS GERAIS
+  #ESTILOS GERAIS - TEMA CARTOON
 \*------------------------------------*/
 
+/* Define a fonte base, mais arredondada e amigável */
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&display=swap");
+
 body {
-  /* Define a fonte principal com um fallback seguro. */
-  font-family: "Nunito", Arial, sans-serif;
+  /* Usando Fredoka como fonte principal para um visual mais "fofo" */
+  font-family: "Fredoka", "Nunito", Arial, sans-serif;
 
-  /* Fundo suave e lúdico com um padrão de estrelas para um visual amigável. */
-  background-color: #fffde7;
-  background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Cpath d="M50 0L61.8 34.5H97.5L69.1 55.9L80.9 90.5L50 71.6L19.1 90.5L30.9 55.9L2.5 34.5H38.2L50 0Z" fill="%23fff176" opacity="0.1"/%3E%3C/svg%3E');
-  background-repeat: repeat;
+  /* Fundo com gradiente suave que lembra um céu de desenho animado */
+  background: radial-gradient(circle, #f0f9ff 0%, #cceeff 100%);
+  background-attachment: fixed; /* O gradiente fica fixo durante o scroll */
 
-  /* Cor de texto principal para garantir boa legibilidade. */
-  color: #444;
-
+  color: #37474f; /* Cor de texto escura e suave */
   margin: 0;
   padding: 20px;
+  overflow-x: hidden; /* Previne scroll horizontal */
 }
+
+/*------------------------------------*
+  #HEADER (CABEÇALHO)
+\*------------------------------------*/
 
 header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 50px;
 }
 
-/* Título principal com grande destaque visual para atrair a atenção. */
+/* Título principal com efeito 3D "cartoon" e animação de balançar */
 header h1 {
-  font-size: 4em;
-  font-weight: 900;
+  font-size: 4.5em; /* Um pouco maior */
+  font-weight: 700;
+  color: #ff6f00; /* Laranja vibrante */
 
-  /* Aplica um gradiente de azul ao texto para um efeito mais vibrante. */
-  background: linear-gradient(to right, #0077cc, #00b0ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  /* Sombra 3D em camadas para o efeito "bloco" */
+  text-shadow: 2px 2px 0px #e65100,
+    /* Sombra laranja escura */ 4px 4px 0px #bf360c,
+    /* Sombra mais escura */ 6px 6px 0px rgba(0, 0, 0, 0.1); /* Sombra suave de fundo */
 
-  /* Sombra e brilho para destacar o título do fundo. */
-  text-shadow: 3px 3px 0px #df6060, 0 0 10px rgba(0, 119, 204, 0.5);
-
-  /* Animação sutil para dar vida ao título. */
-  animation: bounce 2s infinite;
+  /* Animação "wiggle" (balançar) */
+  animation: wiggle 2s ease-in-out infinite;
+  cursor: default;
+  display: inline-block; /* Necessário para a animação de transformação */
 }
 
-/* Define a animação de "pulo" para o título. */
-@keyframes bounce {
+/* Animação de "balançar" */
+@keyframes wiggle {
   0%,
-  20%,
-  50%,
-  80%,
   100% {
-    transform: translateY(0);
+    transform: rotate(-1deg);
   }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
+  50% {
+    transform: rotate(1deg) scale(1.02);
   }
 }
 
-/* Subtítulo com estilo para complementar o título principal. */
+/* Subtítulo */
 header p {
-  font-size: 1.4em;
-  color: #555;
-  font-style: italic;
+  font-size: 1.5em;
+  color: #1e88e5; /* Azul divertido */
+  font-weight: 600;
+  margin-top: -10px;
 }
 
 /*------------------------------------*
   #PÁGINA PRINCIPAL (LOBBY)
 \*------------------------------------*/
 
-/* Estiliza os títulos de cada categoria de jogo. */
-.category-section h2 {
-  font-size: 3em;
-  font-weight: 800;
-  text-align: center;
-  margin-bottom: 30px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative; /* Necessário para os pseudo-elementos ::before e ::after. */
-}
-
-/* Adiciona elementos decorativos (estrelas) ao redor do título da categoria. */
-.category-section h2::before,
-.category-section h2::after {
-  content: "⭐ ";
-  font-size: 1.2em;
-}
-.category-section h2::after {
-  content: " ⭐";
-}
-
-/* Define cores vibrantes e distintas para cada título de categoria. */
-#syllables-title {
-  color: #ff5722;
-}
-#letters-title {
-  color: #4caf50;
-}
-#numbers-title {
-  color: #2196f3;
-}
-
 .game-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 40px;
+  gap: 35px; /* Espaçamento entre os cards */
   justify-content: center;
+  padding: 20px 0;
 }
 
-/* Estilo base para os cards de jogo. O design é arredondado e interativo. */
+/* Card de jogo com estilo de "bloco 3D" */
 .game-card {
   background-color: white;
-  border-radius: 30px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  width: 320px;
+  width: 310px;
   text-align: center;
   text-decoration: none;
-  color: #333;
-  padding: 25px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  color: #37474f;
+  padding: 20px;
+
+  /* Bordas e sombra para criar o efeito de "bloco" */
+  border: 4px solid #546e7a; /* Borda escura principal */
+  border-radius: 25px;
+  box-shadow: 0 10px 0px #b0bec5; /* Sombra 3D "pressionável" */
+
   position: relative;
-  overflow: hidden; /* Essencial para conter os efeitos internos, como o brilho. */
-  border-bottom: 12px solid; /* Borda inferior colorida para associação com a categoria. */
+
+  /* Transição suave para o efeito de "pular" */
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Efeito de brilho que aparece ao passar o mouse. */
-.game-card::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(255, 255, 255, 0) 70%
-  );
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-/* Ativa o efeito de brilho no hover. */
-.game-card:hover::before {
-  opacity: 1;
-}
-
-/* Efeito de zoom e rotação no hover para feedback visual. */
+/* Efeito de "pular" (pop) no hover */
 .game-card:hover {
-  transform: scale(1.1) rotate(2deg);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+  transform: translateY(-12px) rotate(-2deg) scale(1.05);
+  box-shadow: 0 22px 10px #90a4ae; /* Sombra se expande e levanta */
 }
 
-/* Associa a cor da borda do card à sua respectiva categoria. */
-.category-syllables {
-  border-color: #ff9800;
-}
-.category-letters {
-  border-color: #66bb6a;
-}
-.category-numbers {
-  border-color: #42a5f5;
+/* Efeito de "pressionar" ao clicar */
+.game-card:active {
+  transform: translateY(2px) rotate(1deg); /* Afunda */
+  box-shadow: 0 4px 0px #b0bec5; /* Sombra diminui */
+  transition-duration: 0.1s;
 }
 
+/* Imagem dentro do card */
 .game-card img {
   max-width: 100%;
   height: 200px;
   object-fit: cover;
-  border-radius: 20px;
-  border: 3px solid #f5f5f5;
-  transition: transform 0.3s;
+  border-radius: 15px; /* Bordas arredondadas para a imagem */
+  border: 3px solid #eceff1; /* Borda clara sutil */
+  transition: transform 0.3s ease;
 }
 
-/* Efeito de zoom na imagem ao passar o mouse sobre o card. */
+/* Efeito de zoom sutil na imagem ao passar o mouse */
 .game-card:hover img {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
+/* Título do jogo no card */
 .game-card h3 {
-  margin-top: 20px;
-  font-size: 1.8em;
-  font-weight: 800;
-  color: inherit;
+  margin-top: 15px;
+  font-size: 1.7em;
+  font-weight: 600;
+  color: #455a64;
+}
+
+/* Remove a borda colorida da categoria, já que estamos usando outro estilo */
+.category-syllables,
+.category-letters,
+.category-numbers {
+  border-color: #546e7a; /* Todas as bordas são iguais */
 }
 
 /*------------------------------------*
@@ -193,54 +151,100 @@ header p {
   width: 100%;
 }
 
-/* Estilo para o iframe que carrega o jogo. */
+/* Estilo do iframe do jogo */
 .game-page-container iframe {
-  max-width: 100%;
-  border-radius: 20px;
+  width: 800px; /* Largura fixa definida */
+  height: 500px; /* Altura fixa definida */
+  max-width: 100%; /* Garante que não quebre em telas menores */
   margin: 30px 0;
-  border: 6px solid white;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+
+  /* Borda grossa e colorida, como uma moldura de TV de desenho */
+  border: 10px solid #ffb74d; /* Laranja pastel */
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* Botão de "voltar" com estilo chamativo e efeito 3D sutil. */
+/* Botão de "voltar" super chamativo */
 .back-button {
   display: inline-block;
-  background-color: #ffeb3b;
-  color: #333;
-  padding: 18px 35px;
-  border-radius: 20px;
+  background-color: #76ff03; /* Verde-limão vibrante */
+  color: #33691e; /* Verde escuro para o texto */
+  padding: 18px 40px;
+  border-radius: 50px; /* Bem arredondado */
   text-decoration: none;
-  font-weight: 800;
-  font-size: 1.4em;
-  transition: background-color 0.3s, transform 0.3s;
-  border-bottom: 5px solid #f9a825;
+  font-weight: 700;
+  font-size: 1.6em;
+
+  /* Efeito 3D com borda inferior grossa */
+  border-bottom: 8px solid #558b2f;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  transition: all 0.15s ease-out;
 }
 
-/* Efeito de destaque no hover para indicar interatividade. */
+/* Adiciona um emoji de seta antes do texto */
+.back-button::before {
+  content: "⬅️ ";
+  margin-right: 10px;
+  display: inline-block;
+  transition: transform 0.2s ease-out;
+}
+
+/* Efeito de "pular" no hover */
 .back-button:hover {
-  background-color: #fff59d;
-  transform: scale(1.05) translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  background-color: #b2ff59;
+  transform: translateY(-5px); /* Pula para cima */
+  border-bottom-width: 13px; /* A sombra 3D "estica" */
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Animação da seta no hover */
+.back-button:hover::before {
+  transform: translateX(-5px);
+}
+
+/* Efeito de "pressionar" no clique */
+.back-button:active {
+  background-color: #64dd17;
+  transform: translateY(2px); /* Afunda */
+  border-bottom-width: 6px; /* Sombra diminui */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /*------------------------------------*
   #RESPONSIVIDADE
 \*------------------------------------*/
 
-/* Ajustes para tablets e dispositivos móveis. */
 @media (max-width: 768px) {
-  /* Cards ocupam a largura total em telas menores para melhor toque. */
+  header h1 {
+    font-size: 3.5em; /* Diminui o título */
+    text-shadow: 1px 1px 0px #e65100, 2px 2px 0px #bf360c,
+      3px 3px 0px rgba(0, 0, 0, 0.1);
+  }
+
+  header p {
+    font-size: 1.2em;
+  }
+
   .game-card {
-    width: 100%;
+    width: 90%; /* Ocupa quase toda a largura */
     max-width: 300px;
   }
 
-  header h1 {
-    font-size: 3em;
+  /* Reduz o efeito de hover em telas menores (economia de performance) */
+  .game-card:hover {
+    transform: translateY(-5px) rotate(-1deg);
+    box-shadow: 0 12px 5px #90a4ae;
   }
 
-  .category-section h2 {
-    font-size: 2.5em;
+  .game-page-container iframe {
+    height: 60vh; /* Altura menor no mobile */
+    border-width: 6px;
+    /* O width: 700px e max-width: 100% já cuidam do mobile */
+  }
+
+  .back-button {
+    font-size: 1.3em;
+    padding: 15px 30px;
   }
 }
