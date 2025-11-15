@@ -1,0 +1,250 @@
+/*------------------------------------*
+  #ESTILOS GERAIS - TEMA CARTOON
+\*------------------------------------*/
+
+/* Define a fonte base, mais arredondada e amigável */
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&display=swap");
+
+body {
+  /* Usando Fredoka como fonte principal para um visual mais "fofo" */
+  font-family: "Fredoka", "Nunito", Arial, sans-serif;
+
+  /* Fundo com gradiente suave que lembra um céu de desenho animado */
+  background: radial-gradient(circle, #f0f9ff 0%, #cceeff 100%);
+  background-attachment: fixed; /* O gradiente fica fixo durante o scroll */
+
+  color: #37474f; /* Cor de texto escura e suave */
+  margin: 0;
+  padding: 20px;
+  overflow-x: hidden; /* Previne scroll horizontal */
+}
+
+/*------------------------------------*
+  #HEADER (CABEÇALHO)
+\*------------------------------------*/
+
+header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+/* Título principal com efeito 3D "cartoon" e animação de balançar */
+header h1 {
+  font-size: 4.5em; /* Um pouco maior */
+  font-weight: 700;
+  color: #ff6f00; /* Laranja vibrante */
+
+  /* Sombra 3D em camadas para o efeito "bloco" */
+  text-shadow: 2px 2px 0px #e65100,
+    /* Sombra laranja escura */ 4px 4px 0px #bf360c,
+    /* Sombra mais escura */ 6px 6px 0px rgba(0, 0, 0, 0.1); /* Sombra suave de fundo */
+
+  /* Animação "wiggle" (balançar) */
+  animation: wiggle 2s ease-in-out infinite;
+  cursor: default;
+  display: inline-block; /* Necessário para a animação de transformação */
+}
+
+/* Animação de "balançar" */
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1deg) scale(1.02);
+  }
+}
+
+/* Subtítulo */
+header p {
+  font-size: 1.5em;
+  color: #1e88e5; /* Azul divertido */
+  font-weight: 600;
+  margin-top: -10px;
+}
+
+/*------------------------------------*
+  #PÁGINA PRINCIPAL (LOBBY)
+\*------------------------------------*/
+
+.game-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 35px; /* Espaçamento entre os cards */
+  justify-content: center;
+  padding: 20px 0;
+}
+
+/* Card de jogo com estilo de "bloco 3D" */
+.game-card {
+  background-color: white;
+  width: 310px;
+  text-align: center;
+  text-decoration: none;
+  color: #37474f;
+  padding: 20px;
+
+  /* Bordas e sombra para criar o efeito de "bloco" */
+  border: 4px solid #546e7a; /* Borda escura principal */
+  border-radius: 25px;
+  box-shadow: 0 10px 0px #b0bec5; /* Sombra 3D "pressionável" */
+
+  position: relative;
+
+  /* Transição suave para o efeito de "pular" */
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Efeito de "pular" (pop) no hover */
+.game-card:hover {
+  transform: translateY(-12px) rotate(-2deg) scale(1.05);
+  box-shadow: 0 22px 10px #90a4ae; /* Sombra se expande e levanta */
+}
+
+/* Efeito de "pressionar" ao clicar */
+.game-card:active {
+  transform: translateY(2px) rotate(1deg); /* Afunda */
+  box-shadow: 0 4px 0px #b0bec5; /* Sombra diminui */
+  transition-duration: 0.1s;
+}
+
+/* Imagem dentro do card */
+.game-card img {
+  max-width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 15px; /* Bordas arredondadas para a imagem */
+  border: 3px solid #eceff1; /* Borda clara sutil */
+  transition: transform 0.3s ease;
+}
+
+/* Efeito de zoom sutil na imagem ao passar o mouse */
+.game-card:hover img {
+  transform: scale(1.03);
+}
+
+/* Título do jogo no card */
+.game-card h3 {
+  margin-top: 15px;
+  font-size: 1.7em;
+  font-weight: 600;
+  color: #455a64;
+}
+
+/* Remove a borda colorida da categoria, já que estamos usando outro estilo */
+.category-syllables,
+.category-letters,
+.category-numbers {
+  border-color: #546e7a; /* Todas as bordas são iguais */
+}
+
+/*------------------------------------*
+  #PÁGINA DE JOGO INDIVIDUAL
+\*------------------------------------*/
+
+.game-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* Estilo do iframe do jogo */
+.game-page-container iframe {
+  width: 800px; /* Largura fixa definida */
+  height: 500px; /* Altura fixa definida */
+  max-width: 100%; /* Garante que não quebre em telas menores */
+  margin: 30px 0;
+
+  /* Borda grossa e colorida, como uma moldura de TV de desenho */
+  border: 10px solid #ffb74d; /* Laranja pastel */
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Botão de "voltar" super chamativo */
+.back-button {
+  display: inline-block;
+  background-color: #76ff03; /* Verde-limão vibrante */
+  color: #33691e; /* Verde escuro para o texto */
+  padding: 18px 40px;
+  border-radius: 50px; /* Bem arredondado */
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.6em;
+
+  /* Efeito 3D com borda inferior grossa */
+  border-bottom: 8px solid #558b2f;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  transition: all 0.15s ease-out;
+}
+
+/* Adiciona um emoji de seta antes do texto */
+.back-button::before {
+  content: "⬅️ ";
+  margin-right: 10px;
+  display: inline-block;
+  transition: transform 0.2s ease-out;
+}
+
+/* Efeito de "pular" no hover */
+.back-button:hover {
+  background-color: #b2ff59;
+  transform: translateY(-5px); /* Pula para cima */
+  border-bottom-width: 13px; /* A sombra 3D "estica" */
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Animação da seta no hover */
+.back-button:hover::before {
+  transform: translateX(-5px);
+}
+
+/* Efeito de "pressionar" no clique */
+.back-button:active {
+  background-color: #64dd17;
+  transform: translateY(2px); /* Afunda */
+  border-bottom-width: 6px; /* Sombra diminui */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/*------------------------------------*
+  #RESPONSIVIDADE
+\*------------------------------------*/
+
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 3.5em; /* Diminui o título */
+    text-shadow: 1px 1px 0px #e65100, 2px 2px 0px #bf360c,
+      3px 3px 0px rgba(0, 0, 0, 0.1);
+  }
+
+  header p {
+    font-size: 1.2em;
+  }
+
+  .game-card {
+    width: 90%; /* Ocupa quase toda a largura */
+    max-width: 300px;
+  }
+
+  /* Reduz o efeito de hover em telas menores (economia de performance) */
+  .game-card:hover {
+    transform: translateY(-5px) rotate(-1deg);
+    box-shadow: 0 12px 5px #90a4ae;
+  }
+
+  .game-page-container iframe {
+    height: 60vh; /* Altura menor no mobile */
+    border-width: 6px;
+    /* O width: 700px e max-width: 100% já cuidam do mobile */
+  }
+
+  .back-button {
+    font-size: 1.3em;
+    padding: 15px 30px;
+  }
+}

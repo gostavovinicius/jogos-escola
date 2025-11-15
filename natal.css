@@ -1,0 +1,586 @@
+/*------------------------------------*
+  #ESTILOS GERAIS - TEMA CARTOON DE NATAL (V9 - Ciclo de 4 Cores)
+\*------------------------------------*/
+
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&display=swap");
+
+/* --- Paleta de Cores --- */
+:root {
+  --cor-verde-pinheiro: #1b5e20;
+  --cor-verde-grama: #2e7d32;
+  --cor-vermelho-natal: #c62828;
+  --cor-vermelho-escuro: #a93226;
+  --cor-dourado: #ffd700;
+  --cor-branco-neve: #fff;
+  --cor-texto-claro: #eceff1;
+  --cor-sombra-leve: rgba(0, 0, 0, 0.15);
+}
+
+body {
+  font-family: "Fredoka", "Nunito", Arial, sans-serif;
+  /* Fundo Escuro (Noite de Natal) */
+  background-color: #0d1a26;
+  background-image: radial-gradient(circle at 50% 0%, #2a4a6e 0%, #0d1a26 70%);
+  background-attachment: fixed;
+  color: var(--cor-texto-claro);
+  margin: 0;
+  padding: 20px;
+  overflow-x: hidden;
+}
+
+/*------------------------------------*
+  #HEADER (CABEÇALHO)
+\*------------------------------------*/
+
+header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+header h1 {
+  font-size: 4.5em;
+  font-weight: 700;
+  color: var(--cor-branco-neve);
+  text-shadow: 2px 2px 0px var(--cor-verde-grama),
+    4px 4px 0px var(--cor-verde-pinheiro), 6px 6px 0px var(--cor-sombra-leve);
+  animation: wiggle 2s ease-in-out infinite;
+  cursor: default;
+  display: inline-block;
+  margin: 0;
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1deg) scale(1.02);
+  }
+}
+
+header p {
+  font-size: 1.5em;
+  color: var(--cor-dourado);
+  font-weight: 600;
+  margin-top: 5px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/*------------------------------------*
+  #PÁGINA PRINCIPAL (LOBBY)
+\*------------------------------------*/
+
+.game-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 35px;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+/* --- MUDANÇA: LÓGICA DE 4 CORES INTERCALADAS --- */
+
+/* Padrão 1 (A): Borda Vermelha / Sombra Verde */
+.game-card {
+  background-color: var(--cor-branco-neve);
+  width: 310px;
+  text-align: center;
+  text-decoration: none;
+  color: #37474f;
+  padding: 20px;
+  border-radius: 25px;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  border: 4px solid var(--cor-vermelho-natal);
+  box-shadow: 0 10px 0px var(--cor-verde-grama);
+}
+
+/* Padrão 2 (B): Borda Verde / Sombra Vermelha */
+.game-card:nth-child(4n + 2) {
+  border-color: var(--cor-verde-pinheiro);
+  box-shadow: 0 10px 0px var(--cor-vermelho-natal);
+}
+
+/* Padrão 3 (C): Borda Dourada / Sombra Verde */
+.game-card:nth-child(4n + 3) {
+  border-color: var(--cor-dourado);
+  box-shadow: 0 10px 0px var(--cor-verde-pinheiro);
+}
+
+/* Padrão 4 (D): Borda Vermelha / Sombra Dourada (Novo) */
+.game-card:nth-child(4n + 4) {
+  border-color: var(--cor-vermelho-escuro);
+  box-shadow: 0 10px 0px var(--cor-dourado);
+}
+
+/* --- FIM DA MUDANÇA DE LÓGICA --- */
+
+.game-card:hover {
+  transform: translateY(-12px) rotate(-2deg) scale(1.05);
+  box-shadow: 0 22px 10px #90a4ae;
+}
+
+/* Efeitos :active para cada variação */
+.game-card:active {
+  transform: translateY(2px) rotate(1deg);
+  box-shadow: 0 4px 0px var(--cor-verde-grama); /* Padrão 1 */
+  transition-duration: 0.1s;
+}
+
+.game-card:nth-child(4n + 2):active {
+  box-shadow: 0 4px 0px var(--cor-vermelho-natal); /* Padrão 2 */
+}
+
+.game-card:nth-child(4n + 3):active {
+  box-shadow: 0 4px 0px var(--cor-verde-pinheiro); /* Padrão 3 */
+}
+
+.game-card:nth-child(4n + 4):active {
+  box-shadow: 0 4px 0px var(--cor-dourado); /* Padrão 4 */
+}
+
+.game-card img {
+  max-width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 15px;
+  border: 3px solid #eceff1;
+  transition: transform 0.3s ease;
+}
+
+.game-card:hover img {
+  transform: scale(1.03);
+}
+
+.game-card h3 {
+  margin-top: 15px;
+  font-size: 1.7em;
+  font-weight: 600;
+  color: var(--cor-vermelho-escuro);
+}
+
+/*------------------------------------*
+  #PÁGINA DE JOGO INDIVIDUAL
+\*------------------------------------*/
+
+.game-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.game-page-container iframe {
+  width: 800px;
+  height: 500px;
+  max-width: 100%;
+  margin: 30px 0;
+  border: 15px solid;
+  border-image: repeating-linear-gradient(
+      -45deg,
+      var(--cor-vermelho-natal),
+      var(--cor-vermelho-natal) 10px,
+      var(--cor-branco-neve) 10px,
+      var(--cor-branco-neve) 20px
+    )
+    15;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px var(--cor-sombra-leve);
+}
+
+.back-button {
+  display: inline-block;
+  background-color: var(--cor-vermelho-natal);
+  color: var(--cor-branco-neve);
+  padding: 18px 40px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.6em;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  border-bottom: 8px solid var(--cor-vermelho-escuro);
+  box-shadow: 0 4px 8px var(--cor-sombra-leve);
+  transition: all 0.15s ease-out;
+}
+
+.back-button::before {
+  content: "🎄 ";
+  margin-right: 10px;
+  display: inline-block;
+  transition: transform 0.2s ease-out;
+}
+
+.back-button:hover {
+  background-color: #d32f2f;
+  transform: translateY(-5px);
+  border-bottom-width: 13px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:hover::before {
+  transform: translateX(-5px);
+}
+
+.back-button:active {
+  background-color: var(--cor-vermelho-escuro);
+  transform: translateY(2px);
+  border-bottom-width: 6px;
+  box-shadow: 0 2px 4px var(--cor-sombra-leve);
+}
+
+/*------------------------------------*
+  #RESPONSIVIDADE
+\*------------------------------------*/
+
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 3.5em;
+    text-shadow: 2px 2px 0px var(--cor-verde-grama),
+      3px 3px 0px var(--cor-verde-pinheiro), 4px 4px 0px var(--cor-sombra-leve);
+  }
+
+  header p {
+    font-size: 1.2em;
+  }
+
+  .game-card {
+    width: 90%;
+    max-width: 300px;
+  }
+
+  /* Em telas menores (que podem ter 2 colunas), 
+     a lógica de 4 cores pode não ser perfeita, 
+     mas ainda será melhor que a de 3. */
+
+  .game-card:hover {
+    transform: translateY(-5px) rotate(-1deg);
+  }
+
+  .game-page-container iframe {
+    height: 60vh;
+    border-width: 10px;
+  }
+
+  .back-button {
+    font-size: 1.3em;
+    padding: 15px 30px;
+  }
+} /*------------------------------------*
+  #ESTILOS GERAIS - TEMA CARTOON DE NATAL (V9 - Ciclo de 4 Cores)
+\*------------------------------------*/
+
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&display=swap");
+
+/* --- Paleta de Cores --- */
+:root {
+  --cor-verde-pinheiro: #1b5e20;
+  --cor-verde-grama: #2e7d32;
+  --cor-vermelho-natal: #c62828;
+  --cor-vermelho-escuro: #a93226;
+  --cor-dourado: #ffd700;
+  --cor-branco-neve: #fff;
+  --cor-texto-claro: #eceff1;
+  --cor-sombra-leve: rgba(0, 0, 0, 0.15);
+}
+
+body {
+  font-family: "Fredoka", "Nunito", Arial, sans-serif;
+  /* Fundo Escuro (Noite de Natal) */
+  background-color: #0d1a26;
+  background-image: radial-gradient(circle at 50% 0%, #2a4a6e 0%, #0d1a26 70%);
+  background-attachment: fixed;
+  color: var(--cor-texto-claro);
+  margin: 0;
+  padding: 20px;
+  overflow-x: hidden;
+}
+
+/*------------------------------------*
+  #HEADER (CABEÇALHO)
+\*------------------------------------*/
+
+header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+header h1 {
+  font-size: 4.5em;
+  font-weight: 700;
+  color: var(--cor-branco-neve);
+  text-shadow: 2px 2px 0px var(--cor-verde-grama),
+    4px 4px 0px var(--cor-verde-pinheiro), 6px 6px 0px var(--cor-sombra-leve);
+  animation: wiggle 2s ease-in-out infinite;
+  cursor: default;
+  display: inline-block;
+  margin: 0;
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1deg) scale(1.02);
+  }
+}
+
+header p {
+  font-size: 1.5em;
+  color: var(--cor-dourado);
+  font-weight: 600;
+  margin-top: 5px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/*------------------------------------*
+  #PÁGINA PRINCIPAL (LOBBY)
+\*------------------------------------*/
+
+.game-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 35px;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+/* --- MUDANÇA: LÓGICA DE 4 CORES INTERCALADAS --- */
+
+/* Padrão 1 (A): Borda Vermelha / Sombra Verde */
+.game-card {
+  background-color: var(--cor-branco-neve);
+  width: 310px;
+  text-align: center;
+  text-decoration: none;
+  color: #37474f;
+  padding: 20px;
+  border-radius: 25px;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  border: 4px solid var(--cor-vermelho-natal);
+  box-shadow: 0 10px 0px var(--cor-verde-grama);
+}
+
+/* Padrão 2 (B): Borda Verde / Sombra Vermelha */
+.game-card:nth-child(4n + 2) {
+  border-color: var(--cor-verde-pinheiro);
+  box-shadow: 0 10px 0px var(--cor-vermelho-natal);
+}
+
+/* Padrão 3 (C): Borda Dourada / Sombra Verde */
+.game-card:nth-child(4n + 3) {
+  border-color: var(--cor-dourado);
+  box-shadow: 0 10px 0px var(--cor-verde-pinheiro);
+}
+
+/* Padrão 4 (D): Borda Vermelha / Sombra Dourada (Novo) */
+.game-card:nth-child(4n + 4) {
+  border-color: var(--cor-vermelho-escuro);
+  box-shadow: 0 10px 0px var(--cor-dourado);
+}
+
+/* --- FIM DA MUDANÇA DE LÓGICA --- */
+
+.game-card:hover {
+  transform: translateY(-12px) rotate(-2deg) scale(1.05);
+  box-shadow: 0 22px 10px #90a4ae;
+}
+
+/* Efeitos :active para cada variação */
+.game-card:active {
+  transform: translateY(2px) rotate(1deg);
+  box-shadow: 0 4px 0px var(--cor-verde-grama); /* Padrão 1 */
+  transition-duration: 0.1s;
+}
+
+.game-card:nth-child(4n + 2):active {
+  box-shadow: 0 4px 0px var(--cor-vermelho-natal); /* Padrão 2 */
+}
+
+.game-card:nth-child(4n + 3):active {
+  box-shadow: 0 4px 0px var(--cor-verde-pinheiro); /* Padrão 3 */
+}
+
+.game-card:nth-child(4n + 4):active {
+  box-shadow: 0 4px 0px var(--cor-dourado); /* Padrão 4 */
+}
+
+.game-card img {
+  max-width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 15px;
+  border: 3px solid #eceff1;
+  transition: transform 0.3s ease;
+}
+
+.game-card:hover img {
+  transform: scale(1.03);
+}
+
+.game-card h3 {
+  margin-top: 15px;
+  font-size: 1.7em;
+  font-weight: 600;
+  color: var(--cor-vermelho-escuro);
+}
+
+/*------------------------------------*
+  #PÁGINA DE JOGO INDIVIDUAL
+\*------------------------------------*/
+
+.game-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.game-page-container iframe {
+  width: 800px;
+  height: 500px;
+  max-width: 100%;
+  margin: 30px 0;
+  border: 15px solid;
+  border-image: repeating-linear-gradient(
+      -45deg,
+      var(--cor-vermelho-natal),
+      var(--cor-vermelho-natal) 10px,
+      var(--cor-branco-neve) 10px,
+      var(--cor-branco-neve) 20px
+    )
+    15;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px var(--cor-sombra-leve);
+}
+
+.back-button {
+  display: inline-block;
+  background-color: var(--cor-vermelho-natal);
+  color: var(--cor-branco-neve);
+  padding: 18px 40px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.6em;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  border-bottom: 8px solid var(--cor-vermelho-escuro);
+  box-shadow: 0 4px 8px var(--cor-sombra-leve);
+  transition: all 0.15s ease-out;
+}
+
+.back-button::before {
+  content: "🎄 ";
+  margin-right: 10px;
+  display: inline-block;
+  transition: transform 0.2s ease-out;
+}
+
+.back-button:hover {
+  background-color: #d32f2f;
+  transform: translateY(-5px);
+  border-bottom-width: 13px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:hover::before {
+  transform: translateX(-5px);
+}
+
+.back-button:active {
+  background-color: var(--cor-vermelho-escuro);
+  transform: translateY(2px);
+  border-bottom-width: 6px;
+  box-shadow: 0 2px 4px var(--cor-sombra-leve);
+}
+
+/*------------------------------------*
+  #RESPONSIVIDADE
+\*------------------------------------*/
+
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 3.5em;
+    text-shadow: 2px 2px 0px var(--cor-verde-grama),
+      3px 3px 0px var(--cor-verde-pinheiro), 4px 4px 0px var(--cor-sombra-leve);
+  }
+
+  header p {
+    font-size: 1.2em;
+  }
+
+  .game-card {
+    width: 90%;
+    max-width: 300px;
+  }
+
+  /* Em telas menores (que podem ter 2 colunas), 
+     a lógica de 4 cores pode não ser perfeita, 
+     mas ainda será melhor que a de 3. */
+
+  .game-card:hover {
+    transform: translateY(-5px) rotate(-1deg);
+  }
+
+  .game-page-container iframe {
+    height: 60vh;
+    border-width: 10px;
+  }
+
+  .back-button {
+    font-size: 1.3em;
+    padding: 15px 30px;
+  }
+}
+
+/*------------------------------------*
+  #FOOTER (Rodapé)
+\*------------------------------------*/
+
+footer {
+  /* Fundo de "banco de neve" */
+  background-color: var(--cor-branco-neve);
+
+  /* Arredonda os cantos de cima para parecer um monte de neve */
+  border-radius: 25px 25px 0 0;
+
+  /* Sombra sutil para destacar do fundo escuro */
+  box-shadow: 0 -5px 20px rgba(255, 255, 255, 0.1);
+
+  /* Cor do texto escura para contrastar com o fundo branco */
+  color: var(--cor-verde-pinheiro);
+
+  padding: 25px;
+  text-align: center;
+  margin-top: 80px; /* Dá espaço entre os cards e o rodapé */
+}
+
+footer p {
+  font-size: 1.7em;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+
+  /* Animação de "brilho" sutil */
+  animation: footerGlow 3s ease-in-out infinite;
+}
+
+/* Animação para o texto do rodapé */
+@keyframes footerGlow {
+  0%,
+  100% {
+    color: var(--cor-verde-pinheiro);
+    transform: scale(1);
+  }
+  50% {
+    color: var(--cor-vermelho-natal); /* Pisca para vermelho */
+    transform: scale(1.02);
+  }
+}
