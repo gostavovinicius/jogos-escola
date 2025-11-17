@@ -1,7 +1,6 @@
 /* ===========================
-        ESTILO PROFISSIONAL (ATUALIZADO)
-        Inclui regras para páginas de jogo (game-page-container / iframe / back-button)
-        =========================== */
+  ESTILO PROFISSIONAL (ATUALIZADO)
+  =========================== */
 
 :root {
   --bg-900: #0b0b0b;
@@ -95,11 +94,14 @@ main {
   padding: 8px;
 }
 
-/* Grid de cards (index/home) */
+/* === MELHORIA APLICADA (GRID) === */
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /* Define um tamanho MÍNIMO de 220px e MÁXIMO de 280px por card */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
   gap: 20px;
+  /* Centraliza a grade se houver espaço sobrando (bom para ultrawide) */
+  justify-content: center;
 }
 
 /* Card inicial (index) */
@@ -114,7 +116,11 @@ main {
   box-shadow: 0 12px 30px var(--shadow-color);
   border: 1px solid rgba(0, 0, 0, 0.06);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
-  min-height: 260px; /* Mantém uma altura mínima consistente */
+
+  /* === MELHORIA APLICADA (PROPORÇÃO) === */
+  /* Força o card a ter uma proporção de 4:5 (mais alto que largo) */
+  aspect-ratio: 4 / 5;
+  /* min-height não é mais necessário, pois aspect-ratio cuida da altura */
 }
 .game-card:focus {
   outline: none;
@@ -129,11 +135,11 @@ main {
   outline-offset: 4px;
 }
 
-/* === MELHORIA APLICADA === */
+/* Contêiner da imagem */
 .media {
-  flex-grow: 1; /* Faz este contêiner crescer para preencher o espaço */
-  overflow: hidden; /* Esconde qualquer parte da imagem que transborde */
-  min-height: 150px; /* Garante uma altura mínima para a imagem */
+  flex-grow: 1; /* Faz este contêiner crescer para preencher o espaço vertical */
+  overflow: hidden;
+  min-height: 0; /* Remove altura mínima fixa para obedecer o flex-grow */
 }
 .media img {
   width: 100%;
@@ -141,15 +147,16 @@ main {
   object-fit: cover; /* Cobre o espaço, cortando se necessário */
   display: block;
 }
+
+/* Corpo do card (texto) */
 .card-body {
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   flex-shrink: 0; /* Impede que o corpo do card encolha */
+  /* Ocupa apenas o espaço necessário para o texto na parte inferior */
 }
-/* === FIM DA MELHORIA === */
-
 .card-body h3 {
   margin: 0;
   font-size: 1.05rem;
@@ -158,10 +165,9 @@ main {
 }
 
 /* ---------------------------
-        Regras para páginas de jogo
-        --------------------------- */
+  Regras para páginas de jogo
+  --------------------------- */
 
-/* Container principal da página de jogo */
 .game-page-container {
   max-width: 1100px;
   margin: 28px auto;
@@ -179,42 +185,39 @@ main {
   align-items: center;
   gap: 18px;
 }
-
-/* Título e descrição dentro da página de jogo */
 .game-page-container h1 {
   margin: 0;
   font-size: 2rem;
   color: var(--accent-gold);
   font-family: Montserrat, Inter, sans-serif;
   -webkit-text-stroke: 0.6px rgba(0, 0, 0, 0.25);
+  text-align: center;
 }
 .game-page-container p {
   margin: 0;
   font-size: 1rem;
   color: rgba(255, 255, 255, 0.9);
+  text-align: center;
 }
-
-/* Iframe responsivo: mantém proporção e escala em telas pequenas */
 .game-iframe-wrap {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1000px; /* O iframe não passará disso */
   background: #000;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+  /* === NOVO: Responsividade do Iframe === */
+  aspect-ratio: 1000 / 600; /* Mantém a proporção 1000x600 */
+  height: auto; /* A altura será automática baseada na largura e aspect-ratio */
 }
-
-/* Use este seletor se o iframe estiver diretamente na página (fallback) */
 .game-page-container iframe,
 .game-iframe-wrap iframe {
   width: 100%;
-  height: 60vh; /* altura relativa à viewport para responsividade */
-  min-height: 420px;
+  height: 100%; /* Ocupa 100% do .game-iframe-wrap */
   border: 0;
   display: block;
+  /* min-height não é mais necessário aqui, aspect-ratio cuida disso */
 }
-
-/* Back button (estilizado e tátil para crianças) */
 .back-button {
   display: inline-block;
   background: linear-gradient(180deg, var(--accent-red), #a81a1a);
@@ -235,8 +238,6 @@ main {
 .back-button:active {
   transform: translateY(2px);
 }
-
-/* Quando o back-button for um link que volta, garantir contraste de foco */
 .back-button:focus-visible {
   outline: var(--focus);
   outline-offset: 4px;
@@ -263,11 +264,8 @@ footer .icon-dourado {
 
 /* Responsividade */
 @media (max-width: 1000px) {
-  .game-page-container iframe,
-  .game-iframe-wrap iframe {
-    height: 55vh;
-    min-height: 360px;
-  }
+  /* .game-iframe-wrap já cuida da proporção, então não precisamos
+     de regras específicas de altura para o iframe aqui */
   .game-page-container {
     padding: 16px;
   }
@@ -281,9 +279,6 @@ footer .icon-dourado {
   .logo h1 {
     font-size: 1.4rem;
   }
-  .game-card {
-    min-height: 220px;
-  }
 }
 @media (max-width: 420px) {
   body {
@@ -295,10 +290,9 @@ footer .icon-dourado {
   .game-page-container h1 {
     font-size: 1.4rem;
   }
-  .game-page-container iframe,
-  .game-iframe-wrap iframe {
-    height: 48vh;
-    min-height: 300px;
+  /* Ajuste fino para o iframe em telas muito pequenas */
+  .game-iframe-wrap {
+    aspect-ratio: 4 / 3; /* Proporção mais "quadrada" para caber melhor */
   }
 }
 
