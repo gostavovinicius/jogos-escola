@@ -1,0 +1,309 @@
+/* ===========================
+   ESTILO PROFISSIONAL (ATUALIZADO)
+   Inclui regras para páginas de jogo (game-page-container / iframe / back-button)
+   =========================== */
+
+:root {
+  --bg-900: #0b0b0b;
+  --bg-800: #121212;
+  --card: #ffffff;
+  --muted: #e9ecef;
+  --accent-red: #b22222;
+  --accent-green: #1b7f5a;
+  --accent-gold: #f6c84c;
+  --accent-deep: #7a4b00;
+  --glass: rgba(255, 255, 255, 0.06);
+  --shadow-color: rgba(2, 6, 23, 0.6);
+  --radius: 14px;
+  --focus: 3px solid rgba(246, 200, 76, 0.18);
+  --max-width: 1280px;
+}
+
+/* Reset leve */
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  padding: 28px;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial;
+  background: radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(246, 200, 76, 0.03),
+      transparent
+    ),
+    linear-gradient(180deg, var(--bg-900), var(--bg-800));
+  color: var(--muted);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.35;
+}
+
+/* Skip link acessível */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.skip-link:focus {
+  left: 20px;
+  top: 20px;
+  width: auto;
+  height: auto;
+  padding: 8px 12px;
+  background: var(--card);
+  color: #111;
+  border-radius: 8px;
+  z-index: 9999;
+}
+
+/* Header */
+header {
+  max-width: var(--max-width);
+  margin: 0 auto 22px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+}
+.logo h1 {
+  font-family: Montserrat, Inter, sans-serif;
+  margin: 0;
+  font-size: 1.8rem;
+  color: var(--accent-gold);
+  letter-spacing: 0.6px;
+}
+.logo p {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Main layout */
+main {
+  max-width: var(--max-width);
+  margin: 18px auto;
+  padding: 8px;
+}
+
+/* Grid de cards (index/home) */
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* Card inicial (index) */
+.game-card {
+  background: linear-gradient(180deg, var(--card), #fbfbfb);
+  color: #111;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  overflow: hidden;
+  box-shadow: 0 12px 30px var(--shadow-color);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  min-height: 260px;
+}
+.game-card:focus {
+  outline: none;
+  box-shadow: 0 18px 46px var(--shadow-color);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.game-card:hover {
+  transform: translateY(-8px);
+}
+.game-card:focus-visible {
+  outline: var(--focus);
+  outline-offset: 4px;
+}
+.media img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+.card-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card-body h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0a0a0a;
+}
+
+/* ---------------------------
+   Regras para páginas de jogo
+   --------------------------- */
+
+/* Container principal da página de jogo */
+.game-page-container {
+  max-width: 1100px;
+  margin: 28px auto;
+  padding: 22px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.01)
+  );
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Título e descrição dentro da página de jogo */
+.game-page-container h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--accent-gold);
+  font-family: Montserrat, Inter, sans-serif;
+  -webkit-text-stroke: 0.6px rgba(0, 0, 0, 0.25);
+}
+.game-page-container p {
+  margin: 0;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Iframe responsivo: mantém proporção e escala em telas pequenas */
+.game-iframe-wrap {
+  width: 100%;
+  max-width: 1000px;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+/* Use este seletor se o iframe estiver diretamente na página (fallback) */
+.game-page-container iframe,
+.game-iframe-wrap iframe {
+  width: 100%;
+  height: 60vh; /* altura relativa à viewport para responsividade */
+  min-height: 420px;
+  border: 0;
+  display: block;
+}
+
+/* Back button (estilizado e tátil para crianças) */
+.back-button {
+  display: inline-block;
+  background: linear-gradient(180deg, var(--accent-red), #a81a1a);
+  color: #fff;
+  padding: 14px 28px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 800;
+  border-bottom: 6px solid rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+  margin-top: 6px;
+}
+.back-button:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
+}
+.back-button:active {
+  transform: translateY(2px);
+}
+
+/* Quando o back-button for um link que volta, garantir contraste de foco */
+.back-button:focus-visible {
+  outline: var(--focus);
+  outline-offset: 4px;
+}
+
+/* Footer */
+footer {
+  max-width: var(--max-width);
+  margin: 36px auto 0;
+  padding: 22px;
+  background: transparent;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  text-align: center;
+  color: var(--muted);
+}
+footer p {
+  margin: 0;
+  font-weight: 700;
+}
+footer .icon-dourado {
+  color: var(--accent-gold);
+  margin-left: 10px;
+}
+
+/* Responsividade */
+@media (max-width: 1000px) {
+  .game-page-container iframe,
+  .game-iframe-wrap iframe {
+    height: 55vh;
+    min-height: 360px;
+  }
+  .game-page-container {
+    padding: 16px;
+  }
+}
+@media (max-width: 760px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .logo h1 {
+    font-size: 1.4rem;
+  }
+  .media img {
+    height: 140px;
+  }
+  .game-card {
+    min-height: 220px;
+  }
+}
+@media (max-width: 420px) {
+  body {
+    padding: 16px;
+  }
+  .media img {
+    height: 120px;
+  }
+  .card-body h3 {
+    font-size: 1rem;
+  }
+  .game-page-container h1 {
+    font-size: 1.4rem;
+  }
+  .game-page-container iframe,
+  .game-iframe-wrap iframe {
+    height: 48vh;
+    min-height: 300px;
+  }
+}
+
+/* Movimento reduzido */
+@media (prefers-reduced-motion: no-preference) {
+  .media img {
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .game-card:hover .media img {
+    transform: scale(1.03);
+  }
+}
