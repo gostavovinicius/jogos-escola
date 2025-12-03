@@ -1,474 +1,196 @@
 /* =========================================
-   TEMA: MAGIA DO NATAL DA MEIA-NOITE
+   TEMA: NATAL LITE (Focado em Desempenho)
    ========================================= */
 
 :root {
-  /* Paleta de Cores Profunda */
-  --bg-deep: #0f172a; /* Azul meia-noite quase preto */
-  --bg-night: #1e1b4b; /* Indigo profundo */
-  --text-light: #e2e8f0; /* Branco gelo */
-  --text-dim: #94a3b8; /* Cinza azulado */
-
-  /* Acentos Vibrantes */
-  --gold-glow: #fbbf24; /* Dourado mágico */
-  --ice-blue: #67e8f9; /* Ciano gelo */
-  --holiday-red: #f43f5e; /* Vermelho festivo moderno */
-
-  /* Glassmorphism (Vidro) */
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-highlight: rgba(255, 255, 255, 0.15);
-
-  /* Tipografia */
+  --bg-deep: #0f172a;
+  --bg-card: #1e293b;
+  --text-light: #e2e8f0;
+  --gold-glow: #fbbf24;
+  --holiday-red: #f43f5e;
   --font-display: "Mountains of Christmas", cursive;
   --font-body: "Outfit", sans-serif;
-
-  /* Configuração de Animação */
-  --stagger-delay: 100ms; /* Tempo entre cada carta aparecer */
-}
-
-/* =========================================
-   RESET & BASE
-   ========================================= */
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 body {
   background-color: var(--bg-deep);
   color: var(--text-light);
   font-family: var(--font-body);
+  margin: 0;
+  /* Fundo fixo simples, sem animação pesada */
+  background: radial-gradient(circle at top, #1e1b4b, var(--bg-deep));
   min-height: 100vh;
-  overflow-x: hidden;
-  position: relative;
-  line-height: 1.5;
 }
 
-/* Fundo Gradiente Atmosférico - Efeito "Aurora Boreal" */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(
-      circle at 15% 50%,
-      rgba(76, 29, 149, 0.2),
-      transparent 45%
-    ),
-    radial-gradient(circle at 85% 30%, rgba(34, 211, 238, 0.1), transparent 45%),
-    linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-night) 100%);
-  z-index: -2;
-}
-
-/* Acessibilidade */
+/* --- ACESSIBILIDADE (Corrigido) --- */
 .skip-link {
   position: absolute;
-  left: -9999px;
-  z-index: 999;
-  padding: 1em;
+  left: -9999px; /* Esconde fora da tela */
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  width: auto;
+  height: auto;
+  transform: translateX(-50%);
+  padding: 10px 20px;
   background: var(--gold-glow);
   color: #000;
+  border-radius: 8px;
   text-decoration: none;
   font-weight: bold;
-  border-radius: 8px;
-}
-.skip-link:focus {
-  left: 50%;
-  top: 20px;
-  transform: translateX(-50%);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
 }
 
-/* =========================================
-   CABEÇALHO (HEADER)
-   ========================================= */
-
+/* --- HEADER (Corrigido) --- */
 header {
   text-align: center;
-  padding: 4rem 1rem 2rem;
-  position: relative;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
 }
 
 .brand-container {
-  display: inline-flex;
-  align-items: center;
-  gap: 1rem;
+  display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
+  gap: 15px;
+  width: 100%;
 }
 
 h1 {
   font-family: var(--font-display);
-  font-weight: 700;
   font-size: 3.5rem;
-  color: var(--text-light);
-  /* Brilho suave no texto */
-  text-shadow: 0 0 25px rgba(251, 191, 36, 0.25);
-  line-height: 1;
-  letter-spacing: 1px;
+  color: var(--gold-glow);
   margin: 0;
+  line-height: 1;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 
 .badge {
   background: var(--holiday-red);
   color: white;
-  font-family: var(--font-body);
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 0.85rem;
   font-weight: 700;
-  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  padding: 0.4em 0.9em;
-  border-radius: 99px;
-  box-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
-  transform: rotate(-5deg);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  letter-spacing: 1px;
+  white-space: nowrap;
+
+  /* Corrige o problema da faixa esticada */
+  width: fit-content;
+  display: inline-block;
+  box-shadow: 0 4px 10px rgba(244, 63, 94, 0.3);
 }
 
 .subtitle {
-  margin-top: 0.8rem;
-  font-size: 1.2rem;
-  color: var(--ice-blue);
-  opacity: 0.85;
+  color: #94a3b8;
+  margin: 0;
+  font-size: 1.1rem;
   font-weight: 300;
 }
 
-/* =========================================
-   GRID DE JOGOS
-   ========================================= */
-
-main {
-  padding: 1rem;
-}
-
+/* --- GRID DE JOGOS --- */
 .game-grid {
   display: grid;
-  /* Auto-fill preenche o espaço responsivamente sem media queries complexas */
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 2.5rem;
-  max-width: 1280px;
+  gap: 25px;
+  padding: 20px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem;
 }
 
-/* =========================================
-   CARTÕES (CARDS)
-   ========================================= */
-
+/* Card Otimizado */
 .game-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
+  background-color: var(--bg-card);
+  border: 1px solid #334155;
+  border-radius: 16px;
   overflow: hidden;
   text-decoration: none;
-  /* Transição suave para todos os estados */
-  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-  backdrop-filter: blur(12px); /* Efeito de desfoque atrás do cartão */
-  -webkit-backdrop-filter: blur(12px);
-
-  /* Proporção vertical agradável */
-  aspect-ratio: 4 / 5;
-
-  /* Configuração da Animação de Entrada */
-  opacity: 0;
-  animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  /* Atraso calculado via variável inline no HTML */
-  animation-delay: calc(var(--delay) * var(--stagger-delay));
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-/* Estado Hover (Passar o mouse) */
 .game-card:hover {
-  transform: translateY(-12px) scale(1.02); /* Levanta e cresce */
-  background: rgba(255, 255, 255, 0.07);
-  border-color: var(--glass-highlight);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5),
-    /* Sombra profunda */ 0 0 30px rgba(34, 211, 238, 0.1); /* Brilho Ciano */
-}
-.game-card:focus-visible {
-  outline: 3px solid var(--gold-glow);
-  outline-offset: 4px;
+  transform: translateY(-5px);
+  border-color: var(--gold-glow);
 }
 
-/* Imagem do Cartão */
 .card-image {
-  height: 65%; /* Ocupa a maior parte do card */
+  height: 180px;
   width: 100%;
+  background: #000;
   position: relative;
-  overflow: hidden;
 }
 
 .card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 1.2s ease; /* Zoom muito suave */
 }
 
-/* Zoom na imagem ao passar o mouse */
-.game-card:hover .card-image img {
-  transform: scale(1.15);
-}
-
-/* Overlay gradiente para o texto ficar legível se sobrepor a imagem (segurança) */
-.card-image .overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 40%;
-  background: linear-gradient(to top, rgba(15, 23, 42, 0.8), transparent);
-  opacity: 0.6;
-}
-
-/* Corpo do Cartão */
 .card-info {
-  padding: 1.5rem;
-  flex-grow: 1;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
   justify-content: space-between;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.01),
-    rgba(255, 255, 255, 0.03)
-  );
 }
 
 .card-info h3 {
-  font-size: 1.35rem;
   color: var(--text-light);
-  margin: 0;
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
   font-weight: 700;
-  line-height: 1.2;
-  font-family: var(--font-body);
 }
 
-/* Botão "Jogar Agora" estilizado como texto interativo */
 .play-btn {
-  font-size: 0.9rem;
-  font-weight: 700;
   color: var(--gold-glow);
+  font-weight: bold;
+  font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
-  margin-top: auto;
+  letter-spacing: 1px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  opacity: 0.9;
-  transition: gap 0.3s ease;
+  gap: 8px;
 }
 
-/* Seta que se move */
 .play-btn::after {
   content: "→";
-  font-size: 1.1em;
-  transition: transform 0.3s ease;
 }
 
-.game-card:hover .play-btn {
-  opacity: 1;
-  gap: 15px;
-}
-.game-card:hover .play-btn::after {
-  transform: translateX(5px);
-}
-
-/* =========================================
-   ANIMAÇÕES
-   ========================================= */
-
-/* Entrada dos cartões */
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(60px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Neve CSS (Leve e performática) */
-.snow-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.snow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  /* Cria "flocos" usando gradientes radiais */
-  background-image: radial-gradient(
-      4px 4px at 100px 50px,
-      rgba(255, 255, 255, 0.6),
-      transparent
-    ),
-    radial-gradient(
-      6px 6px at 200px 150px,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    ),
-    radial-gradient(
-      3px 3px at 300px 250px,
-      rgba(255, 255, 255, 0.4),
-      transparent
-    );
-  background-size: 550px 550px;
-  animation: snow 12s linear infinite;
-}
-
-.snow.layer2 {
-  background-image: radial-gradient(
-      3px 3px at 150px 300px,
-      rgba(255, 255, 255, 0.5),
-      transparent
-    ),
-    radial-gradient(
-      4px 4px at 400px 400px,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
-  background-size: 400px 400px;
-  animation: snow 18s linear infinite reverse; /* Camada mais lenta e invertida para profundidade */
-  opacity: 0.5;
-}
-
-@keyframes snow {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 0 550px;
-  }
-}
-
-/* =========================================
-   RODAPÉ
-   ========================================= */
+/* --- FOOTER --- */
 footer {
   text-align: center;
-  padding: 4rem 0;
-  color: var(--text-dim);
-  font-size: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  margin-top: 2rem;
+  padding: 40px;
+  color: #64748b;
+  font-size: 0.9rem;
+  border-top: 1px solid #334155;
+  margin-top: 40px;
 }
 
-/* =========================================
-   RESPONSIVIDADE
-   ========================================= */
-@media (max-width: 640px) {
+/* Responsividade */
+@media (max-width: 600px) {
   h1 {
     font-size: 2.5rem;
   }
+  .brand-container {
+    flex-direction: column;
+    gap: 10px;
+  }
   .game-grid {
-    grid-template-columns: 1fr; /* 1 coluna em telas muito pequenas */
-    gap: 1.5rem;
-    padding: 0.5rem;
-  }
-  .card-info h3 {
-    font-size: 1.2rem;
-  }
-}
-
-/* =========================================
-   PÁGINA INTERNA DO JOGO
-   ========================================= */
-
-.game-page-container {
-  max-width: 1100px;
-  margin: 2rem auto;
-  padding: 2rem;
-  text-align: center;
-
-  /* Reaproveitando o efeito de vidro do tema */
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-}
-
-.game-page-container h1 {
-  /* Ajuste para o título dentro da página do jogo */
-  margin-bottom: 0.5rem;
-  font-size: 3rem;
-}
-
-.game-page-container p {
-  color: var(--ice-blue);
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
-  font-weight: 300;
-}
-
-/* Área do Iframe (Responsividade) */
-.game-iframe-wrap {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 3rem;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 0 30px rgba(103, 232, 249, 0.1); /* Brilho ciano suave */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.3);
-}
-
-/* Força o iframe a ser responsivo */
-.game-iframe-wrap iframe {
-  max-width: 100%;
-  height: auto;
-  aspect-ratio: 16/9; /* Mantém proporção retangular */
-  min-height: 600px; /* Garante altura mínima para o jogo */
-}
-
-/* Botão de Voltar */
-.back-button {
-  display: inline-block;
-  padding: 1rem 2rem;
-  background: var(--bg-night);
-  color: var(--gold-glow);
-  text-decoration: none;
-  font-weight: 700;
-  border-radius: 99px;
-  border: 1px solid var(--gold-glow);
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.back-button:hover {
-  background: var(--gold-glow);
-  color: var(--bg-deep);
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
-  transform: translateY(-3px);
-}
-
-/* Responsividade para Mobile */
-@media (max-width: 768px) {
-  .game-iframe-wrap iframe {
-    min-height: 400px;
-  }
-
-  .game-page-container h1 {
-    font-size: 2rem;
+    grid-template-columns: 1fr;
   }
 }
