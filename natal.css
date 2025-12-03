@@ -1,194 +1,238 @@
 /* =========================================
-   TEMA: NATAL LITE (Focado em Desempenho)
+   TEMA: NATAL ULTRA PERFORMANCE
+   Foco: PCs Escolares / Sem Placa de Vídeo
    ========================================= */
 
 :root {
+  /* Cores Sólidas (Mais leves que gradientes complexos) */
   --bg-deep: #0f172a;
   --bg-card: #1e293b;
-  --text-light: #e2e8f0;
+  --text-light: #f1f5f9;
+  --text-dim: #94a3b8;
   --gold-glow: #fbbf24;
-  --holiday-red: #f43f5e;
+  --holiday-red: #ef4444;
+
+  /* Fontes */
   --font-display: "Mountains of Christmas", cursive;
   --font-body: "Outfit", sans-serif;
+}
+
+/* Reset Básico */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
   background-color: var(--bg-deep);
   color: var(--text-light);
   font-family: var(--font-body);
-  margin: 0;
-  /* Fundo fixo simples, sem animação pesada */
-  background: radial-gradient(circle at top, #1e1b4b, var(--bg-deep));
   min-height: 100vh;
+  /* Gradiente simples e estático (barato para processar) */
+  background: radial-gradient(circle at top, #1e1b4b, var(--bg-deep));
 }
 
-/* --- ACESSIBILIDADE (Corrigido) --- */
+/* Link de Acessibilidade */
 .skip-link {
   position: absolute;
-  left: -9999px; /* Esconde fora da tela */
-  top: auto;
+  left: -9999px;
   width: 1px;
   height: 1px;
   overflow: hidden;
-  z-index: 9999;
 }
-
 .skip-link:focus {
   position: fixed;
-  top: 20px;
+  top: 10px;
   left: 50%;
+  transform: translateX(-50%);
   width: auto;
   height: auto;
-  transform: translateX(-50%);
-  padding: 10px 20px;
   background: var(--gold-glow);
   color: #000;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: bold;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  padding: 10px 20px;
+  z-index: 9999;
+  border-radius: 4px;
 }
 
-/* --- HEADER (Corrigido) --- */
+/* =========================================
+   CABEÇALHO
+   ========================================= */
 header {
   text-align: center;
-  padding: 40px 20px;
+  padding: 3rem 1rem 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
 }
 
 .brand-container {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   gap: 15px;
-  width: 100%;
 }
 
 h1 {
   font-family: var(--font-display);
-  font-size: 3.5rem;
+  font-size: 3rem;
   color: var(--gold-glow);
-  margin: 0;
-  line-height: 1;
-  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+  /* Sombra simples (sem blur alto) */
+  text-shadow: 2px 2px 0 #000;
+  line-height: 1.1;
 }
 
 .badge {
   background: var(--holiday-red);
   color: white;
-  padding: 6px 16px;
-  border-radius: 50px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: bold;
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  white-space: nowrap;
-
-  /* Corrige o problema da faixa esticada */
+  padding: 5px 12px;
+  border-radius: 50px;
+  /* Correção para não esticar */
   width: fit-content;
   display: inline-block;
-  box-shadow: 0 4px 10px rgba(244, 63, 94, 0.3);
 }
 
 .subtitle {
-  color: #94a3b8;
-  margin: 0;
+  color: var(--text-dim);
   font-size: 1.1rem;
-  font-weight: 300;
 }
 
-/* --- GRID DE JOGOS --- */
+/* =========================================
+   GRID DE JOGOS
+   ========================================= */
+main {
+  padding: 10px;
+}
+
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 25px;
-  padding: 20px;
-  max-width: 1200px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
-/* Card Otimizado */
+/* =========================================
+   CARD (Otimizado)
+   ========================================= */
 .game-card {
+  /* Cor sólida em vez de vidro/transparência */
   background-color: var(--bg-card);
   border: 1px solid #334155;
-  border-radius: 16px;
-  overflow: hidden;
+  border-radius: 12px;
   text-decoration: none;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+  position: relative;
+  /* Transição rápida apenas para hover */
+  transition: transform 0.1s ease, border-color 0.1s ease;
+  /* Removida animação de entrada (fadeUp) para carregar instantâneo */
 }
 
+/* Hover Leve */
 .game-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
   border-color: var(--gold-glow);
 }
 
 .card-image {
-  height: 180px;
+  height: 160px;
   width: 100%;
   background: #000;
-  position: relative;
 }
 
 .card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Removido zoom suave na imagem (pesado em GPU antiga) */
 }
 
 .card-info {
-  padding: 1.25rem;
+  padding: 15px;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  justify-content: space-between;
+  gap: 10px;
 }
 
 .card-info h3 {
   color: var(--text-light);
-  margin: 0 0 15px 0;
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 600;
 }
 
 .play-btn {
   color: var(--gold-glow);
-  font-weight: bold;
   font-size: 0.9rem;
+  font-weight: bold;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin-top: auto;
+  display: block;
 }
 
-.play-btn::after {
-  content: "→";
-}
-
-/* --- FOOTER --- */
+/* =========================================
+   RODAPÉ
+   ========================================= */
 footer {
   text-align: center;
   padding: 40px;
-  color: #64748b;
-  font-size: 0.9rem;
-  border-top: 1px solid #334155;
+  color: var(--text-dim);
   margin-top: 40px;
+  border-top: 1px solid #334155;
 }
 
-/* Responsividade */
+/* =========================================
+   PÁGINA INTERNA (JOGO)
+   ========================================= */
+.game-page-container {
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 20px;
+  text-align: center;
+}
+
+.game-iframe-wrap {
+  background: #000;
+  border: 1px solid #334155;
+  margin-bottom: 20px;
+  width: 100%;
+  /* Mantém proporção sem reflow */
+  aspect-ratio: 16/9;
+}
+
+.game-iframe-wrap iframe {
+  width: 100%;
+  height: 100%;
+}
+
+.back-button {
+  display: inline-block;
+  padding: 10px 24px;
+  background-color: var(--bg-card);
+  color: var(--gold-glow);
+  border: 1px solid var(--gold-glow);
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.back-button:hover {
+  background-color: var(--gold-glow);
+  color: var(--bg-deep);
+}
+
+/* Responsividade Básica */
 @media (max-width: 600px) {
   h1 {
-    font-size: 2.5rem;
-  }
-  .brand-container {
-    flex-direction: column;
-    gap: 10px;
+    font-size: 2.2rem;
   }
   .game-grid {
     grid-template-columns: 1fr;
