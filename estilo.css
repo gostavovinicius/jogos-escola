@@ -1,1 +1,148 @@
-@import url(natal.css);
+/* TEMA CARTOON V2.1 - PALETA SUAVE (PASTEL)
+   - Contraste reduzido para conforto visual
+   - Mantém o visual divertido, mas menos "neon"
+   - Sombras sólidas para alta performance
+*/
+
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap");
+
+:root {
+  /* --- PALETA PASTEL DIVERTIDA --- */
+
+  /* Fundo: De amarelo forte para um creme/baunilha suave */
+  --bg-color: #fff0c7;
+  --bg-pattern-dot: #ffeaa7; /* Bolinhas sutis */
+
+  /* Cabeçalho: Coral/Salmão (menos agressivo que vermelho) */
+  --header-bg: #ff7675;
+
+  /* Elementos */
+  --card-bg: #ffffff;
+
+  /* Texto: Cinza chumbo (menos duro que preto puro) */
+  --text-color: #2d3436;
+
+  /* Acentos "cremosos" */
+  --accent-blue: #74b9ff; /* Azul Céu Suave */
+  --accent-green: #55efc4; /* Verde Menta */
+
+  /* Bordas e Sombras */
+  --border-thick: 3px solid #2d3436;
+  --shadow-hard: 5px 5px 0px #2d3436;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  /* Padrão de bolinhas muito sutil */
+  background-image: radial-gradient(var(--bg-pattern-dot) 20%, transparent 20%);
+  background-size: 20px 20px;
+  font-family: "Fredoka", sans-serif;
+  color: var(--text-color);
+  overflow-x: hidden;
+}
+
+/* --- CABEÇALHO --- */
+header {
+  background-color: var(--header-bg);
+  padding: 20px;
+  text-align: center;
+  border-bottom: var(--border-thick);
+  box-shadow: var(--shadow-hard);
+  margin-bottom: 40px;
+}
+
+h1 {
+  font-size: 2.8rem;
+  color: #fff;
+  margin: 0;
+  text-transform: uppercase;
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2); /* Sombra mais leve no texto */
+  letter-spacing: 2px;
+}
+
+p {
+  color: #fff; /* Branco sobre coral fica ótimo */
+  font-size: 1.2rem;
+  margin-top: 10px;
+  font-weight: bold;
+  opacity: 0.95;
+}
+
+/* --- GRID DE JOGOS --- */
+.game-grid {
+  display: grid;
+  /* Cria colunas automáticas */
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+/* --- ESTILO DO CARTÃO --- */
+.game-card {
+  background: var(--card-bg);
+  border: var(--border-thick);
+  text-decoration: none;
+  color: var(--text-color);
+  box-shadow: var(--shadow-hard);
+  transition: transform 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 12px; /* Cantos levemente arredondados suavizam o visual */
+  overflow: hidden; /* Garante que a imagem respeite a borda arredondada */
+}
+
+.game-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent-blue);
+  box-shadow: 7px 7px 0px var(--accent-blue);
+}
+
+/* Área da Imagem */
+.game-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: contain; /* Garante que a imagem apareça inteira */
+  background-color: #fafafa; /* Fundo quase branco para preencher espaços */
+  border-bottom: var(--border-thick);
+}
+
+/* Título */
+.game-card h3 {
+  padding: 15px;
+  margin: 0;
+  text-align: center;
+  font-size: 1.25rem;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Botão "Jogar Agora" embutido */
+.game-card span.play-btn {
+  display: block;
+  background: var(--accent-green);
+  color: var(--text-color);
+  text-align: center;
+  padding: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-top: var(--border-thick);
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 2rem;
+  }
+  .game-grid {
+    grid-template-columns: 1fr;
+  }
+}

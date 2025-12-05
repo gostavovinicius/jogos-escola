@@ -1,84 +1,136 @@
 /* =========================================
-   TEMA: JOGO FOCADO (Desempenho Máximo)
+   TEMA: JOGO FOCADO V2.1 (Suave)
    ========================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap");
+
+:root {
+  /* Mesmas variáveis suaves do tema principal */
+  --bg-color: #fff0c7;
+  --bg-pattern-dot: #ffeaa7;
+  --header-bg: #ff7675;
+  --text-color: #2d3436;
+  --accent-blue: #74b9ff;
+  --accent-green: #55efc4;
+
+  --border-thick: 3px solid #2d3436;
+  --shadow-hard: 5px 5px 0px #2d3436;
+}
 
 body {
   margin: 0;
-  padding: 20px;
-  background-color: #0f172a; /* Fundo escuro sólido */
-  color: #e2e8f0;
-  /* Fonte do sistema para evitar carregamento extra */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
+  padding: 0;
+  background-color: var(--bg-color);
+  background-image: radial-gradient(var(--bg-pattern-dot) 20%, transparent 20%);
+  background-size: 20px 20px;
+  font-family: "Fredoka", sans-serif;
+  color: var(--text-color);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
 }
 
 .game-page-container {
   width: 100%;
   max-width: 1000px;
-  text-align: center;
-  background: transparent;
-  box-shadow: none;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
+/* Título na página do jogo */
 h1 {
-  color: #fbbf24; /* Dourado */
-  margin: 0 0 10px 0;
-  font-size: 2rem;
+  font-size: 2.2rem;
+  color: #fff;
+  background-color: var(--header-bg);
+  padding: 10px 40px;
+  border: var(--border-thick);
+  border-radius: 50px; /* Arredondado para ser mais suave */
+  box-shadow: var(--shadow-hard);
+  margin-bottom: 15px;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+  text-align: center;
 }
 
 p {
-  color: #94a3b8;
-  margin: 0 0 20px 0;
+  background: #fff;
+  padding: 8px 20px;
+  border: 2px solid var(--text-color);
+  border-radius: 12px;
+  font-weight: bold;
   font-size: 1.1rem;
-}
-
-/* Container do Iframe Responsivo */
-.game-iframe-wrap {
-  background: #000;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #334155;
   margin-bottom: 25px;
-
-  /* Mantém proporção 16:9 (video) ou ajustada */
-  position: relative;
-  width: 100%;
-  height: 0;
-  padding-bottom: 56.25%; /* Aspect ratio 16:9 */
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* Ajuste para iframes que precisam ser mais altos (opcional) */
+/* Container do Iframe */
+.game-iframe-wrap {
+  width: 100%;
+  background: #2d3436; /* Moldura escura ajuda no foco */
+  border: var(--border-thick);
+  border-radius: 15px; /* Tela arredondada estilo iPad/Tablet */
+
+  /* Borda colorida mais suave */
+  outline: 6px solid var(--accent-blue);
+  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.2);
+
+  margin-bottom: 30px;
+  position: relative;
+  aspect-ratio: 16/9;
+  overflow: hidden; /* Importante para o border-radius funcionar no iframe */
+}
+
 .game-iframe-wrap iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   border: 0;
+  display: block;
+  background: #fff;
 }
 
 /* Botão Voltar */
 .back-button {
   display: inline-block;
-  padding: 12px 30px;
-  background-color: #1e293b;
-  color: #fbbf24;
+  background-color: var(--accent-green);
+  color: var(--text-color);
   text-decoration: none;
-  border-radius: 50px;
-  border: 1px solid #fbbf24;
+  font-size: 1.1rem;
   font-weight: bold;
   text-transform: uppercase;
-  font-size: 0.9rem;
-  letter-spacing: 1px;
-  transition: all 0.2s ease;
+  padding: 12px 35px;
+  border: var(--border-thick);
+  border-radius: 50px;
+  box-shadow: var(--shadow-hard);
+  transition: transform 0.1s;
+  cursor: pointer;
 }
 
 .back-button:hover {
-  background-color: #fbbf24;
-  color: #0f172a;
-  transform: translateY(-2px);
+  background-color: #58f3c9;
+  transform: translateY(-3px);
+  box-shadow: 7px 7px 0px var(--text-color);
+}
+
+.back-button:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0px var(--text-color);
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.6rem;
+    padding: 10px 20px;
+  }
+
+  .game-iframe-wrap {
+    outline-width: 4px;
+    border-radius: 8px;
+    /* Ajuste para mobile */
+    aspect-ratio: auto;
+    height: 75vh;
+  }
 }
