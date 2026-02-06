@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -146,5 +146,69 @@
         </a>
       </section>
     </main>
+    <script>
+      (() => {
+        const MAX_SHOW = 8;
+        const STORAGE_KEY = "cemei_last_games_v1";
+
+        function shuffle(arr) {
+          for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+          }
+          return arr;
+        }
+
+        function pickRandomSixDifferent(cards) {
+          const last = (() => {
+            try {
+              return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "[]");
+            } catch {
+              return [];
+            }
+          })();
+
+          // Try a few times to avoid repetir exatamente o mesmo conjunto
+          let chosen = [];
+          for (let attempt = 0; attempt < 12; attempt++) {
+            const shuffled = shuffle(cards.slice());
+            chosen = shuffled.slice(0, Math.min(MAX_SHOW, shuffled.length));
+            const chosenHrefs = chosen.map((a) => a.getAttribute("href"));
+            const sameAsLast =
+              last.length === chosenHrefs.length &&
+              last.every((v) => chosenHrefs.includes(v));
+
+            if (!sameAsLast) {
+              sessionStorage.setItem(STORAGE_KEY, JSON.stringify(chosenHrefs));
+              return chosen;
+            }
+          }
+
+          // Fallback (se não conseguir “diferente”)
+          sessionStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(chosen.map((a) => a.getAttribute("href"))),
+          );
+          return chosen;
+        }
+
+        function refreshGameGrid() {
+          const grid = document.querySelector(".game-grid");
+          if (!grid) return;
+
+          const allCards = Array.from(grid.querySelectorAll(".game-card"));
+          if (allCards.length <= MAX_SHOW) return;
+
+          const chosen = pickRandomSixDifferent(allCards);
+
+          // Re-monta o grid só com os escolhidos (na ordem aleatória)
+          grid.innerHTML = "";
+          chosen.forEach((card) => grid.appendChild(card));
+        }
+
+        // Executa quando carrega e também quando volta via "Voltar" do navegador (bfcache)
+        window.addEventListener("pageshow", refreshGameGrid);
+      })();
+    </script>
   </body>
 </html>

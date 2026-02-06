@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -218,5 +218,66 @@
         </a>
       </section>
     </main>
+    <script>
+      (() => {
+        const MAX_SHOW = 8;
+        const STORAGE_KEY = "home_last_games_v1";
+
+        function shuffle(arr) {
+          for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+          }
+          return arr;
+        }
+
+        function pickRandomDifferentSet(cards) {
+          const last = (() => {
+            try {
+              return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "[]");
+            } catch {
+              return [];
+            }
+          })();
+
+          let chosen = [];
+          for (let attempt = 0; attempt < 12; attempt++) {
+            const shuffled = shuffle(cards.slice());
+            chosen = shuffled.slice(0, Math.min(MAX_SHOW, shuffled.length));
+            const hrefs = chosen.map((a) => a.getAttribute("href"));
+
+            const sameAsLast =
+              last.length === hrefs.length &&
+              last.every((v) => hrefs.includes(v));
+
+            if (!sameAsLast) {
+              sessionStorage.setItem(STORAGE_KEY, JSON.stringify(hrefs));
+              return chosen;
+            }
+          }
+
+          sessionStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(chosen.map((a) => a.getAttribute("href"))),
+          );
+          return chosen;
+        }
+
+        function refreshGameGrid() {
+          const grid = document.querySelector(".game-grid");
+          if (!grid) return;
+
+          const allCards = Array.from(grid.querySelectorAll(".game-card"));
+          if (allCards.length <= MAX_SHOW) return;
+
+          const chosen = pickRandomDifferentSet(allCards);
+
+          grid.innerHTML = "";
+          chosen.forEach((card) => grid.appendChild(card));
+        }
+
+        window.addEventListener("pageshow", refreshGameGrid);
+      })();
+    </script>
   </body>
 </html>
