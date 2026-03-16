@@ -42,34 +42,36 @@ body {
   align-items: center;
 }
 
-/* Container principal ocupa a tela toda e organiza em coluna */
+/* Container principal usando GRID */
 .game-page-container {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1100px;
   height: 100vh;
 
-  /* Espaço para o botão fixo não cobrir o topo */
-  padding: 90px 20px 16px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-
+  padding: 15px 20px 16px;
   box-sizing: border-box;
+
+  display: grid;
+  /* O SEGREDO: A 1ª coluna (botão) usa '1fr' e empurra as outras para a direita */
+  grid-template-columns: 1fr max-content max-content;
+  grid-template-rows: auto 1fr;
+  gap: 15px;
+  align-items: center;
 }
 
 /* Título na página do jogo */
 h1 {
+  grid-column: 2;
+  grid-row: 1;
   margin: 0;
 
-  font-size: clamp(1.2rem, 2.2vw, 2.2rem);
+  font-size: clamp(1rem, 2vw, 1.8rem);
   color: #fff;
   background-color: var(--header-bg);
 
-  padding: 10px 40px;
+  padding: 8px 30px;
   border: var(--border-thick);
-  border-radius: 50px; /* Arredondado para ser mais suave */
+  border-radius: 50px;
   box-shadow: var(--shadow-hard);
 
   text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
@@ -78,6 +80,8 @@ h1 {
 }
 
 p {
+  grid-column: 3;
+  grid-row: 1;
   margin: 0;
 
   background: #fff;
@@ -86,29 +90,28 @@ p {
   border-radius: 12px;
 
   font-weight: bold;
-  font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+  font-size: clamp(0.9rem, 1.5vw, 1rem);
 
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* ====== Container do Iframe: ocupa o espaço restante ====== */
 .game-iframe-wrap {
-  flex: 1; /* pega o resto da altura */
-  min-height: 0; /* evita “estourar” e criar scroll */
+  grid-column: 1 / 4; /* Faz o jogo se esticar pelas 3 colunas */
+  grid-row: 2;
   width: 100%;
+  height: 100%;
+  min-height: 0; /* evita “estourar” e criar scroll */
 
-  background: #2d3436; /* Moldura escura ajuda no foco */
+  background: #2d3436;
   border: var(--border-thick);
-  border-radius: 15px; /* Tela arredondada estilo iPad/Tablet */
+  border-radius: 15px;
 
-  /* Borda colorida mais suave */
   outline: 6px solid var(--accent-blue);
   box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.2);
 
   margin: 0;
   position: relative;
-
-  /* Importante para o border-radius funcionar no iframe */
   overflow: hidden;
 }
 
@@ -120,47 +123,46 @@ p {
   background: #fff;
 }
 
-/* ====== Botão voltar fixo e grande (canto superior esquerdo) ====== */
+/* ====== Botão voltar integrado ao cabeçalho ====== */
 .back-button {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 9999;
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start; /* Fixa o botão colado à esquerda */
+  position: static;
+  margin: 0;
 
   display: inline-flex;
   align-items: center;
   gap: 10px;
 
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 800;
   line-height: 1;
 
-  padding: 16px 20px;
+  padding: 12px 18px;
   border-radius: 16px;
 
   text-decoration: none;
 
-  /* Alto contraste */
   background: #ffffff;
   color: #000000;
   border: 4px solid #000000;
 
-  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
   transition: transform 0.1s ease;
 }
 
 /* Feedback claro ao passar o mouse/tocar */
 .back-button:hover {
   transform: translateY(1px);
-  box-shadow: 0 7px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.25);
 }
 
 .back-button:active {
   transform: translateY(2px);
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
 }
 
-/* Acessibilidade: foco bem visível (teclado) */
 .back-button:focus,
 .back-button:focus-visible {
   outline: 6px solid #2b7cff;
@@ -168,20 +170,60 @@ p {
 }
 
 /* ====== Responsividade ====== */
-@media (max-width: 600px) {
+@media (max-width: 850px) {
   .game-page-container {
-    padding-top: 80px;
+    /* Telas médias: Quebra o parágrafo para baixo do título */
+    grid-template-columns: max-content 1fr;
+    grid-template-rows: auto auto 1fr;
   }
-
+  .back-button {
+    grid-column: 1;
+    grid-row: 1 / 3; /* Fica alto na lateral, ocupando 2 linhas */
+    align-self: center;
+  }
+  h1 {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end; /* Mantém o título na direita em tablets */
+  }
+  p {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end; /* Mantém o parágrafo na direita em tablets */
+  }
   .game-iframe-wrap {
-    outline-width: 4px;
-    border-radius: 10px;
+    grid-column: 1 / 3;
+    grid-row: 3;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
+  .game-page-container {
+    /* Celulares pequenos: Empilha tudo no meio */
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto 1fr;
+    gap: 10px;
+    padding-top: 15px;
+  }
   .back-button {
-    font-size: 22px;
-    padding: 18px 18px;
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: center; /* Volta tudo para o meio no celular */
+  }
+  h1 {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: center;
+  }
+  p {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: center;
+  }
+  .game-iframe-wrap {
+    grid-column: 1;
+    grid-row: 4;
+    outline-width: 4px;
+    border-radius: 10px;
   }
 }
