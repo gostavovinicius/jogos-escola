@@ -1,147 +1,157 @@
-/* TEMA CARTOON V2.1 - PALETA SUAVE (PASTEL)
-   - Contraste reduzido para conforto visual
-   - Mantém o visual divertido, mas menos "neon"
-   - Sombras sólidas para alta performance
-*/
-
-@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap");
 
 :root {
-  /* --- PALETA PASTEL DIVERTIDA --- */
-
-  /* Fundo: De amarelo forte para um creme/baunilha suave */
   --bg-color: #fff0c7;
-  --bg-pattern-dot: #ffeaa7; /* Bolinhas sutis */
-
-  /* Cabeçalho: Coral/Salmão (menos agressivo que vermelho) */
+  --bg-pattern-dot: rgba(255, 234, 167, 0.78);
   --header-bg: #ff7675;
-
-  /* Elementos */
-  --card-bg: #ffffff;
-
-  /* Texto: Cinza chumbo (menos duro que preto puro) */
+  --card-bg: rgba(255, 255, 255, 0.96);
   --text-color: #2d3436;
+  --accent-blue: #74b9ff;
+  --accent-green: #55efc4;
+  --accent-yellow: #ffd166;
+  --border-color: #2d3436;
+  --border-thick: 3px solid var(--border-color);
+  --shadow-hard: 5px 5px 0 var(--border-color);
+  --shell-width: min(1200px, calc(100% - 32px));
+}
 
-  /* Acentos "cremosos" */
-  --accent-blue: #74b9ff; /* Azul Céu Suave */
-  --accent-green: #55efc4; /* Verde Menta */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-  /* Bordas e Sombras */
-  --border-thick: 3px solid #2d3436;
-  --shadow-hard: 5px 5px 0px #2d3436;
+html {
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  padding: 0;
+  min-height: 100vh;
   background-color: var(--bg-color);
-  /* Padrão de bolinhas muito sutil */
-  background-image: radial-gradient(var(--bg-pattern-dot) 20%, transparent 20%);
-  background-size: 20px 20px;
+  background-image:
+    radial-gradient(var(--bg-pattern-dot) 18%, transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 42%);
+  background-size: 20px 20px, 100% 100%;
   font-family: "Fredoka", sans-serif;
   color: var(--text-color);
   overflow-x: hidden;
 }
 
-/* --- CABEÇALHO --- */
 header {
-  background-color: var(--header-bg);
-  padding: 20px;
+  width: var(--shell-width);
+  margin: 24px auto 32px;
+  padding: clamp(20px, 3vw, 32px);
+  border: var(--border-thick);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.24), transparent 52%),
+    linear-gradient(135deg, #ff8e8c, var(--header-bg));
   text-align: center;
-  border-bottom: var(--border-thick);
   box-shadow: var(--shadow-hard);
-  margin-bottom: 40px;
 }
 
 h1 {
-  font-size: 2.8rem;
-  color: #fff;
   margin: 0;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  color: #fff;
   text-transform: uppercase;
-  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2); /* Sombra mais leve no texto */
-  letter-spacing: 2px;
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.18);
+  letter-spacing: 0.08em;
 }
 
-p {
-  color: #fff; /* Branco sobre coral fica ótimo */
-  font-size: 1.2rem;
-  margin-top: 10px;
-  font-weight: bold;
-  opacity: 0.95;
+header p,
+.subtitle {
+  margin: 12px auto 0;
+  max-width: 700px;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: clamp(1rem, 1.9vw, 1.25rem);
+  font-weight: 600;
 }
 
-/* --- GRID DE JOGOS --- */
+main {
+  width: var(--shell-width);
+  margin: 0 auto;
+  padding-bottom: 56px;
+}
+
 .game-grid {
   display: grid;
-  /* Cria colunas automáticas */
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px 60px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: clamp(18px, 2.6vw, 28px);
 }
 
-/* --- ESTILO DO CARTÃO --- */
 .game-card {
-  background: var(--card-bg);
-  border: var(--border-thick);
-  text-decoration: none;
-  color: var(--text-color);
-  box-shadow: var(--shadow-hard);
-  transition: transform 0.15s ease;
   display: flex;
+  min-height: 100%;
   flex-direction: column;
-  height: 100%;
-  border-radius: 12px; /* Cantos levemente arredondados suavizam o visual */
-  overflow: hidden; /* Garante que a imagem respeite a borda arredondada */
+  overflow: hidden;
+  border: var(--border-thick);
+  border-radius: 18px;
+  background: var(--card-bg);
+  color: var(--text-color);
+  text-decoration: none;
+  box-shadow: var(--shadow-hard);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease;
 }
 
 .game-card:hover {
   transform: translateY(-5px);
   border-color: var(--accent-blue);
-  box-shadow: 7px 7px 0px var(--accent-blue);
+  box-shadow: 8px 8px 0 var(--accent-blue);
 }
 
-/* Área da Imagem */
+.game-card:focus-visible {
+  outline: 5px solid var(--accent-yellow);
+  outline-offset: 4px;
+}
+
 .game-card img {
   width: 100%;
-  height: 180px;
-  object-fit: contain; /* Garante que a imagem apareça inteira */
-  background-color: #fafafa; /* Fundo quase branco para preencher espaços */
+  aspect-ratio: 16 / 10;
+  object-fit: contain;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(250, 250, 250, 0.98));
   border-bottom: var(--border-thick);
 }
 
-/* Título */
 .game-card h3 {
-  padding: 15px;
   margin: 0;
-  text-align: center;
-  font-size: 1.25rem;
-  flex-grow: 1;
+  padding: 16px 16px 14px;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  font-size: clamp(1.05rem, 2vw, 1.28rem);
 }
 
-/* Botão "Jogar Agora" embutido */
-.game-card span.play-btn {
+.game-card .play-btn {
   display: block;
-  background: var(--accent-green);
+  padding: 12px 14px;
+  border-top: var(--border-thick);
+  background: linear-gradient(180deg, #79f5cc, var(--accent-green));
   color: var(--text-color);
   text-align: center;
-  padding: 12px;
-  font-weight: bold;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  border-top: var(--border-thick);
-  font-size: 0.9rem;
-  letter-spacing: 1px;
 }
 
-/* Responsividade */
-@media (max-width: 600px) {
-  h1 {
-    font-size: 2rem;
+@media (max-width: 720px) {
+  header {
+    margin: 16px auto 24px;
+    border-radius: 22px;
   }
+
+  main {
+    padding-bottom: 40px;
+  }
+
   .game-grid {
     grid-template-columns: 1fr;
   }

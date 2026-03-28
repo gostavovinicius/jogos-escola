@@ -1,0 +1,3921 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jogo 3D Educativo - Contraste e Radar</title>
+    <style>
+      :root {
+        --cor-painel: rgba(7, 15, 28, 0.78);
+        --cor-borda: rgba(144, 224, 239, 0.35);
+        --cor-acento: #ffd166;
+        --cor-acento-2: #7ae582;
+        --sombra-painel: 0 18px 50px rgba(0, 0, 0, 0.35);
+        --menu-largura: min(1080px, calc(100% - 28px));
+        --hud-largura: min(560px, calc(100% - 20px));
+        --minimapa-size: 190px;
+        --touch-size: 58px;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        overflow: hidden;
+        position: relative;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(255, 215, 118, 0.28),
+            transparent 30%
+          ),
+          linear-gradient(180deg, #80cfff 0%, #4f9fe2 38%, #163a6b 100%);
+      }
+
+      canvas {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: block;
+      }
+
+      #efeito-velocidade,
+      #impacto-overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 18;
+        opacity: 0;
+        transition: opacity 0.08s linear;
+      }
+
+      #efeito-velocidade {
+        background:
+          radial-gradient(
+            circle at center,
+            transparent 42%,
+            rgba(132, 220, 255, 0.1) 72%,
+            rgba(132, 220, 255, 0.26) 100%
+          ),
+          repeating-linear-gradient(
+            90deg,
+            transparent 0 18px,
+            rgba(255, 255, 255, 0.08) 18px 20px,
+            transparent 20px 42px
+          );
+        mix-blend-mode: screen;
+      }
+
+      #impacto-overlay {
+        background: radial-gradient(
+          circle at center,
+          rgba(255, 255, 255, 0.08),
+          rgba(255, 82, 82, 0.18) 46%,
+          rgba(90, 0, 0, 0.32)
+        );
+      }
+
+      .firefox #menu-inicial,
+      .firefox #interface,
+      .firefox #info-lateral,
+      .firefox .tela-centro {
+        backdrop-filter: none;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+      }
+
+      #menu-inicial,
+      #interface-jogo {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      #menu-inicial {
+        z-index: 100;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        color: white;
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(255, 223, 128, 0.45),
+            transparent 28%
+          ),
+          linear-gradient(
+            135deg,
+            rgba(11, 58, 95, 0.92),
+            rgba(26, 115, 148, 0.88)
+          );
+        backdrop-filter: blur(10px);
+      }
+
+      .menu-shell {
+        width: var(--menu-largura);
+        display: grid;
+        gap: clamp(18px, 2.8vw, 28px);
+        align-items: center;
+      }
+
+      .menu-apresentacao {
+        text-align: center;
+      }
+
+      #menu-inicial h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2.2rem, 6vw, 4rem);
+        letter-spacing: 0.05em;
+        text-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      }
+
+      #menu-inicial p {
+        margin: 0 auto 26px;
+        max-width: 560px;
+        font-size: clamp(1rem, 1.9vw, 1.28rem);
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.92);
+        text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+      }
+
+      .botoes-serie {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .btn-serie {
+        background: linear-gradient(180deg, #ffd166, #f4a261);
+        color: #10233e;
+        border: 2px solid rgba(255, 255, 255, 0.7);
+        padding: 14px 24px;
+        font-size: clamp(1rem, 1.8vw, 1.2rem);
+        font-weight: bold;
+        letter-spacing: 0.04em;
+        border-radius: 14px;
+        cursor: pointer;
+        box-shadow:
+          0 14px 26px rgba(0, 0, 0, 0.18),
+          inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s,
+          filter 0.2s;
+      }
+
+      .btn-serie:hover {
+        transform: translateY(-3px) scale(1.04);
+        box-shadow:
+          0 18px 30px rgba(0, 0, 0, 0.24),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        filter: saturate(1.08);
+      }
+
+      #painel-garagem {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 20px;
+        padding: 18px;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.2);
+      }
+
+      .garagem-topo {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      #pontos-menu {
+        font-size: 1.1rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+      }
+
+      #garagem-legenda {
+        font-size: 0.86rem;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .opcoes-carro {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+      }
+
+      .btn-carro {
+        min-height: 170px;
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        background: rgba(7, 15, 28, 0.46);
+        color: white;
+        cursor: pointer;
+        display: grid;
+        align-content: start;
+        gap: 8px;
+        text-align: left;
+        transition:
+          transform 0.2s,
+          background 0.2s,
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .btn-carro:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .btn-carro.ativo {
+        border-color: #ffd166;
+        background: rgba(255, 209, 102, 0.18);
+        box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.18);
+      }
+
+      .btn-carro.pode-comprar {
+        border-color: rgba(122, 229, 130, 0.72);
+      }
+
+      .btn-carro.travado {
+        opacity: 0.56;
+        filter: saturate(0.72);
+      }
+
+      .carro-preview {
+        position: relative;
+        height: 60px;
+        border-radius: 14px;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(255, 255, 255, 0.24),
+            transparent 52%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.12),
+            rgba(0, 0, 0, 0.14)
+          );
+      }
+
+      .carro-preview__aura,
+      .carro-preview__body,
+      .carro-preview__cabine,
+      .carro-preview__faixa,
+      .carro-preview__nariz,
+      .carro-preview__rodas,
+      .carro-preview__spoiler,
+      .carro-preview__asa,
+      .carro-preview__entrada-esq,
+      .carro-preview__entrada-dir {
+        position: absolute;
+        display: block;
+      }
+
+      .carro-preview__aura {
+        inset: 10px;
+        border-radius: 999px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.24),
+          transparent 72%
+        );
+        opacity: 0;
+      }
+
+      .carro-preview__body {
+        left: 12%;
+        right: 12%;
+        bottom: 14px;
+        height: 24px;
+        border-radius: 14px 16px 10px 10px;
+        background: var(--preview-body, #d64045);
+        box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18);
+      }
+
+      .carro-preview__cabine {
+        left: 31%;
+        right: 31%;
+        bottom: 30px;
+        height: 15px;
+        border-radius: 10px 10px 4px 4px;
+        background: var(--preview-glass, #1f2a44);
+      }
+
+      .carro-preview__faixa {
+        left: 25%;
+        right: 25%;
+        bottom: 22px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--preview-stripe, #ffd166);
+      }
+
+      .carro-preview__nariz {
+        left: 14%;
+        width: 22%;
+        bottom: 16px;
+        height: 12px;
+        border-radius: 12px 10px 8px 8px;
+        background: linear-gradient(
+          90deg,
+          var(--preview-stripe, #ffd166),
+          var(--preview-body, #d64045)
+        );
+      }
+
+      .carro-preview__rodas {
+        left: 18%;
+        right: 18%;
+        bottom: 8px;
+        height: 10px;
+        background:
+          radial-gradient(
+            circle at left center,
+            #161616 0 6px,
+            transparent 6px
+          ),
+          radial-gradient(
+            circle at right center,
+            #161616 0 6px,
+            transparent 6px
+          );
+      }
+
+      .carro-preview__spoiler {
+        right: 15%;
+        bottom: 36px;
+        width: 22px;
+        height: 4px;
+        border-radius: 999px;
+        background: #111;
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      .carro-preview__asa {
+        left: 14%;
+        right: 14%;
+        bottom: 38px;
+        height: 7px;
+        border-radius: 999px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--preview-accent, #90e0ef),
+          transparent
+        );
+        opacity: 0;
+      }
+
+      .carro-preview__entrada-esq,
+      .carro-preview__entrada-dir {
+        width: 12px;
+        height: 7px;
+        bottom: 22px;
+        border-radius: 999px;
+        background: rgba(8, 15, 28, 0.8);
+        opacity: 0;
+      }
+
+      .carro-preview__entrada-esq {
+        left: 18%;
+      }
+
+      .carro-preview__entrada-dir {
+        right: 18%;
+      }
+
+      /* Baseado em Quadrados (Clássico) */
+      .btn-carro.visual-classico .carro-preview__body {
+        left: 14%; right: 14%; bottom: 14px; height: 22px; border-radius: 14px 16px 12px 12px; background: var(--preview-body);
+      }
+      .btn-carro.visual-classico .carro-preview__cabine {
+        left: 31%; right: 29%; bottom: 31px; height: 15px; border-radius: 10px 10px 4px 4px; background: var(--preview-glass);
+      }
+      .btn-carro.visual-classico .carro-preview__nariz {
+        left: 14%; width: 22%; bottom: 16px; height: 12px; border-radius: 12px 10px 8px 8px;
+        background: linear-gradient(90deg, var(--preview-stripe), var(--preview-body));
+      }
+
+      /* Desportivo (Arredondado) */
+      .btn-carro.visual-esportivo .carro-preview__body {
+        left: 10%; right: 10%; bottom: 12px; height: 20px; border-radius: 50px 50px 20px 20px; background: var(--preview-body);
+      }
+      .btn-carro.visual-esportivo .carro-preview__cabine {
+        left: 28%; right: 28%; bottom: 28px; height: 14px; border-radius: 50% 50% 0 0; background: var(--preview-glass);
+      }
+
+      /* Monstro / Pickup */
+      .btn-carro.visual-pickup .carro-preview__body {
+        left: 10%; right: 10%; bottom: 18px; height: 26px; border-radius: 8px 12px 6px 6px; background: var(--preview-body);
+      }
+      .btn-carro.visual-pickup .carro-preview__cabine {
+        left: 35%; right: 15%; bottom: 44px; height: 16px; border-radius: 6px 8px 2px 2px; background: var(--preview-glass);
+      }
+      .btn-carro.visual-pickup .carro-preview__nariz {
+        left: 10%; width: 25%; bottom: 20px; height: 16px; border-radius: 6px 4px 4px 4px; background: var(--preview-body);
+      }
+
+      /* Fórmula 1 (Bico Fino) */
+      .btn-carro.visual-f1 .carro-preview__body {
+        left: 25%; right: 15%; bottom: 15px; height: 12px; border-radius: 0 10px 10px 0; background: var(--preview-body);
+      }
+      .btn-carro.visual-f1 .carro-preview__nariz {
+        left: 5%; width: 25%; bottom: 15px; height: 6px; border-radius: 20px 0 0 20px; background: var(--preview-body); transform: rotate(10deg);
+      }
+      .btn-carro.visual-f1 .carro-preview__cabine {
+        left: 45%; right: 35%; bottom: 27px; height: 12px; border-radius: 50% 50% 0 0; background: var(--preview-glass);
+      }
+      .btn-carro.visual-f1 .carro-preview__asa {
+        left: 75%; right: 5%; bottom: 32px; height: 4px; background: var(--preview-accent); border-radius: 5px; opacity: 1;
+      }
+
+      /* Futurista / Hipercarro (Em formato de Gota) */
+      .btn-carro.visual-hiper .carro-preview__body {
+        left: 5%; right: 5%; bottom: 10px; height: 18px; border-radius: 80px 20px 10px 10px; background: var(--preview-body);
+      }
+      .btn-carro.visual-hiper .carro-preview__cabine {
+        left: 35%; right: 20%; bottom: 28px; height: 10px; border-radius: 20px 50px 0 0; background: var(--preview-glass);
+      }
+      .btn-carro.visual-hiper .carro-preview__asa {
+        left: 15%; right: 15%; bottom: 15px; height: 4px; background: var(--preview-accent); box-shadow: 0 0 10px var(--preview-accent); opacity: 1;
+      }
+
+      .btn-carro-titulo {
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+      }
+
+      .btn-carro-meta {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .btn-carro-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 0.74rem;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .btn-carro-stats span {
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      #interface-jogo {
+        display: none;
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      #interface {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: var(--hud-largura);
+        max-width: calc(100% - 20px);
+        color: white;
+        background: linear-gradient(
+          180deg,
+          rgba(14, 28, 49, 0.88),
+          rgba(4, 12, 24, 0.78)
+        );
+        padding: 10px 14px 12px;
+        border-radius: 22px;
+        border: 1px solid var(--cor-borda);
+        box-shadow: var(--sombra-painel);
+        pointer-events: auto;
+        text-align: center;
+        min-width: 0;
+        backdrop-filter: blur(12px);
+      }
+
+      #fase-info {
+        color: #fff2b3;
+        font-weight: bold;
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        opacity: 0.9;
+      }
+
+      #objetivo-hud {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      #alvo-emoji-hud {
+        width: 42px;
+        height: 42px;
+        margin: 0;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 24px;
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(255, 255, 255, 0.28),
+            transparent 58%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(255, 209, 102, 0.34),
+            rgba(122, 229, 130, 0.16)
+          );
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.25),
+          0 10px 22px rgba(0, 0, 0, 0.22);
+      }
+
+      #barra-superior-jogo {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+      }
+
+      #btn-trocar-carro-jogo {
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.08);
+        color: white;
+        padding: 6px 10px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.82rem;
+        letter-spacing: 0.04em;
+      }
+
+      #btn-trocar-carro-jogo:hover {
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      #blocos-silabas {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        flex: 1 1 220px;
+        min-width: 0;
+      }
+
+      .bloco-silaba {
+        min-width: 48px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        font-size: clamp(0.95rem, 2.4vw, 1.35rem);
+        font-weight: 900;
+        font-family: "Arial Black", sans-serif;
+        letter-spacing: 1px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.3);
+        text-align: center;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+        text-shadow: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .bloco-silaba.proxima {
+        border-color: #fff;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.15);
+        animation: pulsar 0.9s ease-in-out infinite alternate;
+      }
+
+      .bloco-silaba.coletada {
+        border-color: var(--cor);
+        color: #fff;
+        background: var(--cor);
+        text-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+        box-shadow:
+          0 0 18px var(--cor),
+          0 2px 8px rgba(0, 0, 0, 0.4);
+        transform: scale(1.08);
+      }
+
+      @keyframes pulsar {
+        from {
+          box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+          transform: scale(1);
+        }
+        to {
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.9);
+          transform: scale(1.06);
+        }
+      }
+
+      #info-lateral {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        max-width: min(220px, calc(100% - 24px));
+        background: var(--cor-painel);
+        border: 1px solid rgba(122, 229, 130, 0.35);
+        border-radius: 18px;
+        padding: 10px 16px;
+        color: white;
+        font-size: 13px;
+        pointer-events: auto;
+        backdrop-filter: blur(10px);
+        box-shadow: var(--sombra-painel);
+        line-height: 1.55;
+      }
+
+      #info-lateral .label {
+        color: #4caf50;
+        font-weight: bold;
+        font-size: 11px;
+        letter-spacing: 2px;
+      }
+
+      #info-lateral .label-com-espaco {
+        margin-top: 8px;
+      }
+
+      #info-lateral .valor {
+        font-size: 16px;
+        font-weight: bold;
+        color: #fff;
+      }
+
+      .valor-secundario {
+        margin-top: 3px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.76);
+      }
+
+      .barra-risco {
+        position: relative;
+        width: 100%;
+        height: 10px;
+        margin-top: 6px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow:
+          inset 0 1px 2px rgba(0, 0, 0, 0.35),
+          0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .barra-risco__preenchimento {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #7ae582, #ffd166 55%, #ff595e);
+        box-shadow: 0 0 10px rgba(255, 209, 102, 0.42);
+        transition:
+          width 0.08s linear,
+          filter 0.08s linear;
+        transform-origin: left center;
+      }
+
+      .dica-lateral {
+        margin-top: 10px;
+        font-size: 11px;
+        color: #d7d7d7;
+        max-width: 150px;
+      }
+
+      #moldura-minimapa {
+        position: absolute;
+        right: clamp(10px, 2vw, 20px);
+        bottom: clamp(10px, 2vw, 20px);
+        width: var(--minimapa-size);
+        height: var(--minimapa-size);
+        border: 2px solid rgba(122, 229, 130, 0.72);
+        border-radius: 16px;
+        background: linear-gradient(
+          180deg,
+          rgba(7, 18, 34, 0.84),
+          rgba(5, 10, 22, 0.56)
+        );
+        box-shadow:
+          0 0 20px rgba(76, 175, 80, 0.28),
+          inset 0 0 14px rgba(0, 0, 0, 0.5);
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      #moldura-minimapa::before {
+        content: "RADAR";
+        position: absolute;
+        top: 4px;
+        left: 8px;
+        color: #4caf50;
+        font-size: 10px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        font-family: monospace;
+        z-index: 2;
+      }
+
+      #moldura-minimapa::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px;
+        height: 8px;
+        background: #00a0ff;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #00a0ff;
+        z-index: 2;
+      }
+
+      #controles-touch {
+        display: none;
+        position: absolute;
+        bottom: clamp(12px, 2vw, 24px);
+        left: clamp(12px, 2vw, 24px);
+        z-index: 20;
+        pointer-events: auto;
+        user-select: none;
+      }
+
+      .btn-touch {
+        width: var(--touch-size);
+        height: var(--touch-size);
+        background: rgba(8, 18, 34, 0.34);
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        border-radius: 16px;
+        color: white;
+        font-size: calc(var(--touch-size) * 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: none;
+      }
+
+      .btn-touch:active {
+        background: rgba(255, 255, 255, 0.26);
+      }
+
+      .btn-touch.ativo {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(0.96);
+      }
+
+      .touch-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .touch-col {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+      }
+
+      @media (pointer: coarse) {
+        #controles-touch {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          align-items: center;
+        }
+      }
+
+      .tela-centro {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: min(92vw, 560px);
+        color: #fff;
+        font-size: clamp(1.6rem, 4vw, 2.25rem);
+        display: none;
+        background: linear-gradient(
+          180deg,
+          rgba(10, 18, 32, 0.94),
+          rgba(5, 8, 18, 0.88)
+        );
+        padding: 30px 24px;
+        border-radius: 20px;
+        text-align: center;
+        z-index: 50;
+        font-weight: bold;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+        pointer-events: auto;
+        backdrop-filter: blur(8px);
+        animation: entrar 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      @keyframes entrar {
+        from {
+          transform: translate(-50%, -50%) scale(0.7);
+          opacity: 0;
+        }
+        to {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+      }
+
+      #mensagem-vitoria {
+        border-color: #ffd700;
+      }
+
+      #mensagem-derrota {
+        border-color: #ff4444;
+      }
+
+      @media (min-width: 920px) {
+        .menu-shell {
+          grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+        }
+      }
+
+      @media (max-width: 860px) {
+        #interface {
+          top: 10px;
+          padding-inline: 14px;
+        }
+
+        #info-lateral {
+          top: auto;
+          bottom: calc(var(--minimapa-size) + 24px);
+        }
+      }
+
+      @media (max-width: 620px) {
+        #menu-inicial {
+          padding: 12px;
+        }
+
+        .btn-serie {
+          width: calc(50% - 8px);
+          min-width: 120px;
+        }
+
+        .opcoes-carro {
+          grid-template-columns: 1fr;
+        }
+
+        #interface {
+          width: calc(100% - 16px);
+          top: 8px;
+          padding: 8px 10px 10px;
+        }
+
+        #info-lateral {
+          left: 10px;
+          right: 10px;
+          bottom: calc(var(--minimapa-size) + 18px);
+          max-width: none;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 2px 12px;
+        }
+
+        .dica-lateral {
+          grid-column: 1 / -1;
+          max-width: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="menu-inicial">
+      <div class="menu-shell">
+        <div class="menu-apresentacao">
+          <h1>Corrida do Saber</h1>
+          <p>
+            Escolha a sua série, colete as sílabas na ordem certa e escape da
+            perseguição.
+          </p>
+          <div class="botoes-serie">
+            <button class="btn-serie" data-ano="1">1º Ano</button>
+            <button class="btn-serie" data-ano="2">2º Ano</button>
+            <button class="btn-serie" data-ano="3">3º Ano</button>
+            <button class="btn-serie" data-ano="4">4º Ano</button>
+            <button class="btn-serie" data-ano="5">5º Ano</button>
+          </div>
+        </div>
+        <div id="painel-garagem">
+          <div class="garagem-topo">
+            <div id="pontos-menu">Pontos: 0</div>
+            <div id="garagem-legenda">Quanto mais caro, mais rápido.</div>
+          </div>
+          <div class="opcoes-carro">
+            <button class="btn-carro" data-carro="classico" type="button"></button>
+            <button class="btn-carro" data-carro="esportivo" type="button"></button>
+            <button class="btn-carro" data-carro="pickup" type="button"></button>
+            <button class="btn-carro" data-carro="f1" type="button"></button>
+            <button class="btn-carro" data-carro="hipercarro" type="button"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="interface-jogo">
+      <!-- HUD central: blocos de sílabas -->
+      <div id="interface">
+        <div id="barra-superior-jogo">
+          <div id="fase-info">SÉRIE 1 · FASE 1</div>
+          <button id="btn-trocar-carro-jogo">Trocar Carro</button>
+        </div>
+        <div id="objetivo-hud">
+          <div id="alvo-emoji-hud">🎯</div>
+          <div id="blocos-silabas"></div>
+        </div>
+      </div>
+
+      <!-- Info lateral: série e dica -->
+      <div id="info-lateral">
+        <div class="label">SÉRIE</div>
+        <div class="valor" id="info-serie">1º Ano</div>
+        <div class="label label-com-espaco">PONTOS</div>
+        <div class="valor" id="info-pontos">0</div>
+        <div class="label label-com-espaco">CARRO</div>
+        <div class="valor" id="info-carro">Clássico</div>
+        <div class="valor-secundario" id="info-velocidade">Vel 2 • Acel 2</div>
+        <div class="label label-com-espaco">RISCO</div>
+        <div class="valor" id="info-risco">Livre</div>
+        <div class="barra-risco" aria-hidden="true">
+          <div
+            class="barra-risco__preenchimento"
+            id="barra-risco-preenchimento"
+          ></div>
+        </div>
+        <div class="valor-secundario" id="info-contato">Contato 0%</div>
+        <div class="dica-lateral">
+          🔵 Você • ⬜ Polícia<br />Colete em ordem!
+        </div>
+      </div>
+
+      <div id="moldura-minimapa"></div>
+      <div id="efeito-velocidade"></div>
+      <div id="impacto-overlay"></div>
+
+      <div id="controles-touch">
+        <div class="touch-col">
+          <div class="btn-touch" id="btn-cima">▲</div>
+          <div class="touch-row">
+            <div class="btn-touch" id="btn-esq">◀</div>
+            <div class="btn-touch" id="btn-baixo">▼</div>
+            <div class="btn-touch" id="btn-dir">▶</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mensagem-vitoria" class="tela-centro">
+        <span style="font-size: 52px">⭐</span><br />
+        <div
+          style="
+            color: #ffd700;
+            font-size: 16px;
+            letter-spacing: 3px;
+            margin-bottom: 6px;
+          "
+        >
+          MUITO BEM!
+        </div>
+        <div
+          id="subtitulo-vitoria"
+          style="
+            color: #fff4b8;
+            font-size: 18px;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+          "
+        ></div>
+        <div
+          id="texto-vitoria"
+          style="color: #ffd700; font-size: 40px; letter-spacing: 6px"
+        ></div>
+      </div>
+      <div id="mensagem-derrota" class="tela-centro">
+        <span style="font-size: 52px">🚨</span><br />
+        <div style="color: #ff4444; font-size: 26px; margin-bottom: 8px">
+          VOCÊ FOI PEGO!
+        </div>
+        <div style="font-size: 16px; color: #ccc">
+          A polícia te alcançou.<br />Recomeçando...
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+
+    <script>
+      // ==========================================
+      // 1. CONFIGURAÇÃO BASE
+      // ==========================================
+      const ehFirefox = /firefox/i.test(navigator.userAgent);
+      if (ehFirefox) document.documentElement.classList.add("firefox");
+
+      const cena = new THREE.Scene();
+      cena.background = new THREE.Color(0x60a3d9);
+      cena.fog = new THREE.Fog(0x60a3d9, 60, 250);
+      const raizEstilos = document.documentElement;
+
+      function obterDimensoesViewport() {
+        return {
+          largura: Math.max(
+            1,
+            document.documentElement.clientWidth || window.innerWidth || 1,
+          ),
+          altura: Math.max(
+            1,
+            document.documentElement.clientHeight || window.innerHeight || 1,
+          ),
+        };
+      }
+
+      const dimensoesIniciais = obterDimensoesViewport();
+      let larguraViewport = dimensoesIniciais.largura;
+      let alturaViewport = dimensoesIniciais.altura;
+      let tamanhoMiniMapa = 190;
+
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        larguraViewport / alturaViewport,
+        0.1,
+        1000,
+      );
+      // O Minimapa olhará um raio de 100 unidades ao redor do carro
+      // Near=0.1, Far=500 garante que a câmera a y=300 veja o chão em y=0
+      const cameraMiniMapa = new THREE.OrthographicCamera(
+        -100,
+        100,
+        100,
+        -100,
+        0.1,
+        500,
+      );
+
+      const renderizador = new THREE.WebGLRenderer({
+        antialias: !ehFirefox,
+        powerPreference: "high-performance",
+      });
+      renderizador.setPixelRatio(
+        Math.min(window.devicePixelRatio, ehFirefox ? 1.35 : 2),
+      );
+      renderizador.setSize(larguraViewport, alturaViewport, false);
+      renderizador.shadowMap.enabled = true;
+      renderizador.shadowMap.type = ehFirefox
+        ? THREE.PCFShadowMap
+        : THREE.PCFSoftShadowMap;
+      if (!ehFirefox) {
+        renderizador.outputEncoding = THREE.sRGBEncoding;
+        renderizador.toneMapping = THREE.ACESFilmicToneMapping;
+        renderizador.toneMappingExposure = 1.04;
+      }
+      renderizador.autoClear = false;
+      renderizador.sortObjects = !ehFirefox;
+      document.body.appendChild(renderizador.domElement);
+
+      function atualizarLayoutResponsivo() {
+        const { largura, altura } = obterDimensoesViewport();
+        larguraViewport = largura;
+        alturaViewport = altura;
+        tamanhoMiniMapa = Math.round(
+          THREE.MathUtils.clamp(Math.min(largura, altura) * 0.26, 112, 200),
+        );
+        const hudWidth = Math.round(
+          THREE.MathUtils.clamp(largura * 0.5, 250, 470),
+        );
+        const touchSize = Math.round(
+          THREE.MathUtils.clamp(Math.min(largura, altura) * 0.12, 46, 58),
+        );
+
+        raizEstilos.style.setProperty("--hud-largura", `${hudWidth}px`);
+        raizEstilos.style.setProperty(
+          "--minimapa-size",
+          `${tamanhoMiniMapa}px`,
+        );
+        raizEstilos.style.setProperty("--touch-size", `${touchSize}px`);
+
+        renderizador.setPixelRatio(
+          Math.min(
+            window.devicePixelRatio,
+            ehFirefox ? (largura < 720 ? 1.05 : 1.35) : largura < 720 ? 1.5 : 2,
+          ),
+        );
+        renderizador.setSize(largura, altura, false);
+        camera.aspect = largura / altura;
+        camera.updateProjectionMatrix();
+      }
+
+      atualizarLayoutResponsivo();
+
+      cena.add(new THREE.HemisphereLight(0xdff6ff, 0x2b4c2b, 0.92));
+      const luzDirecional = new THREE.DirectionalLight(0xfff4d6, 1.18);
+      luzDirecional.position.set(78, 92, -42);
+      luzDirecional.castShadow = true;
+      luzDirecional.shadow.mapSize.width = ehFirefox ? 1024 : 2048;
+      luzDirecional.shadow.mapSize.height = ehFirefox ? 1024 : 2048;
+      luzDirecional.shadow.camera.left = -180;
+      luzDirecional.shadow.camera.right = 180;
+      luzDirecional.shadow.camera.top = 180;
+      luzDirecional.shadow.camera.bottom = -180;
+      const luzAmbiente = new THREE.AmbientLight(0x8cc8ff, 0.28);
+      cena.add(luzAmbiente);
+      cena.add(luzDirecional);
+
+      const mundoFisica = new CANNON.World();
+      mundoFisica.gravity.set(0, -20, 0);
+      mundoFisica.broadphase =
+        typeof CANNON.SAPBroadphase === "function"
+          ? new CANNON.SAPBroadphase(mundoFisica)
+          : new CANNON.NaiveBroadphase();
+      const materialDeslizante = new CANNON.Material();
+      const materialCarro = new CANNON.Material();
+      const corposDePiso = new WeakSet();
+      const corposRampas = new WeakSet();
+      mundoFisica.addContactMaterial(
+        new CANNON.ContactMaterial(materialDeslizante, materialDeslizante, {
+          friction: 0.0,
+          restitution: 0.1,
+        }),
+      );
+      mundoFisica.addContactMaterial(
+        new CANNON.ContactMaterial(materialCarro, materialDeslizante, {
+          friction: 0.0,
+          restitution: 0.02,
+        }),
+      );
+      mundoFisica.addContactMaterial(
+        new CANNON.ContactMaterial(materialCarro, materialCarro, {
+          friction: 0.08,
+          restitution: 0.04,
+        }),
+      );
+
+      // ==========================================
+      // 2. CENÁRIO, ÁRVORES, PEDRAS, MONTANHAS E RAMPAS
+      // ==========================================
+      function criarTexturaGrama() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext("2d");
+        const gradiente = ctx.createLinearGradient(0, 0, 512, 512);
+        gradiente.addColorStop(0, "#285943");
+        gradiente.addColorStop(1, "#3f8f63");
+        ctx.fillStyle = gradiente;
+        ctx.fillRect(0, 0, 512, 512);
+        for (let i = 0; i < 4000; i++) {
+          ctx.fillStyle =
+            Math.random() > 0.6
+              ? "rgba(105, 181, 120, 0.72)"
+              : "rgba(27, 67, 50, 0.9)";
+          ctx.fillRect(Math.random() * 512, Math.random() * 512, 5, 5);
+        }
+        for (let i = 0; i < 220; i++) {
+          ctx.fillStyle = "rgba(255,255,255,0.05)";
+          ctx.beginPath();
+          ctx.arc(
+            Math.random() * 512,
+            Math.random() * 512,
+            Math.random() * 2,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+        const textura = new THREE.CanvasTexture(canvas);
+        textura.wrapS = THREE.RepeatWrapping;
+        textura.wrapT = THREE.RepeatWrapping;
+        textura.repeat.set(30, 30);
+        return textura;
+      }
+
+      const chaoMat = new THREE.MeshLambertMaterial({
+        map: criarTexturaGrama(),
+      });
+      const tamanhoMapa = 400;
+      const chaoVisual = new THREE.Mesh(
+        new THREE.PlaneGeometry(tamanhoMapa, tamanhoMapa),
+        chaoMat,
+      );
+      chaoVisual.rotation.x = -Math.PI / 2;
+      chaoVisual.receiveShadow = true;
+      cena.add(chaoVisual);
+      const anelMapa = new THREE.Mesh(
+        new THREE.RingGeometry(194, 270, 64),
+        new THREE.MeshBasicMaterial({
+          color: 0x123559,
+          transparent: true,
+          opacity: 0.52,
+          side: THREE.DoubleSide,
+        }),
+      );
+      anelMapa.rotation.x = -Math.PI / 2;
+      anelMapa.position.y = 0.08;
+      cena.add(anelMapa);
+      const chaoCorpo = new CANNON.Body({
+        mass: 0,
+        shape: new CANNON.Plane(),
+        material: materialDeslizante,
+      });
+      chaoCorpo.quaternion.setFromAxisAngle(
+        new CANNON.Vec3(1, 0, 0),
+        -Math.PI / 2,
+      );
+      corposDePiso.add(chaoCorpo);
+      mundoFisica.addBody(chaoCorpo);
+
+      function descartarMaterial(material, descartarTexturas = true) {
+        if (!material) return;
+        if (descartarTexturas) {
+          for (const chave of ["map", "alphaMap", "emissiveMap", "normalMap"]) {
+            const textura = material[chave];
+            if (textura && typeof textura.dispose === "function") {
+              textura.dispose();
+            }
+          }
+        }
+        if (typeof material.dispose === "function") material.dispose();
+      }
+
+      function descartarObjeto3D(objeto, descartarTexturas = true) {
+        if (!objeto) return;
+        objeto.traverse((filho) => {
+          if (filho.geometry && typeof filho.geometry.dispose === "function") {
+            filho.geometry.dispose();
+          }
+          if (Array.isArray(filho.material)) {
+            for (const material of filho.material) {
+              descartarMaterial(material, descartarTexturas);
+            }
+          } else {
+            descartarMaterial(filho.material, descartarTexturas);
+          }
+        });
+      }
+
+      function removerObjetoRegistrado(item) {
+        if (!item) return;
+        if (item.visual) {
+          cena.remove(item.visual);
+          if (item.descartavel) {
+            descartarObjeto3D(item.visual, item.descartarTexturas);
+          }
+        }
+        if (item.luz) cena.remove(item.luz);
+        if (item.corpo) mundoFisica.removeBody(item.corpo);
+        if (typeof item.aoRemover === "function") item.aoRemover(item);
+      }
+
+      function limparObjetosRegistrados(lista) {
+        for (const item of lista) removerObjetoRegistrado(item);
+        lista.length = 0;
+      }
+
+      function registrarObjeto({
+        visual = null,
+        corpo = null,
+        luz = null,
+        descartavel = true,
+        descartarTexturas = true,
+        aoRemover = null,
+      }) {
+        return {
+          visual,
+          corpo,
+          luz,
+          descartavel,
+          descartarTexturas,
+          aoRemover,
+        };
+      }
+
+      function registrarAreaOcupada(x, z, raio) {
+        areasOcupadasMapa.push({ x, z, raio });
+      }
+
+      function posicaoLivreNoMapa(x, z, raio) {
+        if (Math.abs(x) > 150 || Math.abs(z) > 150) return false;
+        if (Math.hypot(x, z - 20) < 24 + raio) return false;
+        if (Math.hypot(x - 100, z - 100) < 22 + raio) return false;
+        if (Math.hypot(x + 110, z - 85) < 22 + raio) return false;
+
+        return areasOcupadasMapa.every(
+          (area) => Math.hypot(x - area.x, z - area.z) > area.raio + raio,
+        );
+      }
+
+      function encontrarPosicaoLivreParaSilaba(posicoesJaUsadas) {
+        for (let tentativa = 0; tentativa < 120; tentativa++) {
+          const ang = Math.random() * Math.PI * 2;
+          const r = 38 + Math.random() * 78;
+          const x = Math.cos(ang) * r;
+          const z = Math.sin(ang) * r;
+          const livreEntreSilabas = posicoesJaUsadas.every(
+            (p) => Math.hypot(x - p.x, z - p.z) > 30,
+          );
+          if (posicaoLivreNoMapa(x, z, 12) && livreEntreSilabas) {
+            return { x, z };
+          }
+        }
+
+        for (let raio = 45; raio <= 120; raio += 8) {
+          for (let angulo = 0; angulo < Math.PI * 2; angulo += Math.PI / 12) {
+            const x = Math.cos(angulo) * raio;
+            const z = Math.sin(angulo) * raio;
+            const livreEntreSilabas = posicoesJaUsadas.every(
+              (p) => Math.hypot(x - p.x, z - p.z) > 28,
+            );
+            if (posicaoLivreNoMapa(x, z, 10) && livreEntreSilabas) {
+              return { x, z };
+            }
+          }
+        }
+
+        return { x: 0, z: -60 };
+      }
+
+      function criarParedeInvisivel(x, z, largura, prof) {
+        const parede = new CANNON.Body({
+          mass: 0,
+          shape: new CANNON.Box(new CANNON.Vec3(largura / 2, 42, prof / 2)),
+          position: new CANNON.Vec3(x, 21, z),
+          material: materialDeslizante,
+        });
+        mundoFisica.addBody(parede);
+      }
+      criarParedeInvisivel(0, -tamanhoMapa / 2 + 8, tamanhoMapa - 8, 8);
+      criarParedeInvisivel(0, tamanhoMapa / 2 - 8, tamanhoMapa - 8, 8);
+      criarParedeInvisivel(-tamanhoMapa / 2 + 8, 0, 8, tamanhoMapa - 8);
+      criarParedeInvisivel(tamanhoMapa / 2 - 8, 0, 8, tamanhoMapa - 8);
+
+      function criarMontanha(x, z, raio) {
+        const geoMontanha = new THREE.SphereGeometry(raio, 32, 16);
+        const montanhaVisual = new THREE.Mesh(
+          geoMontanha,
+          new THREE.MeshLambertMaterial({
+            color: 0x6e8f78,
+          }),
+        );
+        montanhaVisual.position.set(x, -raio + raio * 0.4, z);
+        montanhaVisual.receiveShadow = true;
+        montanhaVisual.castShadow = true;
+        cena.add(montanhaVisual);
+        const montanhaCorpo = new CANNON.Body({
+          mass: 0,
+          shape: new CANNON.Sphere(raio),
+          material: materialDeslizante,
+          position: new CANNON.Vec3(x, -raio + raio * 0.4, z),
+        });
+        corposDePiso.add(montanhaCorpo);
+        mundoFisica.addBody(montanhaCorpo);
+      }
+
+      for (let i = 0; i < 24; i++) {
+        let angulo = (i / 24) * Math.PI * 2;
+        let raioX = Math.cos(angulo) * 190;
+        let raioZ = Math.sin(angulo) * 190;
+        let tamanhoMontanha = 30 + Math.random() * 30;
+        criarMontanha(raioX, raioZ, tamanhoMontanha);
+      }
+
+      function criarArvore(x, z) {
+        const arvoreVisual = new THREE.Group();
+        const tronco = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.5, 0.8, 4),
+          new THREE.MeshLambertMaterial({ color: 0x6f4e37 }),
+        );
+        tronco.position.y = 2;
+        tronco.castShadow = true;
+        arvoreVisual.add(tronco);
+        const folhas = new THREE.Mesh(
+          new THREE.ConeGeometry(3, 6, 7),
+          new THREE.MeshLambertMaterial({ color: 0x245b3f }),
+        );
+        folhas.position.y = 6;
+        folhas.castShadow = true;
+        arvoreVisual.add(folhas);
+        arvoreVisual.position.set(x, 0, z);
+        cena.add(arvoreVisual);
+        const corpo = new CANNON.Body({
+          mass: 0,
+          shape: new CANNON.Box(new CANNON.Vec3(1.35, 5, 1.35)),
+          position: new CANNON.Vec3(x, 5, z),
+          material: materialDeslizante,
+        });
+        mundoFisica.addBody(corpo);
+        registrarAreaOcupada(x, z, 7);
+        return registrarObjeto({ visual: arvoreVisual, corpo });
+      }
+
+      function criarPedra(x, z, tamanho) {
+        const pedraGeo = new THREE.DodecahedronGeometry(tamanho);
+        const pedraMat = new THREE.MeshLambertMaterial({ color: 0x8a8f99 });
+        const pedraVis = new THREE.Mesh(pedraGeo, pedraMat);
+        pedraVis.position.set(x, tamanho / 2, z);
+        pedraVis.castShadow = true;
+        cena.add(pedraVis);
+        const corpo = new CANNON.Body({
+          mass: 0,
+          shape: new CANNON.Sphere(tamanho + 0.9),
+          position: new CANNON.Vec3(x, tamanho / 2, z),
+          material: materialDeslizante,
+        });
+        mundoFisica.addBody(corpo);
+        registrarAreaOcupada(x, z, tamanho + 4);
+        return registrarObjeto({ visual: pedraVis, corpo });
+      }
+
+      function criarRampa(x, z, rotacaoY) {
+        const rampaCorpo = new CANNON.Body({
+          mass: 0,
+          shape: new CANNON.Box(new CANNON.Vec3(6, 0.5, 8)),
+          material: materialDeslizante,
+        });
+        rampaCorpo.position.set(x, 0, z);
+        const inclina = new CANNON.Quaternion();
+        inclina.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 8);
+        const gira = new CANNON.Quaternion();
+        gira.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotacaoY);
+        rampaCorpo.quaternion = gira.mult(inclina);
+        corposDePiso.add(rampaCorpo);
+        corposRampas.add(rampaCorpo);
+        mundoFisica.addBody(rampaCorpo);
+        const rampaVisual = new THREE.Mesh(
+          new THREE.BoxGeometry(12, 1, 16),
+          new THREE.MeshLambertMaterial({ color: 0xffb347 }),
+        );
+        rampaVisual.castShadow = true;
+        rampaVisual.receiveShadow = true;
+        rampaVisual.position.copy(rampaCorpo.position);
+        rampaVisual.quaternion.copy(rampaCorpo.quaternion);
+        cena.add(rampaVisual);
+        registrarAreaOcupada(x, z, 14);
+        return registrarObjeto({ visual: rampaVisual, corpo: rampaCorpo });
+      }
+
+      function criarArbusto(x, z, tamanho = 2.8) {
+        const arbusto = new THREE.Mesh(
+          new THREE.SphereGeometry(tamanho, 14, 12),
+          new THREE.MeshLambertMaterial({ color: 0x3d7d4f }),
+        );
+        arbusto.position.set(x, tamanho * 0.7, z);
+        arbusto.castShadow = true;
+        arbusto.receiveShadow = true;
+        cena.add(arbusto);
+        const corpo = new CANNON.Body({
+          mass: 0,
+          shape: new CANNON.Sphere(tamanho * 1.1),
+          position: new CANNON.Vec3(x, tamanho * 0.7, z),
+          material: materialDeslizante,
+        });
+        mundoFisica.addBody(corpo);
+        registrarAreaOcupada(x, z, tamanho + 3);
+        return registrarObjeto({ visual: arbusto, corpo });
+      }
+
+      function criarCone(x, z, tamanho = 1.6) {
+        const cone = new THREE.Mesh(
+          new THREE.ConeGeometry(tamanho, tamanho * 3.1, 8),
+          new THREE.MeshLambertMaterial({ color: 0xff7b00 }),
+        );
+        cone.position.set(x, tamanho * 1.5, z);
+        cone.castShadow = true;
+        cena.add(cone);
+        const corpo = new CANNON.Body({
+          mass: 0,
+          shape: new CANNON.Box(
+            new CANNON.Vec3(tamanho * 0.8, tamanho * 1.5, tamanho * 0.8),
+          ),
+          position: new CANNON.Vec3(x, tamanho * 1.5, z),
+          material: materialDeslizante,
+        });
+        mundoFisica.addBody(corpo);
+        registrarAreaOcupada(x, z, tamanho + 2.4);
+        return registrarObjeto({ visual: cone, corpo });
+      }
+
+      function criarCaixa(x, z, largura = 4, altura = 3.2, profundidade = 4) {
+        const caixa = new THREE.Mesh(
+          new THREE.BoxGeometry(largura, altura, profundidade),
+          new THREE.MeshLambertMaterial({ color: 0xa8794f }),
+        );
+        caixa.position.set(x, altura / 2, z);
+        caixa.castShadow = true;
+        caixa.receiveShadow = true;
+        cena.add(caixa);
+        const corpo = new CANNON.Body({
+          mass: 0,
+          shape: new CANNON.Box(
+            new CANNON.Vec3(largura / 2, altura / 2, profundidade / 2),
+          ),
+          position: new CANNON.Vec3(x, altura / 2, z),
+          material: materialDeslizante,
+        });
+        mundoFisica.addBody(corpo);
+        registrarAreaOcupada(x, z, Math.max(largura, profundidade) + 2.8);
+        return registrarObjeto({ visual: caixa, corpo });
+      }
+
+      // Rampas e obstáculos são gerados dentro de iniciarJogo() para serem novos a cada partida
+      // (ver função iniciarJogo abaixo)
+      let objetosDoMapa = []; // objetos visuais do cenário que podem ser removidos/resetados
+      let areasOcupadasMapa = [];
+
+      // ==========================================
+      // 3. OS CARROS (JOGADOR E POLÍCIA)
+      // ==========================================
+      function criarRoda(grupo, x, z) {
+        const roda = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.6, 0.6, 0.5, 16),
+          new THREE.MeshLambertMaterial({ color: 0x222222 }),
+        );
+        roda.rotation.z = Math.PI / 2;
+        roda.position.set(x, -0.6, z);
+        roda.castShadow = true;
+        grupo.add(roda);
+      }
+
+      // Jogador (Adicionado um "telhado" azul para você o achar fácil no radar)
+      const carroCorpo = new CANNON.Body({
+        mass: 800,
+        shape: new CANNON.Box(new CANNON.Vec3(1.2, 0.6, 2.2)),
+        material: materialCarro,
+      });
+      carroCorpo.allowSleep = false;
+      carroCorpo.angularDamping = 0.9;
+      carroCorpo.linearDamping = 0.02;
+      if (
+        carroCorpo.angularFactor &&
+        typeof carroCorpo.angularFactor.set === "function"
+      ) {
+        carroCorpo.angularFactor.set(0, 1, 0);
+      }
+      mundoFisica.addBody(carroCorpo);
+      const carroVisual = new THREE.Group();
+      cena.add(carroVisual);
+
+      function reconstruirMalhasDoCarro(modelo) {
+        while (carroVisual.children.length > 0) {
+          const child = carroVisual.children[0];
+          if (child.geometry) child.geometry.dispose();
+          if (child.material && !Array.isArray(child.material)) child.material.dispose();
+          carroVisual.remove(child);
+        }
+
+        const matCorpo = new THREE.MeshLambertMaterial({ color: modelo.carroceria });
+        const matVidro = new THREE.MeshLambertMaterial({ color: modelo.vidro });
+        const matDetalhe = new THREE.MeshLambertMaterial({ color: modelo.detalhe });
+        const matAsa = new THREE.MeshBasicMaterial({ color: modelo.asa });
+        const matRadar = new THREE.MeshBasicMaterial({ color: 0x00a0ff });
+
+        criarRoda(carroVisual, -1.3, 1.4);
+        criarRoda(carroVisual, 1.3, 1.4);
+        criarRoda(carroVisual, -1.3, -1.4);
+        criarRoda(carroVisual, 1.3, -1.4);
+
+        const radar = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), matRadar);
+        radar.position.set(0, 1.8, 0);
+        carroVisual.add(radar);
+
+        if (modelo.visual === "classico") {
+          const corpo = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.2, 4.4), matCorpo);
+          const vidro = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.6, 1.2), matVidro);
+          vidro.position.set(0, 0.6, -0.6);
+          carroVisual.add(corpo);
+          carroVisual.add(vidro);
+        } else if (modelo.visual === "esportivo") {
+          const geoCorpo = new THREE.SphereGeometry(2.2, 32, 16);
+          const corpo = new THREE.Mesh(geoCorpo, matCorpo);
+          corpo.scale.set(0.6, 0.25, 1);
+          corpo.position.set(0, 0.2, 0);
+
+          const geoVidro = new THREE.SphereGeometry(1.2, 32, 16);
+          const vidro = new THREE.Mesh(geoVidro, matVidro);
+          vidro.scale.set(0.7, 0.4, 0.8);
+          vidro.position.set(0, 0.7, -0.2);
+
+          const geoAero = new THREE.CylinderGeometry(1.2, 1.2, 0.2, 32);
+          const aero = new THREE.Mesh(geoAero, matDetalhe);
+          aero.scale.set(1, 1, 0.5);
+          aero.position.set(0, 0.8, 1.8);
+
+          carroVisual.add(corpo);
+          carroVisual.add(vidro);
+          carroVisual.add(aero);
+        } else if (modelo.visual === "pickup") {
+          const corpo = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.4, 4.6), matCorpo);
+          corpo.position.set(0, 0.3, 0);
+          const cabine = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.0, 1.8), matVidro);
+          cabine.position.set(0, 1.2, -0.4);
+          carroVisual.add(corpo);
+          carroVisual.add(cabine);
+        } else if (modelo.visual === "f1") {
+          const geoCorpo = new THREE.CylinderGeometry(0.5, 0.5, 4.0, 16);
+          geoCorpo.rotateX(Math.PI / 2);
+          const corpo = new THREE.Mesh(geoCorpo, matCorpo);
+
+          const geoBico = new THREE.ConeGeometry(0.5, 1.5, 16);
+          geoBico.rotateX(-Math.PI / 2);
+          const bico = new THREE.Mesh(geoBico, matDetalhe);
+          bico.position.set(0, 0, -2.75);
+
+          const asaFrente = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.1, 0.6), matCorpo);
+          asaFrente.position.set(0, -0.2, -3.2);
+
+          const asaTras = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.1, 0.8), matCorpo);
+          asaTras.position.set(0, 1.2, 1.8);
+          const suporteAsa = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.0, 0.4), matCorpo);
+          suporteAsa.position.set(0, 0.6, 1.8);
+
+          const cabine = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), matVidro);
+          cabine.position.set(0, 0.5, 0);
+
+          carroVisual.add(corpo);
+          carroVisual.add(bico);
+          carroVisual.add(asaFrente);
+          carroVisual.add(asaTras);
+          carroVisual.add(suporteAsa);
+          carroVisual.add(cabine);
+        } else if (modelo.visual === "hiper") {
+          const geoCorpo = new THREE.CylinderGeometry(1.4, 1.6, 4.4, 3);
+          geoCorpo.rotateX(Math.PI / 2);
+          geoCorpo.rotateZ(Math.PI);
+          const corpo = new THREE.Mesh(geoCorpo, matCorpo);
+          corpo.scale.set(1, 0.3, 1);
+          corpo.position.set(0, 0.1, 0);
+
+          const geoVidro = new THREE.SphereGeometry(1.0, 32, 16);
+          const vidro = new THREE.Mesh(geoVidro, matVidro);
+          vidro.scale.set(0.8, 0.3, 1.2);
+          vidro.position.set(0, 0.6, 0.2);
+
+          const luzDir = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 2.0), matAsa);
+          luzDir.position.set(1.2, 0.2, 0);
+          const luzEsq = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 2.0), matAsa);
+          luzEsq.position.set(-1.2, 0.2, 0);
+
+          carroVisual.add(corpo);
+          carroVisual.add(vidro);
+          carroVisual.add(luzDir);
+          carroVisual.add(luzEsq);
+        }
+
+        carroVisual.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+          }
+        });
+      }
+
+      function criarCarroPolicia({
+        corBase,
+        corCapo,
+        corSireneA,
+        corSireneB,
+        corRadar,
+      }) {
+        const corpo = new CANNON.Body({
+          mass: 900,
+          shape: new CANNON.Box(new CANNON.Vec3(1.2, 0.6, 2.2)),
+          material: materialCarro,
+        });
+        corpo.allowSleep = false;
+        corpo.angularDamping = 0.9;
+        corpo.linearDamping = 0.08;
+        if (
+          corpo.angularFactor &&
+          typeof corpo.angularFactor.set === "function"
+        ) {
+          corpo.angularFactor.set(0, 1, 0);
+        }
+        mundoFisica.addBody(corpo);
+
+        const visual = new THREE.Group();
+        const malhaPolicia = new THREE.Mesh(
+          new THREE.BoxGeometry(2.4, 1.2, 4.4),
+          new THREE.MeshLambertMaterial({ color: corBase }),
+        );
+        malhaPolicia.castShadow = true;
+        visual.add(malhaPolicia);
+
+        const capo = new THREE.Mesh(
+          new THREE.BoxGeometry(2.41, 1.21, 2.0),
+          new THREE.MeshLambertMaterial({ color: corCapo }),
+        );
+        capo.position.set(0, 0, 1.2);
+        visual.add(capo);
+
+        const sireneA = new THREE.Mesh(
+          new THREE.BoxGeometry(0.6, 0.4, 0.4),
+          new THREE.MeshBasicMaterial({ color: corSireneA }),
+        );
+        sireneA.position.set(-0.5, 0.8, -0.5);
+        visual.add(sireneA);
+
+        const sireneB = new THREE.Mesh(
+          new THREE.BoxGeometry(0.6, 0.4, 0.4),
+          new THREE.MeshBasicMaterial({ color: corSireneB }),
+        );
+        sireneB.position.set(0.5, 0.8, -0.5);
+        visual.add(sireneB);
+
+        const tetoRadar = new THREE.Mesh(
+          new THREE.BoxGeometry(1.6, 0.16, 1.6),
+          new THREE.MeshBasicMaterial({ color: corRadar }),
+        );
+        tetoRadar.position.set(0, 1.18, 0.1);
+        visual.add(tetoRadar);
+
+        criarRoda(visual, -1.3, 1.4);
+        criarRoda(visual, 1.3, 1.4);
+        criarRoda(visual, -1.3, -1.4);
+        criarRoda(visual, 1.3, -1.4);
+
+        corpo.position.set(0, -50, 0);
+        cena.add(visual);
+        return { corpo, visual };
+      }
+
+      const { corpo: policiaCorpo, visual: policiaVisual } = criarCarroPolicia({
+        corBase: 0xeeeeee,
+        corCapo: 0x111111,
+        corSireneA: 0x0000ff,
+        corSireneB: 0xff0000,
+        corRadar: 0xf5f5f5,
+      });
+      const { corpo: policia2Corpo, visual: policia2Visual } =
+        criarCarroPolicia({
+          corBase: 0x263238,
+          corCapo: 0xffb300,
+          corSireneA: 0xff6f00,
+          corSireneB: 0x00e5ff,
+          corRadar: 0xffc400,
+        });
+      const { corpo: policia3Corpo, visual: policia3Visual } =
+        criarCarroPolicia({
+          corBase: 0x354f52,
+          corCapo: 0x84a98c,
+          corSireneA: 0x4cc9f0,
+          corSireneB: 0xf72585,
+          corRadar: 0xd8f3dc,
+        });
+      const { corpo: policia4Corpo, visual: policia4Visual } =
+        criarCarroPolicia({
+          corBase: 0x5f0f40,
+          corCapo: 0x9a031e,
+          corSireneA: 0xffb703,
+          corSireneB: 0x8ecae6,
+          corRadar: 0xffc6ff,
+        });
+      const { corpo: policia5Corpo, visual: policia5Visual } =
+        criarCarroPolicia({
+          corBase: 0x4a4e69,
+          corCapo: 0x22223b,
+          corSireneA: 0x9a8c98,
+          corSireneB: 0xc9ada7,
+          corRadar: 0xf2e9e4,
+        });
+
+      const cameraPosicaoSuave = new THREE.Vector3(0, 0, 0);
+      const cameraAlvoSuave = new THREE.Vector3(0, 0, 0);
+
+      // ==========================================
+      // 4. MENU E SÉRIES
+      // ==========================================
+      const bancoDeFases = {
+        1: [
+          {
+            palavra: "BOLA",
+            silabas: [
+              { texto: "BO", cor: "#FF5252" },
+              { texto: "LA", cor: "#FFD740" },
+            ],
+          },
+          {
+            palavra: "PATO",
+            silabas: [
+              { texto: "PA", cor: "#69F0AE" },
+              { texto: "TO", cor: "#40C4FF" },
+            ],
+          },
+          {
+            palavra: "GATO",
+            silabas: [
+              { texto: "GA", cor: "#FF6D00" },
+              { texto: "TO", cor: "#E040FB" },
+            ],
+          },
+          {
+            palavra: "SAPO",
+            silabas: [
+              { texto: "SA", cor: "#00E676" },
+              { texto: "PO", cor: "#FF1744" },
+            ],
+          },
+          {
+            palavra: "MALA",
+            silabas: [
+              { texto: "MA", cor: "#FFEA00" },
+              { texto: "LA", cor: "#FF6D00" },
+            ],
+          },
+          {
+            palavra: "FACA",
+            silabas: [
+              { texto: "FA", cor: "#18FFFF" },
+              { texto: "CA", cor: "#FF4081" },
+            ],
+          },
+          {
+            palavra: "BULE",
+            silabas: [
+              { texto: "BU", cor: "#B2FF59" },
+              { texto: "LE", cor: "#FF6D00" },
+            ],
+          },
+          {
+            palavra: "VACA",
+            silabas: [
+              { texto: "VA", cor: "#EA80FC" },
+              { texto: "CA", cor: "#FFD740" },
+            ],
+          },
+          {
+            palavra: "RODA",
+            silabas: [
+              { texto: "RO", cor: "#69F0AE" },
+              { texto: "DA", cor: "#FF1744" },
+            ],
+          },
+          {
+            palavra: "ABELHA",
+            silabas: [
+              { texto: "A", cor: "#FFEA00" },
+              { texto: "BE", cor: "#69F0AE" },
+              { texto: "LHA", cor: "#FF6D00" },
+            ],
+          },
+        ],
+        2: [
+          {
+            palavra: "BANANA",
+            silabas: [
+              { texto: "BA", cor: "#FFEA00" },
+              { texto: "NA", cor: "#FF6D00" },
+              { texto: "NA", cor: "#FFEA00" },
+            ],
+          },
+          {
+            palavra: "MACACO",
+            silabas: [
+              { texto: "MA", cor: "#FF5252" },
+              { texto: "CA", cor: "#FFD740" },
+              { texto: "CO", cor: "#69F0AE" },
+            ],
+          },
+          {
+            palavra: "TOMATE",
+            silabas: [
+              { texto: "TO", cor: "#FF1744" },
+              { texto: "MA", cor: "#FF5252" },
+              { texto: "TE", cor: "#FFD740" },
+            ],
+          },
+          {
+            palavra: "JANELA",
+            silabas: [
+              { texto: "JA", cor: "#69F0AE" },
+              { texto: "NE", cor: "#40C4FF" },
+              { texto: "LA", cor: "#EA80FC" },
+            ],
+          },
+          {
+            palavra: "SAPATO",
+            silabas: [
+              { texto: "SA", cor: "#FF6D00" },
+              { texto: "PA", cor: "#E040FB" },
+              { texto: "TO", cor: "#FF4081" },
+            ],
+          },
+          {
+            palavra: "BONECA",
+            silabas: [
+              { texto: "BO", cor: "#B2FF59" },
+              { texto: "NE", cor: "#18FFFF" },
+              { texto: "CA", cor: "#FF1744" },
+            ],
+          },
+          {
+            palavra: "PALITO",
+            silabas: [
+              { texto: "PA", cor: "#FF5252" },
+              { texto: "LI", cor: "#FFD740" },
+              { texto: "TO", cor: "#40C4FF" },
+            ],
+          },
+          {
+            palavra: "CAVALO",
+            silabas: [
+              { texto: "CA", cor: "#18FFFF" },
+              { texto: "VA", cor: "#B2FF59" },
+              { texto: "LO", cor: "#FF6D00" },
+            ],
+          },
+          {
+            palavra: "FOGUETE",
+            silabas: [
+              { texto: "FO", cor: "#FF5252" },
+              { texto: "GUE", cor: "#E040FB" },
+              { texto: "TE", cor: "#69F0AE" },
+            ],
+          },
+          {
+            palavra: "CASTELO",
+            silabas: [
+              { texto: "CAS", cor: "#FFD740" },
+              { texto: "TE", cor: "#FF4081" },
+              { texto: "LO", cor: "#18FFFF" },
+            ],
+          },
+        ],
+        3: [
+          {
+            palavra: "FLORESTA",
+            silabas: [
+              { texto: "FLO", cor: "#00E676" },
+              { texto: "RES", cor: "#FF6D00" },
+              { texto: "TA", cor: "#40C4FF" },
+            ],
+          },
+          {
+            palavra: "BORRACHA",
+            silabas: [
+              { texto: "BOR", cor: "#B2FF59" },
+              { texto: "RA", cor: "#FF1744" },
+              { texto: "CHA", cor: "#EA80FC" },
+            ],
+          },
+          {
+            palavra: "PEIXINHO",
+            silabas: [
+              { texto: "PEI", cor: "#EA80FC" },
+              { texto: "XI", cor: "#FF5252" },
+              { texto: "NHO", cor: "#FFEA00" },
+            ],
+          },
+          {
+            palavra: "MARGARIDA",
+            silabas: [
+              { texto: "MAR", cor: "#FF4081" },
+              { texto: "GA", cor: "#18FFFF" },
+              { texto: "RI", cor: "#B2FF59" },
+              { texto: "DA", cor: "#FF1744" },
+            ],
+          },
+          {
+            palavra: "PARAFUSO",
+            silabas: [
+              { texto: "PA", cor: "#FF6D00" },
+              { texto: "RA", cor: "#E040FB" },
+              { texto: "FU", cor: "#FFEA00" },
+              { texto: "SO", cor: "#FF4081" },
+            ],
+          },
+          {
+            palavra: "BICICLETA",
+            silabas: [
+              { texto: "BI", cor: "#18FFFF" },
+              { texto: "CI", cor: "#B2FF59" },
+              { texto: "CLE", cor: "#FF1744" },
+              { texto: "TA", cor: "#FF5252" },
+            ],
+          },
+          {
+            palavra: "ELEFANTE",
+            silabas: [
+              { texto: "E", cor: "#FF5252" },
+              { texto: "LE", cor: "#FFD740" },
+              { texto: "FAN", cor: "#69F0AE" },
+              { texto: "TE", cor: "#40C4FF" },
+            ],
+          },
+          {
+            palavra: "BORBOLETA",
+            silabas: [
+              { texto: "BOR", cor: "#FFEA00" },
+              { texto: "BO", cor: "#FF6D00" },
+              { texto: "LE", cor: "#18FFFF" },
+              { texto: "TA", cor: "#FF4081" },
+            ],
+          },
+          {
+            palavra: "TARTARUGA",
+            silabas: [
+              { texto: "TAR", cor: "#FF5252" },
+              { texto: "TA", cor: "#FFD740" },
+              { texto: "RU", cor: "#69F0AE" },
+              { texto: "GA", cor: "#40C4FF" },
+            ],
+          },
+          {
+            palavra: "CHOCOLATE",
+            silabas: [
+              { texto: "CHO", cor: "#FF6D00" },
+              { texto: "CO", cor: "#E040FB" },
+              { texto: "LA", cor: "#FFEA00" },
+              { texto: "TE", cor: "#FF4081" },
+            ],
+          },
+        ],
+        4: [
+          {
+            palavra: "HIPOPOTAMO",
+            silabas: [
+              { texto: "HI", cor: "#18FFFF" },
+              { texto: "PO", cor: "#B2FF59" },
+              { texto: "PÓ", cor: "#FF1744" },
+              { texto: "TA", cor: "#EA80FC" },
+              { texto: "MO", cor: "#FF5252" },
+            ],
+          },
+          {
+            palavra: "TELESCOPIO",
+            silabas: [
+              { texto: "TE", cor: "#18FFFF" },
+              { texto: "LES", cor: "#B2FF59" },
+              { texto: "CÓ", cor: "#FF1744" },
+              { texto: "PI", cor: "#E040FB" },
+              { texto: "O", cor: "#FFD740" },
+            ],
+          },
+          {
+            palavra: "GELADEIRA",
+            silabas: [
+              { texto: "GE", cor: "#69F0AE" },
+              { texto: "LA", cor: "#FF6D00" },
+              { texto: "DEI", cor: "#40C4FF" },
+              { texto: "RA", cor: "#FF4081" },
+            ],
+          },
+          {
+            palavra: "CARAMBOLA",
+            silabas: [
+              { texto: "CA", cor: "#FFEA00" },
+              { texto: "RAM", cor: "#FF5252" },
+              { texto: "BO", cor: "#18FFFF" },
+              { texto: "LA", cor: "#B2FF59" },
+            ],
+          },
+          {
+            palavra: "PRIMAVERA",
+            silabas: [
+              { texto: "PRI", cor: "#EA80FC" },
+              { texto: "MA", cor: "#FFD740" },
+              { texto: "VE", cor: "#69F0AE" },
+              { texto: "RA", cor: "#FF1744" },
+            ],
+          },
+          {
+            palavra: "UNIVERSIDADE",
+            silabas: [
+              { texto: "U", cor: "#B2FF59" },
+              { texto: "NI", cor: "#18FFFF" },
+              { texto: "VER", cor: "#FF1744" },
+              { texto: "SI", cor: "#FF5252" },
+              { texto: "DA", cor: "#FFD740" },
+              { texto: "DE", cor: "#40C4FF" },
+            ],
+          },
+          {
+            palavra: "CONTINENTE",
+            silabas: [
+              { texto: "CON", cor: "#FFEA00" },
+              { texto: "TI", cor: "#FF4081" },
+              { texto: "NEN", cor: "#40C4FF" },
+              { texto: "TE", cor: "#FF5252" },
+            ],
+          },
+          {
+            palavra: "ECOSSISTEMA",
+            silabas: [
+              { texto: "E", cor: "#40C4FF" },
+              { texto: "COS", cor: "#EA80FC" },
+              { texto: "SIS", cor: "#FFD740" },
+              { texto: "TE", cor: "#69F0AE" },
+              { texto: "MA", cor: "#FF6D00" },
+            ],
+          },
+          {
+            palavra: "EXPERIENCIA",
+            silabas: [
+              { texto: "EX", cor: "#FF4081" },
+              { texto: "PE", cor: "#18FFFF" },
+              { texto: "RI", cor: "#B2FF59" },
+              { texto: "EN", cor: "#FF1744" },
+              { texto: "CIA", cor: "#E040FB" },
+            ],
+          },
+          {
+            palavra: "MATEMATICA",
+            silabas: [
+              { texto: "MA", cor: "#FFD740" },
+              { texto: "TE", cor: "#69F0AE" },
+              { texto: "MA", cor: "#FF6D00" },
+              { texto: "TI", cor: "#E040FB" },
+              { texto: "CA", cor: "#FF4081" },
+            ],
+          },
+        ],
+        5: [
+          {
+            palavra: "CONSTITUICAO",
+            silabas: [
+              { texto: "CON", cor: "#FF5252" },
+              { texto: "STI", cor: "#FFD740" },
+              { texto: "TUI", cor: "#40C4FF" },
+              { texto: "ÇÃO", cor: "#69F0AE" },
+            ],
+          },
+          {
+            palavra: "REVOLUCAO",
+            silabas: [
+              { texto: "RE", cor: "#FF6D00" },
+              { texto: "VO", cor: "#FFEA00" },
+              { texto: "LU", cor: "#EA80FC" },
+              { texto: "ÇÃO", cor: "#FF4081" },
+            ],
+          },
+          {
+            palavra: "DEMOCRACIA",
+            silabas: [
+              { texto: "DE", cor: "#FF5252" },
+              { texto: "MO", cor: "#FFD740" },
+              { texto: "CRA", cor: "#69F0AE" },
+              { texto: "CI", cor: "#40C4FF" },
+              { texto: "A", cor: "#E040FB" },
+            ],
+          },
+          {
+            palavra: "FOTOSSINTESE",
+            silabas: [
+              { texto: "FO", cor: "#B2FF59" },
+              { texto: "TOS", cor: "#FF6D00" },
+              { texto: "SIN", cor: "#18FFFF" },
+              { texto: "TE", cor: "#FF1744" },
+              { texto: "SE", cor: "#EA80FC" },
+            ],
+          },
+          {
+            palavra: "CIVILIZACAO",
+            silabas: [
+              { texto: "CI", cor: "#18FFFF" },
+              { texto: "VI", cor: "#B2FF59" },
+              { texto: "LI", cor: "#FF1744" },
+              { texto: "ZA", cor: "#FFEA00" },
+              { texto: "ÇÃO", cor: "#FF5252" },
+            ],
+          },
+          {
+            palavra: "ESTRELA",
+            silabas: [
+              { texto: "ES", cor: "#FFD740" },
+              { texto: "TRE", cor: "#69F0AE" },
+              { texto: "LA", cor: "#FF6D00" },
+            ],
+          },
+          {
+            palavra: "BORBOLETA",
+            silabas: [
+              { texto: "BOR", cor: "#FF6D00" },
+              { texto: "BO", cor: "#E040FB" },
+              { texto: "LE", cor: "#40C4FF" },
+              { texto: "TA", cor: "#FF5252" },
+            ],
+          },
+          {
+            palavra: "UNIVERSIDADE",
+            silabas: [
+              { texto: "U", cor: "#B2FF59" },
+              { texto: "NI", cor: "#18FFFF" },
+              { texto: "VER", cor: "#FF1744" },
+              { texto: "SI", cor: "#FF5252" },
+              { texto: "DA", cor: "#FFD740" },
+              { texto: "DE", cor: "#40C4FF" },
+            ],
+          },
+          {
+            palavra: "HIPOPOTAMO",
+            silabas: [
+              { texto: "HI", cor: "#18FFFF" },
+              { texto: "PO", cor: "#B2FF59" },
+              { texto: "PÓ", cor: "#FF1744" },
+              { texto: "TA", cor: "#EA80FC" },
+              { texto: "MO", cor: "#FF5252" },
+            ],
+          },
+          {
+            palavra: "TELESCOPIO",
+            silabas: [
+              { texto: "TE", cor: "#18FFFF" },
+              { texto: "LES", cor: "#B2FF59" },
+              { texto: "CÓ", cor: "#FF1744" },
+              { texto: "PI", cor: "#E040FB" },
+              { texto: "O", cor: "#FFD740" },
+            ],
+          },
+        ],
+      };
+
+      let serieAtual = 1;
+      let niveisAtuais = [];
+      let faseAtual = 0;
+      let silabasAtivas = [];
+      let estadoJogo = "menu";
+      let rodadaEncerrada = false;
+      let timeoutDerrota = null;
+      let timeoutVitoria = null;
+      let timeoutFimDeSerie = null;
+
+      let velMaxPolicia = 30;
+      let totalPoliciasAtivas = 1;
+      let objetosDestaFase = [];
+      let efeitosFogos = [];
+      let pontosJogador = 0;
+      let carroSelecionado = "classico";
+      let cooldownRampa = 0;
+      let atrasoPoliciaRestante = 0;
+      let tempoReforcoPolicia = 0;
+      let tempoContatoPolicia = 0;
+      const tempoCapturaPolicia = 0.8;
+      let cooldownImpactoColisao = 0;
+      let intensidadeImpactoVisual = 0;
+      const CHAVE_PONTOS = "corridaDoSaber:pontos";
+      const CHAVE_CARRO = "corridaDoSaber:carroSelecionado";
+      const CHAVE_CARROS_DESBLOQUEADOS = "corridaDoSaber:carrosDesbloqueados";
+      let carrosDesbloqueados = new Set(["classico"]);
+
+      const garagemCarros = {
+        classico: {
+          nome: "Clássico", visual: "classico", titulo: "Equilíbrio", custo: 0,
+          carroceria: 0xd64045, vidro: 0x1f2a44, detalhe: 0xffd166, asa: 0x90e0ef, faixa: 0xffd166, teto: 0x00a0ff,
+          velocidadeMaxima: 42, aceleracao: 52000, freio: 30000, curva: 1.9, tracao: 0.86,
+          impulsoRampa: 38, saltoRampa: 17.5, cameraAltura: 8, cameraDistancia: 20,
+          nivelVelocidade: 2, nivelAceleracao: 2, nivelControle: 3,
+        },
+        esportivo: {
+          nome: "Desportivo", visual: "esportivo", titulo: "Curvas Perfeitas", custo: 100,
+          carroceria: 0x1976d2, vidro: 0x102a43, detalhe: 0xffffff, asa: 0xffffff, faixa: 0xffffff, teto: 0xffffff,
+          velocidadeMaxima: 50, aceleracao: 65000, freio: 38000, curva: 2.2, tracao: 0.90,
+          impulsoRampa: 42, saltoRampa: 18.5, cameraAltura: 8, cameraDistancia: 19,
+          nivelVelocidade: 3, nivelAceleracao: 4, nivelControle: 4,
+        },
+        pickup: {
+          nome: "Monstro", visual: "pickup", titulo: "Peso Pesado", custo: 180,
+          carroceria: 0x2e7d32, vidro: 0x1b5e20, detalhe: 0x111111, asa: 0x4caf50, faixa: 0x111111, teto: 0x111111,
+          velocidadeMaxima: 43, aceleracao: 65000, freio: 40000, curva: 1.85, tracao: 0.95,
+          impulsoRampa: 35, saltoRampa: 16.5, cameraAltura: 9.5, cameraDistancia: 22,
+          nivelVelocidade: 3, nivelAceleracao: 4, nivelControle: 4,
+        },
+        f1: {
+          nome: "Fórmula Z", visual: "f1", titulo: "Velocidade Pura", custo: 250,
+          carroceria: 0xd50000, vidro: 0x000000, detalhe: 0xffeb3b, asa: 0xff0000, faixa: 0xffeb3b, teto: 0xffeb3b,
+          velocidadeMaxima: 65, aceleracao: 85000, freio: 45000, curva: 2.5, tracao: 0.85,
+          impulsoRampa: 48, saltoRampa: 20, cameraAltura: 7.2, cameraDistancia: 17.5,
+          nivelVelocidade: 5, nivelAceleracao: 5, nivelControle: 5,
+        },
+        hipercarro: {
+          nome: "Hipercarro", visual: "hiper", titulo: "Futurista", custo: 400,
+          carroceria: 0x6a0dad, vidro: 0x0b132b, detalhe: 0x90e0ef, asa: 0x90e0ef, faixa: 0x90e0ef, teto: 0x90e0ef,
+          velocidadeMaxima: 70, aceleracao: 90000, freio: 50000, curva: 2.3, tracao: 0.88,
+          impulsoRampa: 50, saltoRampa: 21, cameraAltura: 7.2, cameraDistancia: 17.5,
+          nivelVelocidade: 5, nivelAceleracao: 5, nivelControle: 4,
+        },
+      };
+
+      function criarEstadoPolicia() {
+        return {
+          tempoTravado: 0,
+          tempoRe: 0,
+          direcaoRe: 1,
+          tempoAereo: 0,
+          tempoCapotado: 0,
+        };
+      }
+
+      const policiais = [
+        {
+          corpo: policiaCorpo,
+          visual: policiaVisual,
+          estado: criarEstadoPolicia(),
+          forcaFrente: 65000,
+          forcaRe: 25000,
+        },
+        {
+          corpo: policia2Corpo,
+          visual: policia2Visual,
+          estado: criarEstadoPolicia(),
+          forcaFrente: 68000,
+          forcaRe: 25000,
+        },
+        {
+          corpo: policia3Corpo,
+          visual: policia3Visual,
+          estado: criarEstadoPolicia(),
+          forcaFrente: 70000,
+          forcaRe: 25000,
+        },
+        {
+          corpo: policia4Corpo,
+          visual: policia4Visual,
+          estado: criarEstadoPolicia(),
+          forcaFrente: 75000,
+          forcaRe: 25000,
+        },
+        {
+          corpo: policia5Corpo,
+          visual: policia5Visual,
+          estado: criarEstadoPolicia(),
+          forcaFrente: 80000,
+          forcaRe: 25000,
+        },
+      ];
+
+      if (typeof carroCorpo.addEventListener === "function") {
+        carroCorpo.addEventListener("collide", (evento) => {
+          if (!evento || !evento.contact) return;
+          const corpoAtingiu =
+            evento.contact.bi === carroCorpo
+              ? evento.contact.bj
+              : evento.contact.bi;
+          for (const policial of policiais) {
+            if (policial.corpo !== corpoAtingiu) continue;
+            lidarComColisaoEntreCarros(carroCorpo, policial.corpo);
+            break;
+          }
+        });
+      }
+
+      const botoesSerie = [...document.querySelectorAll(".btn-serie")];
+      const botoesCarro = [...document.querySelectorAll(".btn-carro")];
+      const botaoTrocarCarroJogo = document.getElementById(
+        "btn-trocar-carro-jogo",
+      );
+      const hudFase = document.getElementById("fase-info");
+      const alvoEmojiHud = document.getElementById("alvo-emoji-hud");
+      const infoSerie = document.getElementById("info-serie");
+      const infoPontos = document.getElementById("info-pontos");
+      const infoCarro = document.getElementById("info-carro");
+      const infoVelocidade = document.getElementById("info-velocidade");
+      const infoRisco = document.getElementById("info-risco");
+      const infoContato = document.getElementById("info-contato");
+      const barraRiscoPreenchimento = document.getElementById(
+        "barra-risco-preenchimento",
+      );
+      const efeitoVelocidade = document.getElementById("efeito-velocidade");
+      const impactoOverlay = document.getElementById("impacto-overlay");
+      const pontosMenu = document.getElementById("pontos-menu");
+      const mensagemVitoria = document.getElementById("mensagem-vitoria");
+      const subtituloVitoria = document.getElementById("subtitulo-vitoria");
+      const textoVitoria = document.getElementById("texto-vitoria");
+      const mensagemDerrota = document.getElementById("mensagem-derrota");
+      const dicasVisuais = {
+        BOLA: "⚽",
+        PATO: "🦆",
+        GATO: "🐱",
+        SAPO: "🐸",
+        MALA: "🧳",
+        FACA: "🔪",
+        BULE: "🫖",
+        VACA: "🐮",
+        DEDO: "🖐️",
+        RODA: "🛞",
+        MACACO: "🐒",
+        BANANA: "🍌",
+        CABELO: "💇",
+        CAVALO: "🐴",
+        TOMATE: "🍅",
+        JANELA: "🪟",
+        SAPATO: "👟",
+        BONECA: "🪆",
+        PALITO: "🥢",
+        ABELHA: "🐝",
+        FOGUETE: "🚀",
+        FLORESTA: "🌳",
+        CASTELO: "🏰",
+        BORRACHA: "🩹",
+        TARTARUGA: "🐢",
+        PARAFUSO: "🔩",
+        BICICLETA: "🚲",
+        AMARELO: "🟡",
+        PEIXINHO: "🐟",
+        MARGARIDA: "🌼",
+        ELEFANTE: "🐘",
+        CHOCOLATE: "🍫",
+        HIPOPOTAMO: "🦛",
+        PRINCIPAL: "⭐",
+        MARAVILHA: "✨",
+        TELESCOPIO: "🔭",
+        GELADEIRA: "🧊",
+        CARAMBOLA: "⭐",
+        PRIMAVERA: "🌸",
+        BORBOLETA: "🦋",
+        DEMOCRACIA: "🗳️",
+        FOTOSSINTESE: "🌿",
+        CONTINENTE: "🌎",
+        ESTRELA: "⭐",
+        MATEMATICA: "➗",
+        CIVILIZACAO: "🏛️",
+        ECOSSISTEMA: "🌱",
+        EXPERIENCIA: "🧪",
+        CONSTITUICAO: "📜",
+        REVOLUCAO: "⚙️",
+        UNIVERSIDADE: "🎓",
+      };
+
+      function limparTimeout(id) {
+        if (id) clearTimeout(id);
+        return null;
+      }
+
+      function limparTransicoes() {
+        timeoutDerrota = limparTimeout(timeoutDerrota);
+        timeoutVitoria = limparTimeout(timeoutVitoria);
+        timeoutFimDeSerie = limparTimeout(timeoutFimDeSerie);
+        mensagemVitoria.style.display = "none";
+        mensagemDerrota.style.display = "none";
+      }
+
+      function limparEfeitosFogos() {
+        for (const efeito of efeitosFogos) {
+          cena.remove(efeito.mesh);
+          efeito.mesh.geometry.dispose();
+          efeito.mesh.material.dispose();
+        }
+        efeitosFogos = [];
+      }
+
+      function zerarTeclas() {
+        for (const tecla of Object.keys(teclas)) teclas[tecla] = false;
+        document.querySelectorAll(".btn-touch").forEach((botao) => {
+          botao.classList.remove("ativo");
+        });
+      }
+
+      function resetarCorpo(corpo, x, y, z) {
+        corpo.position.set(x, y, z);
+        corpo.velocity.setZero();
+        corpo.angularVelocity.setZero();
+        corpo.force.setZero();
+        corpo.torque.setZero();
+        corpo.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 0);
+      }
+
+      function encontrarSpawnPolicial() {
+        const silabaAtiva = silabasAtivas[proximaSilaba];
+
+        for (let tentativa = 0; tentativa < 24; tentativa++) {
+          const angulo = Math.random() * Math.PI * 2;
+          const distancia = 52 + Math.random() * 54;
+          const candidatoX =
+            carroCorpo.position.x + Math.cos(angulo) * distancia;
+          const candidatoZ =
+            carroCorpo.position.z + Math.sin(angulo) * distancia;
+          const ponto = limitarPontoAoMapa(candidatoX, candidatoZ, 26);
+          const distJogador = Math.hypot(
+            carroCorpo.position.x - ponto.x,
+            carroCorpo.position.z - ponto.z,
+          );
+          const pertoDaSilabaAtiva =
+            silabaAtiva &&
+            !silabaAtiva.coletada &&
+            Math.hypot(
+              ponto.x - silabaAtiva.mesh.position.x,
+              ponto.z - silabaAtiva.mesh.position.z,
+            ) < 18;
+
+          if (
+            !pertoDaSilabaAtiva &&
+            distJogador > 42 &&
+            posicaoLivreNoMapa(ponto.x, ponto.z, 8)
+          ) {
+            return { x: ponto.x, y: 3.2, z: ponto.z };
+          }
+        }
+
+        const fallback = limitarPontoAoMapa(
+          carroCorpo.position.x + (Math.random() > 0.5 ? 72 : -72),
+          carroCorpo.position.z + (Math.random() > 0.5 ? 72 : -72),
+          26,
+        );
+        return {
+          x: fallback.x,
+          y: 3.2,
+          z: fallback.z,
+        };
+      }
+
+      function reposicionarPolicia(policial, indice) {
+        const spawn = encontrarSpawnPolicial(indice);
+        policial.spawn = spawn;
+        resetarCorpo(policial.corpo, spawn.x, spawn.y, spawn.z);
+        const yawJogador = Math.atan2(
+          carroCorpo.position.x - spawn.x,
+          -(carroCorpo.position.z - spawn.z),
+        );
+        policial.corpo.quaternion.setFromAxisAngle(
+          new CANNON.Vec3(0, 1, 0),
+          yawJogador,
+        );
+        policial.visual.visible = true;
+        policial.visual.position.set(spawn.x, spawn.y, spawn.z);
+        policial.visual.quaternion.copy(policial.corpo.quaternion);
+        resetarEstadoPolicia(policial.estado);
+        if (typeof policial.corpo.wakeUp === "function")
+          policial.corpo.wakeUp();
+      }
+
+      function resetarPosicoes() {
+        resetarCorpo(carroCorpo, 0, 3, 20);
+        for (let i = 0; i < policiais.length; i++) {
+          reposicionarPolicia(policiais[i], i);
+        }
+        atrasoPoliciaRestante = 1.15;
+        tempoReforcoPolicia = 0;
+        tempoContatoPolicia = 0;
+        cooldownImpactoColisao = 0;
+        intensidadeImpactoVisual = 0;
+        cameraPosicaoSuave.set(0, 0, 0);
+        cameraAlvoSuave.set(0, 0, 0);
+        if (efeitoVelocidade) efeitoVelocidade.style.opacity = "0";
+        if (impactoOverlay) impactoOverlay.style.opacity = "0";
+        atualizarIndicadorContato();
+      }
+
+      function resetarEstadoPolicia(estado) {
+        estado.tempoTravado = 0;
+        estado.tempoRe = 0;
+        estado.direcaoRe = 1;
+        estado.tempoAereo = 0;
+        estado.tempoCapotado = 0;
+      }
+
+      function exibirVitoria(subtitulo, texto) {
+        subtituloVitoria.textContent = subtitulo;
+        textoVitoria.textContent = texto;
+        mensagemVitoria.style.display = "block";
+      }
+
+      function atualizarDicaVisual(palavra) {
+        alvoEmojiHud.textContent = dicasVisuais[palavra] || "🎯";
+      }
+
+      function atualizarPainelPontos() {
+        infoPontos.textContent = String(pontosJogador);
+        pontosMenu.textContent = `Pontos: ${pontosJogador}`;
+      }
+
+      function atualizarIndicadorContato() {
+        const progresso = THREE.MathUtils.clamp(
+          tempoContatoPolicia / tempoCapturaPolicia,
+          0,
+          1,
+        );
+        if (infoRisco) {
+          infoRisco.textContent =
+            progresso >= 0.75
+              ? "Pegando!"
+              : progresso >= 0.3
+                ? "Perigo"
+                : "Livre";
+        }
+        if (infoContato) {
+          infoContato.textContent = `Contato ${Math.round(progresso * 100)}%`;
+        }
+        if (barraRiscoPreenchimento) {
+          barraRiscoPreenchimento.style.width = `${Math.round(progresso * 100)}%`;
+          barraRiscoPreenchimento.style.filter =
+            progresso >= 0.75 ? "saturate(1.25) brightness(1.1)" : "none";
+        }
+      }
+
+      function aplicarImpactoVisual(intensidade) {
+        intensidadeImpactoVisual = Math.max(
+          intensidadeImpactoVisual,
+          intensidade,
+        );
+        if (impactoOverlay) {
+          impactoOverlay.style.opacity = intensidadeImpactoVisual.toFixed(3);
+        }
+      }
+
+      function lidarComColisaoEntreCarros(corpoJogador, corpoPolicial) {
+        if (cooldownImpactoColisao > 0 || rodadaEncerrada) return;
+
+        const dx = corpoJogador.position.x - corpoPolicial.position.x;
+        const dz = corpoJogador.position.z - corpoPolicial.position.z;
+        const distancia = Math.hypot(dx, dz) || 1;
+        const direcaoX = dx / distancia;
+        const direcaoZ = dz / distancia;
+        const velocidadeRelativa = Math.hypot(
+          corpoPolicial.velocity.x - corpoJogador.velocity.x,
+          corpoPolicial.velocity.z - corpoJogador.velocity.z,
+        );
+        const impulso = THREE.MathUtils.clamp(
+          2.8 + velocidadeRelativa * 0.18,
+          2.8,
+          7.2,
+        );
+
+        corpoJogador.velocity.x += direcaoX * impulso;
+        corpoJogador.velocity.z += direcaoZ * impulso;
+        corpoPolicial.velocity.x -= direcaoX * impulso * 0.38;
+        corpoPolicial.velocity.z -= direcaoZ * impulso * 0.38;
+        cooldownImpactoColisao = 0.12;
+        aplicarImpactoVisual(THREE.MathUtils.clamp(impulso / 8, 0.22, 0.6));
+      }
+
+      function jogadorEstaEncostandoNaPolicia() {
+        for (let i = 0; i < mundoFisica.contacts.length; i++) {
+          const contato = mundoFisica.contacts[i];
+          const corpoA = contato.bi;
+          const corpoB = contato.bj;
+          if (corpoA !== carroCorpo && corpoB !== carroCorpo) continue;
+
+          const outroCorpo = corpoA === carroCorpo ? corpoB : corpoA;
+          for (let idx = 0; idx < totalPoliciasAtivas; idx++) {
+            if (policiais[idx].corpo === outroCorpo) return true;
+          }
+        }
+        return false;
+      }
+
+      function atualizarCapturaPorContato(delta) {
+        if (rodadaEncerrada || atrasoPoliciaRestante > 0) {
+          tempoContatoPolicia = Math.max(0, tempoContatoPolicia - delta * 2.2);
+          atualizarIndicadorContato();
+          return;
+        }
+
+        if (jogadorEstaEncostandoNaPolicia()) {
+          tempoContatoPolicia = Math.min(
+            tempoCapturaPolicia,
+            tempoContatoPolicia + delta,
+          );
+        } else {
+          tempoContatoPolicia = Math.max(0, tempoContatoPolicia - delta * 1.6);
+        }
+
+        atualizarIndicadorContato();
+        if (tempoContatoPolicia >= tempoCapturaPolicia) {
+          iniciarDerrota();
+        }
+      }
+
+      function salvarProgressoLocal() {
+        try {
+          localStorage.setItem(CHAVE_PONTOS, String(pontosJogador));
+          localStorage.setItem(CHAVE_CARRO, carroSelecionado);
+          localStorage.setItem(
+            CHAVE_CARROS_DESBLOQUEADOS,
+            JSON.stringify([...carrosDesbloqueados]),
+          );
+        } catch {}
+      }
+
+      function carregarProgressoLocal() {
+        try {
+          const pontosSalvos = Number(
+            localStorage.getItem(CHAVE_PONTOS) || "0",
+          );
+          const carroSalvo = localStorage.getItem(CHAVE_CARRO) || "classico";
+          const carrosSalvos = JSON.parse(
+            localStorage.getItem(CHAVE_CARROS_DESBLOQUEADOS) || '["classico"]',
+          );
+          pontosJogador = Number.isFinite(pontosSalvos)
+            ? Math.max(0, pontosSalvos)
+            : 0;
+          carrosDesbloqueados = new Set(
+            Array.isArray(carrosSalvos) ? carrosSalvos : ["classico"],
+          );
+          carrosDesbloqueados.add("classico");
+          carroSelecionado = garagemCarros[carroSalvo]
+            ? carroSalvo
+            : "classico";
+          if (!carrosDesbloqueados.has(carroSelecionado))
+            carroSelecionado = "classico";
+        } catch {
+          pontosJogador = 0;
+          carrosDesbloqueados = new Set(["classico"]);
+          carroSelecionado = "classico";
+        }
+      }
+
+      function obterCarroAtual() {
+        return garagemCarros[carroSelecionado] || garagemCarros.classico;
+      }
+
+      function hexParaCss(valor) {
+        return `#${valor.toString(16).padStart(6, "0")}`;
+      }
+
+      function montarCardCarro(modelo, desbloqueado, equipado) {
+        const meta = desbloqueado
+          ? equipado
+            ? "Equipado"
+            : "Disponível"
+          : `Desbloquear por ${modelo.custo} pts`;
+
+        return `
+          <span class="carro-preview" aria-hidden="true">
+            <span class="carro-preview__aura"></span>
+            <span class="carro-preview__body"></span>
+            <span class="carro-preview__cabine"></span>
+            <span class="carro-preview__faixa"></span>
+            <span class="carro-preview__nariz"></span>
+            <span class="carro-preview__rodas"></span>
+            <span class="carro-preview__spoiler"></span>
+            <span class="carro-preview__asa"></span>
+            <span class="carro-preview__entrada-esq"></span>
+            <span class="carro-preview__entrada-dir"></span>
+          </span>
+          <span class="btn-carro-titulo">${modelo.nome}</span>
+          <span class="btn-carro-meta">${modelo.titulo} • ${meta}</span>
+          <span class="btn-carro-stats">
+            <span>Vel ${modelo.nivelVelocidade}/5</span>
+            <span>Acel ${modelo.nivelAceleracao}/5</span>
+            <span>Ctrl ${modelo.nivelControle}/5</span>
+          </span>
+        `;
+      }
+
+      function aplicarModeloCarro() {
+        const modelo = obterCarroAtual();
+        reconstruirMalhasDoCarro(modelo);
+      }
+
+      function atualizarGaragemUI(reconstruirCards = estadoJogo === "menu") {
+        const carroAtual = obterCarroAtual();
+        if (reconstruirCards) {
+          botoesCarro.forEach((botao) => {
+            const id = botao.dataset.carro;
+            const modelo = garagemCarros[id];
+            const desbloqueado = carrosDesbloqueados.has(id);
+            const podeComprar = pontosJogador >= modelo.custo;
+            botao.classList.toggle("travado", !desbloqueado && !podeComprar);
+            botao.classList.toggle(
+              "pode-comprar",
+              !desbloqueado && podeComprar,
+            );
+            botao.classList.toggle("ativo", carroSelecionado === id);
+            botao.classList.remove(
+              "visual-classico",
+              "visual-esportivo",
+              "visual-pickup",
+              "visual-f1",
+              "visual-hiper"
+            );
+            botao.classList.add(`visual-${modelo.visual}`);
+            botao.style.setProperty("--preview-body", hexParaCss(modelo.carroceria));
+            botao.style.setProperty("--preview-glass", hexParaCss(modelo.vidro));
+            botao.style.setProperty("--preview-stripe", hexParaCss(modelo.faixa));
+            botao.style.setProperty("--preview-accent", hexParaCss(modelo.asa));
+            botao.setAttribute(
+              "aria-label",
+              `${modelo.nome}, velocidade ${modelo.nivelVelocidade} de 5 e aceleração ${modelo.nivelAceleracao} de 5`,
+            );
+            botao.innerHTML = montarCardCarro(
+              modelo,
+              desbloqueado,
+              carroSelecionado === id,
+            );
+          });
+        }
+        botaoTrocarCarroJogo.textContent = `${carroAtual.nome} • Vel ${carroAtual.nivelVelocidade}/5`;
+        if (infoCarro) infoCarro.textContent = carroAtual.nome;
+        if (infoVelocidade) {
+          infoVelocidade.textContent = `Vel ${carroAtual.nivelVelocidade} • Acel ${carroAtual.nivelAceleracao}`;
+        }
+      }
+
+      function adicionarPontos(valor) {
+        pontosJogador += valor;
+        atualizarPainelPontos();
+        atualizarGaragemUI();
+        salvarProgressoLocal();
+      }
+
+      function trocarParaProximoCarro() {
+        const idsDisponiveis = Object.keys(garagemCarros).filter((id) =>
+          carrosDesbloqueados.has(id),
+        );
+        const indiceAtual = idsDisponiveis.indexOf(carroSelecionado);
+        const proximoId =
+          idsDisponiveis[
+            (indiceAtual + 1 + idsDisponiveis.length) % idsDisponiveis.length
+          ];
+        carroSelecionado = proximoId;
+        aplicarModeloCarro();
+        atualizarGaragemUI();
+        salvarProgressoLocal();
+      }
+
+      function configurarDificuldadeDaFase(indice) {
+        totalPoliciasAtivas = Math.min(indice + 1, 5);
+      }
+
+      function sincronizarVisibilidadePolicias() {
+        policiais.forEach((policial, idx) => {
+          const ativa = idx < totalPoliciasAtivas;
+          policial.visual.visible = ativa;
+          if (ativa) {
+            const dx = policial.corpo.position.x - carroCorpo.position.x;
+            const dz = policial.corpo.position.z - carroCorpo.position.z;
+            const distancia = Math.hypot(dx, dz);
+            if (
+              policial.corpo.position.y < 0.5 ||
+              !Number.isFinite(policial.corpo.position.x) ||
+              !Number.isFinite(policial.corpo.position.z) ||
+              distancia > 90
+            ) {
+              reposicionarPolicia(policial, idx);
+            }
+            policial.corpo.position.y = Math.max(policial.corpo.position.y, 3);
+            if (typeof policial.corpo.wakeUp === "function")
+              policial.corpo.wakeUp();
+          } else {
+            policial.corpo.position.y = -50;
+            policial.visual.position.copy(policial.corpo.position);
+          }
+        });
+      }
+
+      function voltarAoMenu() {
+        limparTransicoes();
+        limparObjetosRegistrados(objetosDestaFase);
+        limparObjetosRegistrados(objetosDoMapa);
+        silabasAtivas = [];
+        proximaSilaba = 0;
+        rodadaEncerrada = false;
+        tempoContatoPolicia = 0;
+        limparEfeitosFogos();
+        zerarTeclas();
+        policiais.forEach((policial) => resetarEstadoPolicia(policial.estado));
+        subtituloVitoria.textContent = "";
+        textoVitoria.textContent = "";
+        hudFase.textContent = "SÉRIE 1 · FASE 1";
+        infoSerie.textContent = "1º Ano";
+        alvoEmojiHud.textContent = "🎯";
+        atualizarHUD();
+        atualizarIndicadorContato();
+        estadoJogo = "menu";
+        document.getElementById("interface-jogo").style.display = "none";
+        document.getElementById("menu-inicial").style.display = "grid";
+        resetarPosicoes();
+        policiais.forEach((policial) => {
+          policial.corpo.position.y = -50;
+        });
+        sincronizarVisibilidadePolicias();
+        carroVisual.position.copy(carroCorpo.position);
+        carroVisual.quaternion.copy(carroCorpo.quaternion);
+        policiais.forEach((policial) => {
+          policial.visual.position.copy(policial.corpo.position);
+          policial.visual.quaternion.copy(policial.corpo.quaternion);
+        });
+      }
+
+      // ==========================================
+      // 5. INICIALIZAÇÃO E CORREÇÃO DE CONTRASTE
+      // ==========================================
+      const cacheTexturasSilabas = new Map();
+      const geoSilaba = new THREE.BoxGeometry(3.8, 3.8, 3.8);
+
+      function criarTexturaTexto(texto, corFundo) {
+        const chave = `${texto}|${corFundo}`;
+        if (cacheTexturasSilabas.has(chave))
+          return cacheTexturasSilabas.get(chave);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = 256;
+        canvas.height = 256;
+        const ctx = canvas.getContext("2d");
+
+        // Fundo da cor escolhida
+        ctx.fillStyle = corFundo;
+        ctx.fillRect(0, 0, 256, 256);
+
+        // Configurações da Fonte
+        ctx.font = "Bold 100px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // CORREÇÃO: Contorno preto grosso para a letra se destacar em qualquer fundo
+        ctx.lineWidth = 10;
+        ctx.strokeStyle = "black";
+        ctx.strokeText(texto, 128, 128);
+
+        // Miolo da letra em branco
+        ctx.fillStyle = "white";
+        ctx.fillText(texto, 128, 128);
+
+        const textura = new THREE.CanvasTexture(canvas);
+        cacheTexturasSilabas.set(chave, textura);
+        return textura;
+      }
+
+      function iniciarJogo(ano) {
+        serieAtual = ano;
+        niveisAtuais = bancoDeFases[ano];
+        faseAtual = 0;
+        velMaxPolicia = obterCarroAtual().velocidadeMaxima * 0.95;
+        rodadaEncerrada = false;
+        tempoContatoPolicia = 0;
+        limparTransicoes();
+        zerarTeclas();
+        areasOcupadasMapa = [];
+
+        // Limpa objetos do mapa anterior (caso reuse)
+        limparObjetosRegistrados(objetosDoMapa);
+        limparObjetosRegistrados(objetosDestaFase);
+
+        // === RAMPAS ALEATÓRIAS (5 a 7 rampas em posições variadas) ===
+        const numRampas = 5 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < numRampas; i++) {
+          let rx = (Math.random() - 0.5) * 240;
+          let rz = (Math.random() - 0.5) * 240;
+          if (Math.abs(rx) < 20 && Math.abs(rz) < 20) {
+            rx += 40;
+            rz += 40;
+          }
+          objetosDoMapa.push(criarRampa(rx, rz, Math.random() * Math.PI * 2));
+        }
+
+        // === OBSTÁCULOS ALEATÓRIOS (árvores e pedras) ===
+        let quantidadeObstaculos = 40 + ano * 12;
+        for (let i = 0; i < quantidadeObstaculos; i++) {
+          let x = (Math.random() - 0.5) * 320;
+          let z = (Math.random() - 0.5) * 320;
+          // Área segura ao redor do spawn do jogador (0,0,20)
+          if (Math.abs(x) < 25 && Math.abs(z - 20) < 25) continue;
+          if (Math.random() > 0.35) {
+            objetosDoMapa.push(criarArvore(x, z));
+          } else {
+            objetosDoMapa.push(criarPedra(x, z, 3 + Math.random() * 5));
+          }
+        }
+
+        const quantidadeArbustos = 18 + ano * 5;
+        for (let i = 0; i < quantidadeArbustos; i++) {
+          const x = (Math.random() - 0.5) * 300;
+          const z = (Math.random() - 0.5) * 300;
+          if (!posicaoLivreNoMapa(x, z, 7)) continue;
+          objetosDoMapa.push(criarArbusto(x, z, 2 + Math.random() * 1.5));
+        }
+
+        const quantidadeCones = 10 + ano * 3;
+        for (let i = 0; i < quantidadeCones; i++) {
+          const x = (Math.random() - 0.5) * 260;
+          const z = (Math.random() - 0.5) * 260;
+          if (!posicaoLivreNoMapa(x, z, 5)) continue;
+          objetosDoMapa.push(criarCone(x, z, 1.2 + Math.random() * 0.6));
+        }
+
+        const quantidadeCaixas = 8 + ano * 2;
+        for (let i = 0; i < quantidadeCaixas; i++) {
+          const x = (Math.random() - 0.5) * 260;
+          const z = (Math.random() - 0.5) * 260;
+          if (!posicaoLivreNoMapa(x, z, 8)) continue;
+          objetosDoMapa.push(
+            criarCaixa(
+              x,
+              z,
+              3 + Math.random() * 3,
+              2.5 + Math.random() * 2,
+              3 + Math.random() * 3,
+            ),
+          );
+        }
+
+        document.getElementById("menu-inicial").style.display = "none";
+        document.getElementById("interface-jogo").style.display = "block";
+
+        carregarFase(0);
+      }
+
+      // índice da próxima sílaba a ser coletada (lógica em ordem)
+      let proximaSilaba = 0;
+
+      function atualizarHUD() {
+        const container = document.getElementById("blocos-silabas");
+        container.innerHTML = "";
+        for (let i = 0; i < silabasAtivas.length; i++) {
+          const s = silabasAtivas[i];
+          const bloco = document.createElement("div");
+          bloco.className = "bloco-silaba";
+          bloco.id = "bloco-" + i;
+          bloco.style.setProperty("--cor", s.corHex);
+          if (s.coletada) {
+            bloco.classList.add("coletada");
+            bloco.textContent = s.texto;
+          } else if (i === proximaSilaba) {
+            bloco.classList.add("proxima");
+            bloco.textContent = s.texto; // mostra a sílaba alvo
+          } else {
+            bloco.textContent = "?";
+          }
+          container.appendChild(bloco);
+        }
+      }
+
+      function carregarFase(indice) {
+        limparTransicoes();
+        limparObjetosRegistrados(objetosDestaFase);
+        limparEfeitosFogos();
+        silabasAtivas = [];
+        proximaSilaba = 0;
+        rodadaEncerrada = false;
+        tempoContatoPolicia = 0;
+        policiais.forEach((policial) => resetarEstadoPolicia(policial.estado));
+        configurarDificuldadeDaFase(indice);
+
+        if (indice >= niveisAtuais.length) {
+          exibirVitoria(
+            `VOCÊ COMPLETOU O ${serieAtual}º ANO!`,
+            niveisAtuais[indice - 1]?.palavra || "FIM",
+          );
+          estadoJogo = "zerado";
+          timeoutFimDeSerie = setTimeout(() => {
+            voltarAoMenu();
+          }, 4000);
+          return;
+        }
+
+        const fase = niveisAtuais[indice];
+        hudFase.textContent = `${serieAtual}º ANO · FASE ${indice + 1} / ${niveisAtuais.length}`;
+        infoSerie.textContent = `${serieAtual}º Ano`;
+        atualizarDicaVisual(fase.palavra);
+
+        // Gera posições aleatórias para as sílabas, longe do centro e entre si
+        const posicoesSilabas = [];
+        for (let i = 0; i < fase.silabas.length; i++) {
+          posicoesSilabas.push(
+            encontrarPosicaoLivreParaSilaba(posicoesSilabas),
+          );
+        }
+
+        for (let i = 0; i < fase.silabas.length; i++) {
+          const dados = fase.silabas[i];
+          const pos = posicoesSilabas[i];
+          const texturaSilaba = criarTexturaTexto(dados.texto, dados.cor);
+          const materialSilaba = new THREE.MeshLambertMaterial({
+            map: texturaSilaba,
+          });
+          const malha = new THREE.Mesh(geoSilaba, materialSilaba);
+          malha.position.set(pos.x, 1.9, pos.z);
+          malha.castShadow = true;
+
+          const luzSilaba = new THREE.PointLight(dados.cor, 2, 40);
+          luzSilaba.position.set(pos.x, 1.9, pos.z);
+
+          // Só a 1ª sílaba começa visível; as demais ficam escondidas (scale 0)
+          if (i > 0) {
+            malha.scale.set(0, 0, 0);
+            luzSilaba.intensity = 0;
+          }
+
+          cena.add(malha);
+          cena.add(luzSilaba);
+          objetosDestaFase.push(
+            registrarObjeto({
+              visual: malha,
+              luz: luzSilaba,
+              descartavel: false,
+              aoRemover: () => {
+                materialSilaba.dispose();
+              },
+            }),
+          );
+
+          silabasAtivas.push({
+            mesh: malha,
+            luz: luzSilaba,
+            texto: dados.texto,
+            corHex: dados.cor,
+            coletada: false,
+            yBase: 1.9,
+          });
+        }
+
+        atualizarHUD();
+        resetarPosicoes();
+        sincronizarVisibilidadePolicias();
+        carroVisual.position.copy(carroCorpo.position);
+        carroVisual.quaternion.copy(carroCorpo.quaternion);
+        policiais.forEach((policial) => {
+          policial.visual.position.copy(policial.corpo.position);
+          policial.visual.quaternion.copy(policial.corpo.quaternion);
+        });
+
+        estadoJogo = "jogando";
+      }
+
+      // ==========================================
+      // 6. LÓGICA DO MOTOR
+      // ==========================================
+      const teclas = {};
+      function definirTecla(code, ativa) {
+        teclas[code] = ativa;
+      }
+
+      window.addEventListener("keydown", (e) => definirTecla(e.code, true));
+      window.addEventListener("keyup", (e) => definirTecla(e.code, false));
+      window.addEventListener("blur", zerarTeclas);
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) zerarTeclas();
+      });
+
+      botoesSerie.forEach((botao) => {
+        botao.addEventListener("click", () => {
+          iniciarJogo(Number(botao.dataset.ano));
+        });
+      });
+      botoesCarro.forEach((botao) => {
+        botao.addEventListener("click", () => {
+          const id = botao.dataset.carro;
+          const modelo = garagemCarros[id];
+          if (!carrosDesbloqueados.has(id)) {
+            if (pontosJogador < modelo.custo) return;
+            pontosJogador -= modelo.custo;
+            carrosDesbloqueados.add(id);
+            atualizarPainelPontos();
+          }
+          carroSelecionado = id;
+          aplicarModeloCarro();
+          atualizarGaragemUI();
+          salvarProgressoLocal();
+        });
+      });
+      botaoTrocarCarroJogo.addEventListener("click", trocarParaProximoCarro);
+      carregarProgressoLocal();
+      atualizarPainelPontos();
+      atualizarGaragemUI();
+      aplicarModeloCarro();
+      atualizarIndicadorContato();
+
+      function bindTouch(id, code) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        const ativar = (e) => {
+          if (e) e.preventDefault();
+          definirTecla(code, true);
+          el.classList.add("ativo");
+        };
+        const desativar = (e) => {
+          if (e) e.preventDefault();
+          definirTecla(code, false);
+          el.classList.remove("ativo");
+        };
+
+        el.addEventListener("touchstart", ativar, { passive: false });
+        el.addEventListener("touchend", desativar, { passive: false });
+        el.addEventListener("touchcancel", desativar, { passive: false });
+        el.addEventListener("mousedown", ativar);
+        el.addEventListener("mouseup", desativar);
+        el.addEventListener("mouseleave", desativar);
+      }
+      bindTouch("btn-cima", "ArrowUp");
+      bindTouch("btn-baixo", "ArrowDown");
+      bindTouch("btn-esq", "ArrowLeft");
+      bindTouch("btn-dir", "ArrowRight");
+
+      const relogio = new THREE.Clock();
+      let anguloMenu = 0;
+
+      function estaNoChao(corpo) {
+        for (let i = 0; i < mundoFisica.contacts.length; i++) {
+          const contato = mundoFisica.contacts[i];
+          let outroCorpo = null;
+
+          if (contato.bi === corpo) {
+            outroCorpo = contato.bj;
+          } else if (contato.bj === corpo) {
+            outroCorpo = contato.bi;
+          }
+
+          if (!outroCorpo || !corposDePiso.has(outroCorpo)) continue;
+          if (Math.abs(contato.ni.y) > 0.15) return true;
+        }
+        return false;
+      }
+
+      function manterDentroDoMapa(corpo) {
+        const limite = tamanhoMapa / 2 - 16;
+        corpo.position.x = THREE.MathUtils.clamp(
+          corpo.position.x,
+          -limite,
+          limite,
+        );
+        corpo.position.z = THREE.MathUtils.clamp(
+          corpo.position.z,
+          -limite,
+          limite,
+        );
+      }
+
+      function criarFogosSilaba(posicao, corHex) {
+        const cor = new THREE.Color(corHex);
+        for (let i = 0; i < 16; i++) {
+          const particula = new THREE.Mesh(
+            new THREE.SphereGeometry(0.22 + Math.random() * 0.12, 6, 6),
+            new THREE.MeshBasicMaterial({
+              color: cor,
+              transparent: true,
+              opacity: 1,
+            }),
+          );
+          particula.position.copy(posicao);
+          cena.add(particula);
+          efeitosFogos.push({
+            mesh: particula,
+            velocidade: new THREE.Vector3(
+              (Math.random() - 0.5) * 8,
+              4 + Math.random() * 6,
+              (Math.random() - 0.5) * 8,
+            ),
+            vida: 0.7 + Math.random() * 0.4,
+          });
+        }
+      }
+
+      function atualizarFogos(delta) {
+        efeitosFogos = efeitosFogos.filter((efeito) => {
+          efeito.vida -= delta;
+          if (efeito.vida <= 0) {
+            cena.remove(efeito.mesh);
+            efeito.mesh.geometry.dispose();
+            efeito.mesh.material.dispose();
+            return false;
+          }
+
+          efeito.velocidade.y -= 12 * delta;
+          efeito.mesh.position.x += efeito.velocidade.x * delta;
+          efeito.mesh.position.y += efeito.velocidade.y * delta;
+          efeito.mesh.position.z += efeito.velocidade.z * delta;
+          efeito.mesh.material.opacity = Math.max(efeito.vida, 0);
+          efeito.mesh.scale.setScalar(0.8 + efeito.vida * 0.5);
+          return true;
+        });
+      }
+
+      function estaEmRampa(corpo) {
+        for (let i = 0; i < mundoFisica.contacts.length; i++) {
+          const contato = mundoFisica.contacts[i];
+          const outroCorpo =
+            contato.bi === corpo
+              ? contato.bj
+              : contato.bj === corpo
+                ? contato.bi
+                : null;
+          if (outroCorpo && corposRampas.has(outroCorpo)) return true;
+        }
+        return false;
+      }
+
+      function reposicionarCarroSeCapotado(delta) {
+        if (!reposicionarCarroSeCapotado.tempo)
+          reposicionarCarroSeCapotado.tempo = 0;
+
+        let cima = new CANNON.Vec3(0, 1, 0);
+        carroCorpo.quaternion.vmult(cima, cima);
+        const velocidade = carroCorpo.velocity.length();
+        const capotadoOuDeLado = cima.y < 0.18;
+
+        if (capotadoOuDeLado && velocidade < 5) {
+          reposicionarCarroSeCapotado.tempo += delta;
+        } else {
+          reposicionarCarroSeCapotado.tempo = 0;
+        }
+
+        if (reposicionarCarroSeCapotado.tempo >= 1.1) {
+          reposicionarCarroSeCapotado.tempo = 0;
+          carroCorpo.position.y += 3.2;
+          carroCorpo.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 0);
+          carroCorpo.velocity.set(0, 0, 0);
+          carroCorpo.angularVelocity.set(0, 0, 0);
+        }
+      }
+
+      function limitarVelocidadeHorizontal(corpo, limite) {
+        const velocidadeHorizontal = Math.hypot(
+          corpo.velocity.x,
+          corpo.velocity.z,
+        );
+        if (velocidadeHorizontal <= limite) return;
+
+        const escala = limite / velocidadeHorizontal;
+        corpo.velocity.x *= escala;
+        corpo.velocity.z *= escala;
+      }
+
+      function aplicarForcaDirecional(corpo, intensidade) {
+        const direcao = new CANNON.Vec3(0, 0, -1);
+        corpo.quaternion.vmult(direcao, direcao);
+        corpo.applyForce(
+          new CANNON.Vec3(direcao.x * intensidade, 0, direcao.z * intensidade),
+          corpo.position,
+        );
+      }
+
+      function obterDirecaoFrente(corpo) {
+        const direcao = new CANNON.Vec3(0, 0, -1);
+        corpo.quaternion.vmult(direcao, direcao);
+        return direcao;
+      }
+
+      function obterVelocidadeFrontal(corpo) {
+        const frente = obterDirecaoFrente(corpo);
+        return corpo.velocity.x * frente.x + corpo.velocity.z * frente.z;
+      }
+
+      function obterYawCorpo(corpo) {
+        const frente = obterDirecaoFrente(corpo);
+        return Math.atan2(frente.x, -frente.z);
+      }
+
+      function normalizarAngulo(angulo) {
+        while (angulo > Math.PI) angulo -= Math.PI * 2;
+        while (angulo < -Math.PI) angulo += Math.PI * 2;
+        return angulo;
+      }
+
+      function limitarPontoAoMapa(x, z, margem = 18) {
+        const limite = tamanhoMapa / 2 - margem;
+        return {
+          x: THREE.MathUtils.clamp(x, -limite, limite),
+          z: THREE.MathUtils.clamp(z, -limite, limite),
+        };
+      }
+
+      function endireitarCorpoNoYaw(corpo) {
+        const yaw = obterYawCorpo(corpo);
+        corpo.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), yaw);
+      }
+
+      function aplicarTracaoLateral(corpo, intensidade = 0.86) {
+        const frente = obterDirecaoFrente(corpo);
+        const lateral = new CANNON.Vec3(-frente.z, 0, frente.x);
+        const velocidadeLateral =
+          corpo.velocity.x * lateral.x + corpo.velocity.z * lateral.z;
+
+        corpo.velocity.x -= lateral.x * velocidadeLateral * intensidade;
+        corpo.velocity.z -= lateral.z * velocidadeLateral * intensidade;
+      }
+
+      function iniciarDerrota() {
+        if (rodadaEncerrada) return;
+        if (pontosJogador > 0) {
+          pontosJogador = Math.max(0, pontosJogador - 25);
+          atualizarPainelPontos();
+          atualizarGaragemUI();
+          salvarProgressoLocal();
+        }
+        rodadaEncerrada = true;
+        estadoJogo = "derrota";
+        mensagemDerrota.style.display = "block";
+        timeoutDerrota = setTimeout(() => {
+          mensagemDerrota.style.display = "none";
+          carregarFase(faseAtual);
+        }, 3000);
+      }
+
+      function atualizarIApolicia({
+        corpo,
+        visual,
+        estado,
+        alvo,
+        delta,
+        velMaxima,
+        forcaFrente,
+        forcaRe,
+      }) {
+        let vetorCima = new CANNON.Vec3(0, 1, 0);
+        corpo.quaternion.vmult(vetorCima, vetorCima);
+        const orientado = vetorCima.y > 0.4;
+        const noChao = orientado && estaNoChao(corpo);
+        const velocidadeHorizontal = Math.hypot(
+          corpo.velocity.x,
+          corpo.velocity.z,
+        );
+        const velocidadeFrontal = obterVelocidadeFrontal(corpo);
+        const alvoDx = alvo.x - corpo.position.x;
+        const alvoDz = alvo.z - corpo.position.z;
+        const distanciaAlvo = Math.hypot(alvoDx, alvoDz);
+
+        estado.tempoAereo = noChao ? 0 : estado.tempoAereo + delta;
+        estado.tempoCapotado = orientado ? 0 : estado.tempoCapotado + delta;
+
+        if (
+          !Number.isFinite(corpo.position.x) ||
+          !Number.isFinite(corpo.position.z) ||
+          corpo.position.y < -5 ||
+          corpo.position.y > 14 ||
+          estado.tempoAereo > 1.4 ||
+          estado.tempoCapotado > 0.9
+        ) {
+          return false;
+        }
+
+        if (!orientado && velocidadeHorizontal < 1.5) {
+          corpo.position.y += 3;
+          endireitarCorpoNoYaw(corpo);
+          corpo.velocity.set(0, 0, 0);
+          corpo.angularVelocity.set(0, 0, 0);
+          resetarEstadoPolicia(estado);
+          return true;
+        }
+
+        if (!noChao) {
+          corpo.velocity.x *= 0.994;
+          corpo.velocity.z *= 0.994;
+          corpo.angularVelocity.x *= 0.82;
+          corpo.angularVelocity.z *= 0.82;
+          corpo.angularVelocity.y *= 0.95;
+        } else {
+          const anguloAlvo = Math.atan2(alvoDx, -alvoDz);
+          const yawAtual = obterYawCorpo(corpo);
+          const diffAngulo = normalizarAngulo(anguloAlvo - yawAtual);
+
+          aplicarTracaoLateral(corpo, 0.88);
+          corpo.angularVelocity.x = 0;
+          corpo.angularVelocity.z = 0;
+
+          if (
+            estado.tempoRe <= 0 &&
+            distanciaAlvo > 7 &&
+            velocidadeHorizontal < 1.6 &&
+            Math.abs(velocidadeFrontal) < 1.05
+          ) {
+            estado.tempoTravado += delta;
+          } else {
+            estado.tempoTravado = Math.max(
+              0,
+              estado.tempoTravado - delta * 1.6,
+            );
+          }
+
+          if (estado.tempoTravado > 0.72) {
+            estado.tempoRe = 0.42;
+            estado.tempoTravado = 0;
+            estado.direcaoRe = diffAngulo >= 0 ? -1 : 1;
+          }
+
+          if (estado.tempoRe > 0) {
+            estado.tempoRe -= delta;
+            corpo.angularVelocity.y = estado.direcaoRe * 1.35;
+            aplicarForcaDirecional(corpo, -forcaRe);
+            corpo.velocity.x *= 0.992;
+            corpo.velocity.z *= 0.992;
+            limitarVelocidadeHorizontal(corpo, velMaxima * 0.42);
+          } else {
+            if (distanciaAlvo > 2.5) {
+              const intensidadeCurva = THREE.MathUtils.clamp(
+                Math.abs(diffAngulo) / Math.PI,
+                0,
+                1,
+              );
+              const fatorCurva = Math.max(0.48, 1 - intensidadeCurva * 0.55);
+              corpo.angularVelocity.y = THREE.MathUtils.clamp(
+                -diffAngulo * 2.4,
+                -2.4,
+                2.4,
+              );
+
+              if (velocidadeHorizontal < velMaxima) {
+                aplicarForcaDirecional(corpo, forcaFrente * fatorCurva);
+              }
+              corpo.velocity.x *= 0.988;
+              corpo.velocity.z *= 0.988;
+            } else {
+              corpo.velocity.x *= 0.9;
+              corpo.velocity.z *= 0.9;
+            }
+          }
+        }
+
+        visual.quaternion.copy(corpo.quaternion);
+        limitarVelocidadeHorizontal(corpo, velMaxima);
+        if (corpo.position.y < -5) return false;
+        if (typeof corpo.wakeUp === "function") corpo.wakeUp();
+        return true;
+      }
+
+      function estabilizarPolicia(corpo, delta) {
+        let vetorCima = new CANNON.Vec3(0, 1, 0);
+        corpo.quaternion.vmult(vetorCima, vetorCima);
+        const noChao = estaNoChao(corpo);
+
+        corpo.angularVelocity.x *= noChao ? 0.18 : 0.48;
+        corpo.angularVelocity.z *= noChao ? 0.18 : 0.48;
+        corpo.angularVelocity.y = THREE.MathUtils.clamp(
+          corpo.angularVelocity.y,
+          -1.9,
+          1.9,
+        );
+
+        if (corpo.velocity.y > 6.5) corpo.velocity.y = 6.5;
+        if (corpo.velocity.y < -20) corpo.velocity.y = -20;
+
+        if (!noChao) {
+          corpo.velocity.x *= 0.994;
+          corpo.velocity.z *= 0.994;
+          return;
+        }
+
+        if (vetorCima.y < 0.45) {
+          corpo.angularVelocity.x = 0;
+          corpo.angularVelocity.z = 0;
+          corpo.velocity.y = Math.min(corpo.velocity.y, 1.6);
+          corpo.position.y = Math.max(corpo.position.y, 2.6);
+          endireitarCorpoNoYaw(corpo);
+          corpo.velocity.x *= 0.94;
+          corpo.velocity.z *= 0.94;
+        }
+      }
+
+      function garantirPresencaPolicias(delta) {
+        if (rodadaEncerrada) return;
+        tempoReforcoPolicia += delta;
+        if (tempoReforcoPolicia < 0.35) return;
+        tempoReforcoPolicia = 0;
+
+        policiais.forEach((policial, indice) => {
+          if (indice >= totalPoliciasAtivas) {
+            policial.visual.visible = false;
+            if (policial.corpo.position.y > -40) {
+              resetarCorpo(policial.corpo, 0, -60, 0);
+            }
+            resetarEstadoPolicia(policial.estado);
+            return;
+          }
+          policial.visual.visible = true;
+          const dx = policial.corpo.position.x - carroCorpo.position.x;
+          const dz = policial.corpo.position.z - carroCorpo.position.z;
+          const distancia = Math.hypot(dx, dz);
+          let vetorCima = new CANNON.Vec3(0, 1, 0);
+          policial.corpo.quaternion.vmult(vetorCima, vetorCima);
+          const velocidadeHorizontal = Math.hypot(
+            policial.corpo.velocity.x,
+            policial.corpo.velocity.z,
+          );
+          const limiteMapa = tamanhoMapa / 2 - 10;
+          const invalida =
+            policial.corpo.position.y < -5 ||
+            policial.corpo.position.y > 14 ||
+            !Number.isFinite(policial.corpo.position.x) ||
+            !Number.isFinite(policial.corpo.position.z) ||
+            Math.abs(policial.corpo.position.x) > limiteMapa ||
+            Math.abs(policial.corpo.position.z) > limiteMapa ||
+            distancia > 180 ||
+            velocidadeHorizontal > Math.max(velMaxPolicia, 18) * 1.9 ||
+            Math.abs(policial.corpo.angularVelocity.x) > 5 ||
+            Math.abs(policial.corpo.angularVelocity.z) > 5 ||
+            policial.estado.tempoAereo > 1.2 ||
+            policial.estado.tempoCapotado > 0.85 ||
+            vetorCima.y < -0.1;
+          if (invalida) reposicionarPolicia(policial, indice);
+        });
+      }
+
+      function animar() {
+        requestAnimationFrame(animar);
+        const delta = relogio.getDelta();
+
+        // Limpa a tela inteira com a cor do céu
+        renderizador.setClearColor(0x60a3d9);
+        renderizador.clear();
+
+        if (estadoJogo === "menu") {
+          if (efeitoVelocidade) efeitoVelocidade.style.opacity = "0";
+          if (impactoOverlay) impactoOverlay.style.opacity = "0";
+          anguloMenu += 0.5 * delta;
+          camera.position.x = Math.sin(anguloMenu) * 80;
+          camera.position.z = Math.cos(anguloMenu) * 80;
+          camera.position.y = 40;
+          camera.lookAt(0, 0, 0);
+          renderizador.setViewport(0, 0, larguraViewport, alturaViewport);
+          renderizador.setScissor(0, 0, larguraViewport, alturaViewport);
+          renderizador.setScissorTest(true);
+          renderizador.render(cena, camera);
+          return;
+        }
+
+        if (estadoJogo === "jogando") {
+          const carroAtual = obterCarroAtual();
+          velMaxPolicia = carroAtual.velocidadeMaxima * 0.95;
+          cooldownRampa = Math.max(0, cooldownRampa - delta);
+          atrasoPoliciaRestante = Math.max(0, atrasoPoliciaRestante - delta);
+          cooldownImpactoColisao = Math.max(0, cooldownImpactoColisao - delta);
+          intensidadeImpactoVisual = Math.max(
+            0,
+            intensidadeImpactoVisual - delta * 2.8,
+          );
+          if (impactoOverlay) {
+            impactoOverlay.style.opacity = intensidadeImpactoVisual.toFixed(3);
+          }
+          let vetorCima = new CANNON.Vec3(0, 1, 0);
+          carroCorpo.quaternion.vmult(vetorCima, vetorCima);
+          reposicionarCarroSeCapotado(delta);
+
+          // Movimento do Jogador
+          const tocandoChao = estaNoChao(carroCorpo);
+          const carroEmPosicaoValida = tocandoChao && vetorCima.y > 0.72;
+          const velocidadeFrontal = obterVelocidadeFrontal(carroCorpo);
+
+          if (carroEmPosicaoValida) {
+            carroCorpo.angularVelocity.x = 0;
+            carroCorpo.angularVelocity.z = 0;
+            aplicarTracaoLateral(carroCorpo, carroAtual.tracao);
+
+            const fatorMovimento = Math.min(
+              Math.abs(velocidadeFrontal) / 10,
+              1.0,
+            );
+            const direcaoSinal = velocidadeFrontal < -0.5 ? -1 : 1;
+            const curvaDesejada =
+              (teclas["ArrowLeft"] ? carroAtual.curva : 0) -
+              (teclas["ArrowRight"] ? carroAtual.curva : 0);
+            carroCorpo.angularVelocity.y =
+              curvaDesejada * fatorMovimento * direcaoSinal;
+
+            if (teclas["ArrowUp"]) {
+              aplicarForcaDirecional(carroCorpo, carroAtual.aceleracao);
+            } else if (teclas["ArrowDown"]) {
+              aplicarForcaDirecional(carroCorpo, -carroAtual.freio);
+            } else {
+              carroCorpo.velocity.x *= 0.985;
+              carroCorpo.velocity.z *= 0.985;
+            }
+          } else {
+            carroCorpo.velocity.x *= 0.992;
+            carroCorpo.velocity.z *= 0.992;
+            carroCorpo.angularVelocity.x = 0;
+            carroCorpo.angularVelocity.z = 0;
+            carroCorpo.angularVelocity.y *= 0.82;
+          }
+          limitarVelocidadeHorizontal(carroCorpo, carroAtual.velocidadeMaxima);
+          if (
+            cooldownRampa <= 0 &&
+            estaEmRampa(carroCorpo) &&
+            vetorCima.y > 0.68
+          ) {
+            const frenteRampa = obterDirecaoFrente(carroCorpo);
+            carroCorpo.velocity.x += frenteRampa.x * carroAtual.impulsoRampa;
+            carroCorpo.velocity.z += frenteRampa.z * carroAtual.impulsoRampa;
+            carroCorpo.velocity.y = Math.max(
+              carroCorpo.velocity.y,
+              carroAtual.saltoRampa,
+            );
+            cooldownRampa = 1.1;
+          }
+
+          // IA da Polícia — usa força em vez de setar velocidade direta,
+          // para que o corpo físico respeite colisões com obstáculos
+          if (!rodadaEncerrada && atrasoPoliciaRestante <= 0) {
+            policiais.forEach((policial, indice) => {
+              if (indice >= totalPoliciasAtivas) {
+                policial.visual.visible = false;
+                if (policial.corpo.position.y > -40) {
+                  resetarCorpo(policial.corpo, 0, -60, 0);
+                }
+                resetarEstadoPolicia(policial.estado);
+                return;
+              }
+
+              const iaEstavel = atualizarIApolicia({
+                corpo: policial.corpo,
+                visual: policial.visual,
+                estado: policial.estado,
+                alvo: carroCorpo.position,
+                delta,
+                velMaxima: carroAtual.velocidadeMaxima * 0.95,
+                forcaFrente: policial.forcaFrente,
+                forcaRe: policial.forcaRe,
+              });
+              if (!iaEstavel) reposicionarPolicia(policial, indice);
+            });
+          }
+
+          mundoFisica.step(1 / 60, delta, 3);
+          atualizarFogos(delta);
+          garantirPresencaPolicias(delta);
+          atualizarCapturaPorContato(delta);
+          manterDentroDoMapa(carroCorpo);
+          policiais.forEach((policial) => {
+            estabilizarPolicia(policial.corpo, delta);
+            manterDentroDoMapa(policial.corpo);
+          });
+          carroVisual.position.copy(carroCorpo.position);
+          carroVisual.quaternion.copy(carroCorpo.quaternion);
+          policiais.forEach((policial) => {
+            policial.visual.position.copy(policial.corpo.position);
+            policial.visual.quaternion.copy(policial.corpo.quaternion);
+          });
+
+          // Sílabas — coleta em ordem, revela próxima ao coletar atual
+          const agora = performance.now();
+          let todasColetadas =
+            silabasAtivas.length > 0 && silabasAtivas.every((s) => s.coletada);
+
+          for (let i = 0; i < silabasAtivas.length; i++) {
+            const silaba = silabasAtivas[i];
+            if (silaba.coletada) continue;
+
+            // Anima apenas a sílaba ativa (próxima a coletar)
+            if (i === proximaSilaba) {
+              silaba.mesh.rotation.y += 0.025;
+              // Pulsação de escala para chamar atenção
+              const pulso = 1 + Math.sin(agora * 0.004) * 0.07;
+              silaba.mesh.scale.set(pulso, pulso, pulso);
+
+              const flutuacao = Math.sin(agora * 0.002) * 0.3;
+              silaba.mesh.position.y = silaba.yBase + flutuacao;
+              silaba.luz.position.y = silaba.yBase + flutuacao;
+
+              // Verifica coleta
+              if (carroVisual.position.distanceTo(silaba.mesh.position) < 4.0) {
+                criarFogosSilaba(silaba.mesh.position.clone(), silaba.corHex);
+                adicionarPontos(10);
+                silaba.coletada = true;
+                cena.remove(silaba.mesh);
+                cena.remove(silaba.luz);
+                proximaSilaba++;
+
+                // Revela a próxima sílaba com animação de surgimento
+                if (proximaSilaba < silabasAtivas.length) {
+                  const proxima = silabasAtivas[proximaSilaba];
+                  proxima.mesh.scale.set(0.01, 0.01, 0.01);
+                  proxima.luz.intensity = 2;
+                  // Anima scale de 0 → 1 suavemente no próximo frame
+                  proxima._surgindo = true;
+                }
+                atualizarHUD();
+              }
+            } else if (silaba._surgindo) {
+              // Animação de surgimento: escala cresce até 1
+              const s = silaba.mesh.scale.x;
+              if (s < 0.99) {
+                const novo = s + (1 - s) * 0.12;
+                silaba.mesh.scale.set(novo, novo, novo);
+              } else {
+                silaba.mesh.scale.set(1, 1, 1);
+                silaba._surgindo = false;
+              }
+            }
+          }
+
+          if (todasColetadas && !rodadaEncerrada) {
+            rodadaEncerrada = true;
+            estadoJogo = "transicao";
+            adicionarPontos(40 + faseAtual * 5);
+            const palavraFormada = niveisAtuais[faseAtual].palavra;
+            exibirVitoria(`FASE ${faseAtual + 1} CONCLUÍDA!`, palavraFormada);
+            timeoutVitoria = setTimeout(() => {
+              mensagemVitoria.style.display = "none";
+              faseAtual++;
+              carregarFase(faseAtual);
+            }, 3000);
+          }
+        }
+
+        if (estadoJogo !== "menu") {
+          // RENDERIZAÇÃO 1: Câmera Principal (Tela Cheia)
+          const carroAtual = obterCarroAtual();
+          const velocidadeAtual = Math.hypot(
+            carroCorpo.velocity.x,
+            carroCorpo.velocity.z,
+          );
+          const fatorVelocidade = THREE.MathUtils.clamp(
+            velocidadeAtual / Math.max(carroAtual.velocidadeMaxima, 1),
+            0,
+            1,
+          );
+          const relativeCameraOffset = new THREE.Vector3(
+            0,
+            carroAtual.cameraAltura,
+            carroAtual.cameraDistancia,
+          );
+          const cameraOffset = relativeCameraOffset.applyQuaternion(
+            carroVisual.quaternion,
+          );
+          const destinoCamera = carroVisual.position.clone().add(cameraOffset);
+          const destinoAlvo = new THREE.Vector3(
+            carroVisual.position.x,
+            carroVisual.position.y + 2,
+            carroVisual.position.z,
+          );
+          const suavizacaoCamera = THREE.MathUtils.clamp(
+            delta * 7.5,
+            0.08,
+            0.3,
+          );
+          if (cameraPosicaoSuave.lengthSq() === 0) {
+            cameraPosicaoSuave.copy(destinoCamera);
+            cameraAlvoSuave.copy(destinoAlvo);
+          }
+          cameraPosicaoSuave.lerp(destinoCamera, suavizacaoCamera);
+          cameraAlvoSuave.lerp(destinoAlvo, suavizacaoCamera * 0.9);
+          const fovAlvo = 75 + fatorVelocidade * 7;
+          if (Math.abs(camera.fov - fovAlvo) > 0.05) {
+            camera.fov += (fovAlvo - camera.fov) * Math.min(0.18, delta * 6);
+            camera.updateProjectionMatrix();
+          }
+          if (efeitoVelocidade) {
+            efeitoVelocidade.style.opacity = Math.max(
+              0,
+              fatorVelocidade - 0.58,
+            ).toFixed(3);
+          }
+          camera.position.copy(cameraPosicaoSuave);
+          camera.lookAt(cameraAlvoSuave);
+
+          renderizador.setViewport(0, 0, larguraViewport, alturaViewport);
+          renderizador.setScissor(0, 0, larguraViewport, alturaViewport);
+          renderizador.setScissorTest(true);
+          renderizador.render(cena, camera);
+
+          // RENDERIZAÇÃO 2: Mini-mapa (canto inferior direito)
+          // WebGL: coordenada Y parte do FUNDO da tela (oposto ao CSS)
+          const largMapa = tamanhoMiniMapa;
+          const altMapa = tamanhoMiniMapa;
+          const mapaX = Math.max(10, larguraViewport - largMapa - 20);
+          const mapaY = 20; // 20px do fundo = coincide com bottom:20px do CSS
+
+          renderizador.setViewport(mapaX, mapaY, largMapa, altMapa);
+          renderizador.setScissor(mapaX, mapaY, largMapa, altMapa);
+          renderizador.setScissorTest(true);
+          renderizador.clearDepth();
+
+          // Câmera de cima para baixo, 300 unidades de altura
+          cameraMiniMapa.position.set(
+            carroVisual.position.x,
+            300,
+            carroVisual.position.z,
+          );
+          cameraMiniMapa.lookAt(
+            carroVisual.position.x,
+            0,
+            carroVisual.position.z,
+          );
+          cameraMiniMapa.updateProjectionMatrix();
+
+          let neblinaVelha = cena.fog;
+          cena.fog = null;
+          renderizador.render(cena, cameraMiniMapa);
+          cena.fog = neblinaVelha;
+        }
+      }
+
+      window.addEventListener("resize", atualizarLayoutResponsivo);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener(
+          "resize",
+          atualizarLayoutResponsivo,
+        );
+      }
+
+      animar();
+    </script>
+  </body>
+</html>

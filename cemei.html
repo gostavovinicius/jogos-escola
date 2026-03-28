@@ -3,23 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jogos Educativos</title>
-    <!-- CSS atualizado para o tema Cartoon V2 -->
+    <title>Jogos Educativos | Cemei</title>
     <link rel="stylesheet" href="estilo.css" />
   </head>
   <body>
-    <!-- Removido o link "Pular para o conteúdo" e badges de Natal -->
-
     <header>
-      <div class="brand-container">
-        <h1>Jogos Educativos</h1>
-      </div>
-      <p class="subtitle">Escolha sua diversão!</p>
+      <h1>Jogos Educativos</h1>
+      <p class="subtitle">Atividades do Cemei com navegação mais leve e visual padronizado.</p>
     </header>
 
     <main id="main-content">
-      <section class="game-grid">
-        <!-- Jogo 1 -->
+      <section
+        class="game-grid"
+        data-random-games="true"
+        data-max-show="8"
+        data-storage-key="cemei_last_games_v1"
+      >
         <a href="jogos/cemei/jogoDaMemoria.html" class="game-card">
           <img
             src="https://screens.cdn.wordwall.net/200/4a4638bbbe7c44f894c88d65633625b3_65"
@@ -30,7 +29,6 @@
           <span class="play-btn">Jogar Agora</span>
         </a>
 
-        <!-- Jogo 3 -->
         <a href="jogos/cemei/letra_inicial.html" class="game-card">
           <img
             src="https://www.coquinhos.com/wp-content/uploads/thumbs/custom/J/jogo-letra-inicial-portugues.jpg"
@@ -41,7 +39,6 @@
           <span class="play-btn">Jogar Agora</span>
         </a>
 
-        <!-- Jogo 11 -->
         <a href="jogos/cemei/jogo_memoria.html" class="game-card">
           <img
             src="https://www.coquinhos.com/wp-content/uploads/2021/10/pares-animais-150x150.jpg"
@@ -52,7 +49,6 @@
           <span class="play-btn">Jogar Agora</span>
         </a>
 
-        <!-- Jogo 13 -->
         <a href="jogos/cemei/alfabeto.html" class="game-card">
           <img
             src="https://www.coquinhos.com/wp-content/uploads/2020/07/jogo-ordenacao-alfabeto-150x150.jpg"
@@ -63,7 +59,6 @@
           <span class="play-btn">Jogar Agora</span>
         </a>
 
-        <!-- Jogo 2 -->
         <a href="jogos/cemei/jogoDaMemoria2.html" class="game-card">
           <img
             src="https://screens.cdn.wordwall.net/200/21d7ac297077432db5493baa904fa7c2_0"
@@ -74,7 +69,6 @@
           <span class="play-btn">Jogar Agora</span>
         </a>
 
-        <!-- Jogo 17 -->
         <a href="jogos/cemei/quebraCabeca.html" class="game-card">
           <img
             src="https://hvirtua.com/jogoseducativos/wp-content/uploads/2024/02/quebra-cabeca-animais.jpg"
@@ -156,69 +150,6 @@
         </a>
       </section>
     </main>
-    <script>
-      (() => {
-        const MAX_SHOW = 8;
-        const STORAGE_KEY = "cemei_last_games_v1";
-
-        function shuffle(arr) {
-          for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-          }
-          return arr;
-        }
-
-        function pickRandomSixDifferent(cards) {
-          const last = (() => {
-            try {
-              return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "[]");
-            } catch {
-              return [];
-            }
-          })();
-
-          // Try a few times to avoid repetir exatamente o mesmo conjunto
-          let chosen = [];
-          for (let attempt = 0; attempt < 12; attempt++) {
-            const shuffled = shuffle(cards.slice());
-            chosen = shuffled.slice(0, Math.min(MAX_SHOW, shuffled.length));
-            const chosenHrefs = chosen.map((a) => a.getAttribute("href"));
-            const sameAsLast =
-              last.length === chosenHrefs.length &&
-              last.every((v) => chosenHrefs.includes(v));
-
-            if (!sameAsLast) {
-              sessionStorage.setItem(STORAGE_KEY, JSON.stringify(chosenHrefs));
-              return chosen;
-            }
-          }
-
-          // Fallback (se não conseguir “diferente”)
-          sessionStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(chosen.map((a) => a.getAttribute("href"))),
-          );
-          return chosen;
-        }
-
-        function refreshGameGrid() {
-          const grid = document.querySelector(".game-grid");
-          if (!grid) return;
-
-          const allCards = Array.from(grid.querySelectorAll(".game-card"));
-          if (allCards.length <= MAX_SHOW) return;
-
-          const chosen = pickRandomSixDifferent(allCards);
-
-          // Re-monta o grid só com os escolhidos (na ordem aleatória)
-          grid.innerHTML = "";
-          chosen.forEach((card) => grid.appendChild(card));
-        }
-
-        // Executa quando carrega e também quando volta via "Voltar" do navegador (bfcache)
-        window.addEventListener("pageshow", refreshGameGrid);
-      })();
-    </script>
+    <script src="catalogo.js"></script>
   </body>
 </html>

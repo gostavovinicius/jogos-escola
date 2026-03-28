@@ -1,23 +1,23 @@
-/* =========================================
-   TEMA: JOGO FOCADO V2.1 (Suave) - FINAL
-   ========================================= */
-
-@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap");
 
 :root {
-  /* Mesmas variáveis suaves do tema principal */
   --bg-color: #fff0c7;
-  --bg-pattern-dot: #ffeaa7;
+  --bg-pattern-dot: rgba(255, 234, 167, 0.78);
   --header-bg: #ff7675;
   --text-color: #2d3436;
   --accent-blue: #74b9ff;
   --accent-green: #55efc4;
-
-  --border-thick: 3px solid #2d3436;
-  --shadow-hard: 5px 5px 0px #2d3436;
+  --border-color: #2d3436;
+  --border-thick: 3px solid var(--border-color);
+  --shadow-hard: 5px 5px 0 var(--border-color);
 }
 
-/* ====== Sem scroll: tudo cabe na tela ====== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body {
   height: 100%;
@@ -25,94 +25,75 @@ body {
 
 body {
   margin: 0;
-  padding: 0;
-
+  min-height: 100vh;
   background-color: var(--bg-color);
-  background-image: radial-gradient(var(--bg-pattern-dot) 20%, transparent 20%);
-  background-size: 20px 20px;
-
+  background-image:
+    radial-gradient(var(--bg-pattern-dot) 18%, transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 42%);
+  background-size: 20px 20px, 100% 100%;
   font-family: "Fredoka", sans-serif;
   color: var(--text-color);
-
-  min-height: 100vh;
-  overflow: hidden; /* impede scroll no body */
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  overflow: hidden;
 }
 
-/* Container principal usando GRID */
 .game-page-container {
-  width: 100%;
-  max-width: 1100px;
+  width: min(1160px, calc(100% - 24px));
   height: 100vh;
-
-  padding: 15px 20px 16px;
-  box-sizing: border-box;
-
+  margin: 0 auto;
+  padding: 16px 0;
   display: grid;
-  /* O SEGREDO: A 1ª coluna (botão) usa '1fr' e empurra as outras para a direita */
-  grid-template-columns: 1fr max-content max-content;
-  grid-template-rows: auto 1fr;
-  gap: 15px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
   align-items: center;
 }
 
-/* Título na página do jogo */
-h1 {
+.game-page-container > h1 {
   grid-column: 2;
   grid-row: 1;
+  justify-self: center;
   margin: 0;
-
-  font-size: clamp(1rem, 2vw, 1.8rem);
-  color: #fff;
-  background-color: var(--header-bg);
-
-  padding: 8px 30px;
+  padding: 10px 30px;
   border: var(--border-thick);
-  border-radius: 50px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff8e8c, var(--header-bg));
   box-shadow: var(--shadow-hard);
-
-  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
-  text-transform: uppercase;
+  color: #fff;
+  font-size: clamp(1rem, 2vw, 1.8rem);
   text-align: center;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.18);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-p {
+.game-page-container > p {
   grid-column: 3;
   grid-row: 1;
   margin: 0;
-
-  background: #fff;
-  padding: 8px 20px;
+  max-width: 280px;
+  padding: 10px 18px;
   border: 2px solid var(--text-color);
-  border-radius: 12px;
-
-  font-weight: bold;
-  font-size: clamp(0.9rem, 1.5vw, 1rem);
-
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.12);
+  font-size: clamp(0.88rem, 1.4vw, 1rem);
+  font-weight: 600;
+  text-align: center;
 }
 
-/* ====== Container do Iframe: ocupa o espaço restante ====== */
 .game-iframe-wrap {
-  grid-column: 1 / 4; /* Faz o jogo se esticar pelas 3 colunas */
+  grid-column: 1 / 4;
   grid-row: 2;
-  width: 100%;
+  min-width: 0;
+  min-height: 0;
   height: 100%;
-  min-height: 0; /* evita “estourar” e criar scroll */
-
-  background: #2d3436;
-  border: var(--border-thick);
-  border-radius: 15px;
-
-  outline: 6px solid var(--accent-blue);
-  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.2);
-
-  margin: 0;
-  position: relative;
   overflow: hidden;
+  position: relative;
+  border: var(--border-thick);
+  border-radius: 18px;
+  outline: 6px solid var(--accent-blue);
+  background: #2d3436;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.2);
 }
 
 .game-iframe-wrap iframe {
@@ -123,36 +104,28 @@ p {
   background: #fff;
 }
 
-/* ====== Botão voltar integrado ao cabeçalho ====== */
 .back-button {
   grid-column: 1;
   grid-row: 1;
-  justify-self: start; /* Fixa o botão colado à esquerda */
-  position: static;
-  margin: 0;
-
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1;
-
   padding: 12px 18px;
+  border: 4px solid #000;
   border-radius: 16px;
-
-  text-decoration: none;
-
-  background: #ffffff;
-  color: #000000;
-  border: 4px solid #000000;
-
+  background: #fff;
   box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
-  transition: transform 0.1s ease;
+  color: #000;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
-/* Feedback claro ao passar o mouse/tocar */
 .back-button:hover {
   transform: translateY(1px);
   box-shadow: 0 5px 0 rgba(0, 0, 0, 0.25);
@@ -163,67 +136,85 @@ p {
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
 }
 
-.back-button:focus,
 .back-button:focus-visible {
   outline: 6px solid #2b7cff;
   outline-offset: 4px;
 }
 
-/* ====== Responsividade ====== */
-@media (max-width: 850px) {
+@media (max-width: 900px) {
   .game-page-container {
-    /* Telas médias: Quebra o parágrafo para baixo do título */
-    grid-template-columns: max-content 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
   }
+
   .back-button {
     grid-column: 1;
-    grid-row: 1 / 3; /* Fica alto na lateral, ocupando 2 linhas */
+    grid-row: 1 / 3;
     align-self: center;
   }
-  h1 {
+
+  .game-page-container > h1 {
     grid-column: 2;
     grid-row: 1;
-    justify-self: end; /* Mantém o título na direita em tablets */
+    justify-self: end;
   }
-  p {
+
+  .game-page-container > p {
     grid-column: 2;
     grid-row: 2;
-    justify-self: end; /* Mantém o parágrafo na direita em tablets */
+    justify-self: end;
   }
+
   .game-iframe-wrap {
     grid-column: 1 / 3;
     grid-row: 3;
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
+  body {
+    overflow: auto;
+  }
+
   .game-page-container {
-    /* Celulares pequenos: Empilha tudo no meio */
+    width: min(100%, calc(100% - 20px));
+    height: auto;
+    min-height: 100vh;
+    padding: 14px 0 18px;
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto 1fr;
-    gap: 10px;
-    padding-top: 15px;
+    grid-template-rows: auto auto auto minmax(360px, 1fr);
+    gap: 12px;
   }
-  .back-button {
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: center; /* Volta tudo para o meio no celular */
-  }
-  h1 {
-    grid-column: 1;
-    grid-row: 2;
-    justify-self: center;
-  }
-  p {
-    grid-column: 1;
-    grid-row: 3;
-    justify-self: center;
-  }
+
+  .back-button,
+  .game-page-container > h1,
+  .game-page-container > p,
   .game-iframe-wrap {
     grid-column: 1;
+    justify-self: center;
+  }
+
+  .back-button {
+    grid-row: 1;
+  }
+
+  .game-page-container > h1 {
+    grid-row: 2;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .game-page-container > p {
+    grid-row: 3;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .game-iframe-wrap {
     grid-row: 4;
+    width: 100%;
+    min-height: 60vh;
     outline-width: 4px;
-    border-radius: 10px;
+    border-radius: 14px;
   }
 }
