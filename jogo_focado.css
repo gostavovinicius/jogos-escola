@@ -48,6 +48,11 @@ body {
   align-items: center;
 }
 
+.game-page-container--embed-focus {
+  width: min(1280px, calc(100% - 16px));
+  gap: 10px;
+}
+
 .game-page-container > h1 {
   grid-column: 2;
   grid-row: 1;
@@ -94,6 +99,11 @@ body {
   outline: 6px solid var(--accent-blue);
   background: #2d3436;
   box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.game-iframe-wrap--embed-focus {
+  min-height: clamp(520px, 80vh, 980px);
+  border-radius: 16px;
 }
 
 .game-iframe-wrap iframe {
