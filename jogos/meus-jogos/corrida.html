@@ -18,13 +18,21 @@
         --cor-radar-borda: rgba(29, 119, 242, 0.7);
         --sombra-painel: 0 18px 44px rgba(17, 78, 141, 0.16);
         --menu-largura: min(1080px, calc(100% - 28px));
-        --hud-largura: min(620px, calc(100% - 20px));
+        --hud-largura: min(380px, calc(100% - 20px));
         --minimapa-size: 190px;
         --touch-size: 62px;
         --iframe-hud-right: 12px;
         --iframe-hud-top: 12px;
-        --iframe-hud-width: min(340px, calc(100% - 24px));
+        --iframe-hud-width: min(320px, calc(100% - 24px));
         --iframe-info-top: 224px;
+        --silabas-gap: 6px;
+        --silabas-min-largura: 54px;
+        --silabas-padding-y: 10px;
+        --silabas-padding-x: 12px;
+        --silabas-font-size: 1.08rem;
+        --palavra-font-size: 1.34rem;
+        --palavra-padding-y: 12px;
+        --palavra-padding-x: 20px;
       }
 
       *,
@@ -185,9 +193,15 @@
       .firefox #menu-inicial,
       .firefox #interface,
       .firefox #info-lateral,
+      .firefox #moldura-minimapa,
       .firefox .tela-centro {
         backdrop-filter: none;
         box-shadow: 0 10px 26px rgba(17, 78, 141, 0.16);
+      }
+
+      .firefox-economia #efeito-velocidade,
+      .firefox-economia #impacto-overlay {
+        display: none;
       }
 
       .em-iframe #interface {
@@ -195,14 +209,16 @@
         right: var(--iframe-hud-right);
         top: var(--iframe-hud-top);
         transform: none;
-        width: var(--iframe-hud-width);
-        max-width: calc(100% - 24px);
+        width: max-content;
+        min-width: 0;
+        max-width: min(var(--iframe-hud-width), calc(100% - 24px));
         padding: 12px 14px;
         text-align: left;
       }
 
       .em-iframe #barra-superior-jogo {
-        justify-content: space-between;
+        justify-content: flex-start;
+        justify-items: flex-start;
         align-items: flex-start;
       }
 
@@ -213,10 +229,6 @@
 
       .em-iframe #blocos-silabas {
         justify-content: flex-start;
-      }
-
-      .em-iframe #texto-desafio-hud {
-        text-align: left;
       }
 
       .em-iframe #info-lateral {
@@ -906,8 +918,13 @@
         right: 12px;
         left: auto;
         transform: none;
-        width: var(--hud-largura);
-        max-width: calc(100% - 20px);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        width: max-content;
+        min-width: 0;
+        max-width: min(var(--hud-largura), calc(100% - 20px));
         color: var(--cor-texto-forte);
         background: linear-gradient(
           180deg,
@@ -919,9 +936,32 @@
         border: 1px solid var(--cor-borda);
         box-shadow: var(--sombra-painel);
         pointer-events: auto;
-        text-align: center;
+        text-align: left;
         min-width: 0;
         backdrop-filter: blur(12px);
+      }
+
+      #btn-respawn-manual {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 22;
+        padding: 8px 12px;
+        border: 1px solid rgba(30, 116, 237, 0.2);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #16324f;
+        font-family: inherit;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        pointer-events: auto;
+        box-shadow: 0 10px 18px rgba(17, 78, 141, 0.12);
+      }
+
+      #btn-respawn-manual:hover {
+        background: rgba(226, 240, 255, 0.96);
       }
 
       #fase-info {
@@ -930,24 +970,60 @@
         font-size: 12px;
         letter-spacing: 2.2px;
         text-transform: uppercase;
-        margin-bottom: 6px;
+        margin-bottom: 0;
         opacity: 1;
       }
 
       #objetivo-hud {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         gap: 8px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        align-self: flex-start;
+        width: max-content;
+        max-width: 100%;
       }
 
-      #texto-desafio-hud {
-        margin-top: 10px;
-        font-size: clamp(0.98rem, 2vw, 1.12rem);
-        color: var(--cor-texto-suave);
-        font-weight: 700;
-        letter-spacing: 0.03em;
+      #hud-perseguicao {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-self: stretch;
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      .hud-perseguicao-topo {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .hud-perseguicao-label {
+        color: #2b7fff;
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      #hud-perseguicao #info-risco {
+        font-size: 0.96rem;
+        font-weight: 900;
+        color: var(--cor-texto-forte);
+      }
+
+      #hud-perseguicao .barra-risco {
+        width: 100%;
+        min-width: 0;
+        margin-top: 0;
+      }
+
+      #hud-perseguicao #info-contato {
+        margin-top: 0;
+        font-size: 0.8rem;
       }
 
       #alvo-emoji-hud {
@@ -994,12 +1070,14 @@
       }
 
       #barra-superior-jogo {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 8px;
-        flex-wrap: wrap;
+        display: grid;
+        justify-content: flex-start;
+        justify-items: flex-start;
+        align-items: flex-start;
+        gap: 6px;
+        margin-bottom: 0;
+        width: max-content;
+        max-width: 100%;
       }
 
       #btn-trocar-carro-jogo {
@@ -1013,6 +1091,8 @@
         font-size: 0.92rem;
         letter-spacing: 0.04em;
         box-shadow: 0 10px 18px rgba(17, 78, 141, 0.08);
+        width: fit-content;
+        max-width: 100%;
       }
 
       #btn-trocar-carro-jogo:hover {
@@ -1021,19 +1101,25 @@
 
       #blocos-silabas {
         display: flex;
-        gap: 6px;
-        justify-content: center;
+        gap: var(--silabas-gap);
+        justify-content: flex-start;
         align-items: center;
-        flex-wrap: wrap;
-        flex: 1 1 220px;
+        flex-wrap: nowrap;
+        flex: 0 1 auto;
         min-width: 0;
+        width: auto;
+        max-width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
       }
 
       .bloco-silaba {
-        min-width: 54px;
-        padding: 10px 12px;
+        flex: 0 1 auto;
+        min-width: var(--silabas-min-largura);
+        max-width: 100%;
+        padding: var(--silabas-padding-y) var(--silabas-padding-x);
         border-radius: 16px;
-        font-size: clamp(1.02rem, 2.6vw, 1.45rem);
+        font-size: var(--silabas-font-size);
         font-weight: 900;
         font-family: "Arial Black", sans-serif;
         letter-spacing: 1px;
@@ -1041,10 +1127,18 @@
         background: rgba(255, 255, 255, 0.88);
         color: rgba(20, 50, 79, 0.4);
         text-align: center;
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transition:
+          transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+          background 0.24s ease,
+          color 0.24s ease,
+          border-color 0.24s ease,
+          box-shadow 0.24s ease;
         position: relative;
         text-shadow: none;
         box-shadow: 0 8px 18px rgba(17, 78, 141, 0.12);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: clip;
       }
 
       .bloco-silaba.proxima {
@@ -1070,9 +1164,10 @@
       }
 
       .bloco-silaba.bloco-palavra {
-        min-width: min(320px, 78vw);
-        padding: 12px 20px;
-        font-size: clamp(1.18rem, 3.4vw, 1.82rem);
+        min-width: 0;
+        max-width: 100%;
+        padding: var(--palavra-padding-y) var(--palavra-padding-x);
+        font-size: var(--palavra-font-size);
         letter-spacing: 2px;
         font-family: "Arial Black", sans-serif;
       }
@@ -1091,26 +1186,8 @@
 
       .bloco-silaba.proxima::after,
       .bloco-silaba.coletada::after {
-        position: absolute;
-        top: -9px;
-        right: 8px;
-        padding: 2px 6px;
-        border-radius: 999px;
-        font-size: 0.58rem;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-      }
-
-      .bloco-silaba.proxima::after {
-        content: "ALVO";
-        color: #0f172a;
-        background: #ffffff;
-      }
-
-      .bloco-silaba.coletada::after {
-        content: "OK";
-        color: white;
-        background: rgba(15, 23, 42, 0.48);
+        content: none;
+        display: none;
       }
 
       @keyframes pulsar {
@@ -1143,6 +1220,7 @@
         backdrop-filter: blur(10px);
         box-shadow: var(--sombra-painel);
         line-height: 1.6;
+        display: none !important;
       }
 
       #info-lateral .label {
@@ -1218,6 +1296,7 @@
         pointer-events: none;
         overflow: hidden;
         backdrop-filter: blur(1px);
+        display: none !important;
       }
 
       #radar-canvas {
@@ -1304,6 +1383,32 @@
       .radar-tag--objetivo::before {
         background: #ffd166;
         box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.24);
+      }
+
+      .hud-compacta #info-lateral,
+      .hud-compacta #moldura-minimapa {
+        display: none !important;
+      }
+
+      .hud-compacta #interface {
+        top: 8px;
+        right: 8px;
+        left: auto;
+        width: max-content;
+        min-width: 0;
+        max-width: min(320px, calc(100% - 16px));
+        padding: 9px 11px 11px;
+      }
+
+      .hud-compacta #barra-superior-jogo,
+      .hud-compacta #objetivo-hud {
+        gap: 6px;
+      }
+
+      .hud-compacta #alvo-emoji-hud {
+        width: 44px;
+        height: 44px;
+        font-size: 25px;
       }
 
       #controles-touch {
@@ -1423,7 +1528,10 @@
           right: 10px;
           left: auto;
           transform: none;
-          padding-inline: 16px;
+          width: max-content;
+          min-width: 0;
+          max-width: min(340px, calc(100% - 20px));
+          padding-inline: 14px;
         }
 
         #info-lateral {
@@ -1460,12 +1568,21 @@
         }
 
         #interface {
-          width: calc(100% - 16px);
+          width: max-content;
+          min-width: 0;
+          max-width: min(320px, calc(100% - 16px));
           top: 8px;
           right: 8px;
           left: auto;
           transform: none;
           padding: 10px 12px 12px;
+        }
+
+        #btn-respawn-manual {
+          top: 8px;
+          left: 8px;
+          padding: 7px 10px;
+          font-size: 0.76rem;
         }
 
         #info-lateral {
@@ -1496,7 +1613,9 @@
         }
 
         .em-iframe #interface {
-          width: min(320px, calc(100% - 16px));
+          width: max-content;
+          min-width: 0;
+          max-width: min(320px, calc(100% - 16px));
           top: 8px;
           right: 8px;
           left: auto;
@@ -1599,8 +1718,22 @@
             aria-label="Progresso das sílabas"
           ></div>
         </div>
-        <div id="texto-desafio-hud">Colete as sílabas na ordem certa.</div>
+        <div id="hud-perseguicao">
+          <div class="hud-perseguicao-topo">
+            <div class="hud-perseguicao-label">Perseguição</div>
+            <div id="info-risco">Livre</div>
+          </div>
+          <div class="barra-risco" aria-hidden="true">
+            <div
+              class="barra-risco__preenchimento"
+              id="barra-risco-preenchimento"
+            ></div>
+          </div>
+          <div class="valor-secundario" id="info-contato">Contato 0%</div>
+        </div>
       </div>
+
+      <button id="btn-respawn-manual" type="button">Respawn</button>
 
       <!-- Info lateral: série e dica -->
       <div id="info-lateral">
@@ -1611,15 +1744,6 @@
         <div class="label label-com-espaco">CARRO</div>
         <div class="valor" id="info-carro">Clássico</div>
         <div class="valor-secundario" id="info-velocidade">Vel 2 • Acel 2</div>
-        <div class="label label-com-espaco">RISCO</div>
-        <div class="valor" id="info-risco">Livre</div>
-        <div class="barra-risco" aria-hidden="true">
-          <div
-            class="barra-risco__preenchimento"
-            id="barra-risco-preenchimento"
-          ></div>
-        </div>
-        <div class="valor-secundario" id="info-contato">Contato 0%</div>
         <div class="dica-lateral">
           Azul = você • Vermelho = polícia<br />Colete em ordem!
         </div>
@@ -1796,15 +1920,20 @@
             !/edg|opr|opera/i.test(navigator.userAgent);
           const estaEmIframe = window.self !== window.top;
           const memoriaDispositivo = navigator.deviceMemory || 8;
-          const nucleosDispositivo = navigator.hardwareConcurrency || 8;
+          const nucleosDispositivo =
+            navigator.hardwareConcurrency || (ehFirefox ? 4 : 8);
           const PERFIL_EXECUCAO = {
             firefoxIframe: ehFirefox && estaEmIframe,
+            firefoxEconomia: ehFirefox && nucleosDispositivo <= 4,
             chrome: ehChrome,
             pcFraco: memoriaDispositivo <= 4 || nucleosDispositivo <= 4,
             usarControlesTouch: false,
             usarVibracao: false,
           };
           if (ehFirefox) document.documentElement.classList.add("firefox");
+          if (PERFIL_EXECUCAO.firefoxEconomia) {
+            document.documentElement.classList.add("firefox-economia");
+          }
           if (estaEmIframe) document.documentElement.classList.add("em-iframe");
 
           const cena = new THREE.Scene();
@@ -1839,11 +1968,18 @@
           let radarFundoCtx = null;
           let radarFundoSujo = true;
           let radarTempoAcumulado = 0;
+          let hudCompactaAtiva = false;
+          let blocosSilabas = null;
+          let ajusteBlocosSilabasFrame = 0;
           const CONFIG_RADAR_REAL = {
             inset: 12,
             altitude: 340,
             folgaMapa: 18,
           };
+          const EXIBIR_HUD_SECUNDARIA = false;
+          const MAX_POLICIAS_ATIVAS = 4;
+          const TEMPO_RESPAWN_CAPOTADO = 5;
+          const COOLDOWN_RESPAWN_MANUAL = 1.2;
 
           function preencherVetorCima(corpo, destino) {
             destino.set(0, 1, 0);
@@ -1864,6 +2000,12 @@
           }
 
           function obterPixelRatioIdeal(largura) {
+            if (PERFIL_EXECUCAO.firefoxEconomia) {
+              if (largura < 720) return 0.78;
+              if (largura < 1280) return 0.9;
+              return 1;
+            }
+
             if (PERFIL_EXECUCAO.pcFraco) {
               if (largura < 900) return 1;
               return 1.05;
@@ -1970,6 +2112,8 @@
           renderizador.sortObjects = !ehFirefox && !PERFIL_EXECUCAO.pcFraco;
           renderizador.domElement.tabIndex = 0;
           renderizador.domElement.style.willChange = "transform";
+          renderizador.domElement.style.width = "100%";
+          renderizador.domElement.style.height = "100%";
           document.body.appendChild(renderizador.domElement);
 
           function focarJogoNoIframe() {
@@ -1991,9 +2135,9 @@
             const margem = larguraViewport < 700 ? 8 : 12;
             const larguraHUDIframe = Math.round(
               THREE.MathUtils.clamp(
-                larguraViewport * 0.34,
-                260,
-                larguraViewport < 980 ? 320 : 360,
+                larguraViewport * 0.3,
+                236,
+                larguraViewport < 980 ? 300 : 336,
               ),
             );
 
@@ -2018,10 +2162,95 @@
             });
           }
 
+          function aplicarEscalaBlocosSilabas(escala = 1) {
+            const container =
+              blocosSilabas || document.getElementById("blocos-silabas");
+            if (!container) return;
+            const escalaLimitada = Math.max(0.64, Math.min(1, escala));
+            container.style.setProperty(
+              "--silabas-gap",
+              `${Math.max(4, Math.round(6 * escalaLimitada))}px`,
+            );
+            container.style.setProperty(
+              "--silabas-min-largura",
+              `${Math.max(40, Math.round(54 * escalaLimitada))}px`,
+            );
+            container.style.setProperty(
+              "--silabas-padding-y",
+              `${Math.max(6, Math.round(10 * escalaLimitada))}px`,
+            );
+            container.style.setProperty(
+              "--silabas-padding-x",
+              `${Math.max(8, Math.round(12 * escalaLimitada))}px`,
+            );
+            container.style.setProperty(
+              "--silabas-font-size",
+              `${(1.08 * escalaLimitada).toFixed(3)}rem`,
+            );
+            container.style.setProperty(
+              "--palavra-font-size",
+              `${(1.34 * Math.max(0.7, escalaLimitada)).toFixed(3)}rem`,
+            );
+            container.style.setProperty(
+              "--palavra-padding-y",
+              `${Math.max(8, Math.round(12 * escalaLimitada))}px`,
+            );
+            container.style.setProperty(
+              "--palavra-padding-x",
+              `${Math.max(12, Math.round(20 * escalaLimitada))}px`,
+            );
+          }
+
+          function ajustarBlocosSilabasAoEspaco() {
+            const container =
+              blocosSilabas || document.getElementById("blocos-silabas");
+            if (!container) return;
+            aplicarEscalaBlocosSilabas(1);
+            const larguraDisponivel = container.clientWidth || 0;
+            if (larguraDisponivel <= 0) return;
+            let escalaAtual = 1;
+            for (let tentativa = 0; tentativa < 4; tentativa++) {
+              const larguraNecessaria = container.scrollWidth || 0;
+              if (larguraNecessaria <= larguraDisponivel || escalaAtual <= 0.64) {
+                break;
+              }
+              escalaAtual = Math.max(
+                0.64,
+                escalaAtual * (larguraDisponivel / larguraNecessaria) * 0.98,
+              );
+              aplicarEscalaBlocosSilabas(escalaAtual);
+            }
+          }
+
+          function agendarAjusteBlocosSilabas() {
+            cancelAnimationFrame(ajusteBlocosSilabasFrame);
+            ajusteBlocosSilabasFrame = requestAnimationFrame(() => {
+              ajusteBlocosSilabasFrame = 0;
+              ajustarBlocosSilabasAoEspaco();
+            });
+          }
+
+          function atualizarEstadoHUDCompacta(largura, altura) {
+            const proximaHudCompacta = largura <= 980 || altura <= 700;
+            if (hudCompactaAtiva === proximaHudCompacta) return;
+            hudCompactaAtiva = proximaHudCompacta;
+            raizEstilos.classList.toggle("hud-compacta", hudCompactaAtiva);
+            if (hudCompactaAtiva && radarCtx && radarCanvas) {
+              radarCtx.clearRect(
+                0,
+                0,
+                radarCanvas.clientWidth || 0,
+                radarCanvas.clientHeight || 0,
+              );
+            }
+            agendarAjusteBlocosSilabas();
+          }
+
           function atualizarLayoutResponsivo() {
             const { largura, altura } = obterDimensoesViewport();
             larguraViewport = largura;
             alturaViewport = altura;
+            atualizarEstadoHUDCompacta(largura, altura);
             tamanhoMiniMapa = Math.round(
               THREE.MathUtils.clamp(
                 Math.min(largura, altura) *
@@ -2032,9 +2261,9 @@
             );
             const hudWidth = Math.round(
               THREE.MathUtils.clamp(
-                largura * (PERFIL_EXECUCAO.firefoxIframe ? 0.62 : 0.5),
-                250,
-                PERFIL_EXECUCAO.firefoxIframe ? 420 : 470,
+                largura * (PERFIL_EXECUCAO.firefoxIframe ? 0.32 : 0.28),
+                236,
+                PERFIL_EXECUCAO.firefoxIframe ? 336 : 380,
               ),
             );
             const touchSize = Math.round(
@@ -2048,11 +2277,15 @@
             );
             raizEstilos.style.setProperty("--touch-size", `${touchSize}px`);
             sincronizarLayoutHUDIframe();
-            if (radarCanvas && radarCtx) {
+            if (EXIBIR_HUD_SECUNDARIA && radarCanvas && radarCtx) {
               const tamanhoRadarInterno = Math.max(72, tamanhoMiniMapa - 24);
               const pixelRatioRadar = Math.min(
                 window.devicePixelRatio || 1,
-                PERFIL_EXECUCAO.pcFraco ? 1.25 : 2,
+                PERFIL_EXECUCAO.firefoxEconomia
+                  ? 1
+                  : PERFIL_EXECUCAO.pcFraco
+                    ? 1.25
+                    : 2,
               );
               radarCanvas.width = Math.round(
                 tamanhoRadarInterno * pixelRatioRadar,
@@ -2095,6 +2328,7 @@
                 luzDirecional.shadow.map.dispose();
               }
             }
+            agendarAjusteBlocosSilabas();
           }
 
           atualizarLayoutResponsivo();
@@ -2181,7 +2415,11 @@
           // ==========================================
           function criarTexturaGrama() {
             const canvas = document.createElement("canvas");
-            const tamanhoTextura = PERFIL_EXECUCAO.pcFraco ? 384 : 512;
+            const tamanhoTextura = PERFIL_EXECUCAO.firefoxEconomia
+              ? 256
+              : PERFIL_EXECUCAO.pcFraco
+                ? 384
+                : 512;
             canvas.width = tamanhoTextura;
             canvas.height = tamanhoTextura;
             const ctx = canvas.getContext("2d");
@@ -2208,7 +2446,16 @@
                 );
               }
             }
-            for (let i = 0; i < (PERFIL_EXECUCAO.pcFraco ? 2400 : 4000); i++) {
+            for (
+              let i = 0;
+              i <
+              (PERFIL_EXECUCAO.firefoxEconomia
+                ? 1400
+                : PERFIL_EXECUCAO.pcFraco
+                  ? 2400
+                  : 4000);
+              i++
+            ) {
               ctx.fillStyle =
                 Math.random() > 0.6
                   ? "rgba(167, 255, 79, 0.52)"
@@ -2220,7 +2467,16 @@
                 5,
               );
             }
-            for (let i = 0; i < (PERFIL_EXECUCAO.pcFraco ? 180 : 300); i++) {
+            for (
+              let i = 0;
+              i <
+              (PERFIL_EXECUCAO.firefoxEconomia
+                ? 110
+                : PERFIL_EXECUCAO.pcFraco
+                  ? 180
+                  : 300);
+              i++
+            ) {
               ctx.fillStyle = ["#7be45d", "#d8ee70", "#67c56c", "#b4f24e"][
                 Math.floor(Math.random() * 4)
               ];
@@ -3909,34 +4165,6 @@
             corSireneB: 0xff3152,
             corRadar: 0xffffff,
           });
-          const policia5 = criarCarroPolicia({
-            corBase: 0x23395b,
-            corCapo: 0xdfe9ff,
-            corSireneA: 0x39a0ff,
-            corSireneB: 0xff4d5f,
-            corRadar: 0xfafcff,
-          });
-          const policia6 = criarCarroPolicia({
-            corBase: 0x16233c,
-            corCapo: 0xf0f5ff,
-            corSireneA: 0x15a4ff,
-            corSireneB: 0xff2748,
-            corRadar: 0xffffff,
-          });
-          const policia7 = criarMotoPolicia({
-            corBase: 0x0f2138,
-            corDetalhe: 0xf2f7ff,
-            corSireneA: 0x12a2ff,
-            corSireneB: 0xff3152,
-            corCapacete: 0xffffff,
-          });
-          const policia8 = criarCarroPolicia({
-            corBase: 0x0e1a2d,
-            corCapo: 0xeef4ff,
-            corSireneA: 0x149eff,
-            corSireneB: 0xff3a54,
-            corRadar: 0xffffff,
-          });
 
           const cameraPosicaoSuave = new THREE.Vector3(0, 0, 0);
           const cameraAlvoSuave = new THREE.Vector3(0, 0, 0);
@@ -3954,18 +4182,28 @@
           };
           const CONFIG_OTIMIZACAO = {
             deltaMaximo: 1 / 30,
-            intervaloAnalisePolicial: 0.08,
-            intervaloRadar: 1 / 14,
-            passoFisica: PERFIL_EXECUCAO.pcFraco ? 1 / 60 : 1 / 90,
-            maxSubstepsFisica: PERFIL_EXECUCAO.pcFraco ? 5 : 10,
+            intervaloAnalisePolicial: PERFIL_EXECUCAO.firefoxEconomia
+              ? 0.1
+              : 0.08,
+            intervaloRadar: PERFIL_EXECUCAO.firefoxEconomia ? 1 / 10 : 1 / 14,
+            passoFisica: PERFIL_EXECUCAO.firefoxEconomia
+              ? 1 / 54
+              : PERFIL_EXECUCAO.pcFraco
+                ? 1 / 60
+                : 1 / 90,
+            maxSubstepsFisica: PERFIL_EXECUCAO.firefoxEconomia
+              ? 4
+              : PERFIL_EXECUCAO.pcFraco
+                ? 5
+                : 10,
           };
           const CONFIG_TATICA_POLICIAL = {
-            raioLeituraSilaba: 64,
-            raioRespostaPolicial: 92,
-            distanciaBloqueioMin: 9,
-            distanciaBloqueioMax: 18,
-            distanciaColisao: 24,
-            alinhamentoMinimo: 0.18,
+            raioLeituraSilaba: 48,
+            raioRespostaPolicial: 72,
+            distanciaBloqueioMin: 6,
+            distanciaBloqueioMax: 12,
+            distanciaColisao: 16,
+            alinhamentoMinimo: 0.28,
           };
           const contextoTaticoPolicia = {
             ativa: false,
@@ -4422,10 +4660,11 @@
           let pontosJogador = 0;
           let carroSelecionado = "classico";
           let cooldownRampa = 0;
+          let cooldownRespawnJogador = 0;
           let atrasoPoliciaRestante = 0;
           let tempoReforcoPolicia = 0;
           let tempoContatoPolicia = 0;
-          const tempoCapturaPolicia = 1.18;
+          const tempoCapturaPolicia = 1.8;
           let cooldownImpactoColisao = 0;
           let intensidadeImpactoVisual = 0;
           let pausaCapturaAposColisao = 0;
@@ -4713,6 +4952,7 @@
               alvoRotaZ: Number.NaN,
               planoAtual: null,
               tempoSobreposicaoJogador: 0,
+              tempoDesgrudeJogador: 0,
             };
           }
 
@@ -4721,65 +4961,31 @@
               ...policia1,
               estado: criarEstadoPolicia(),
               estrategia: "perseguidora",
-              forcaFrente: 65000,
-              forcaRe: 25000,
+              forcaFrente: 52000,
+              forcaRe: 18000,
             },
             {
               ...policia2,
               estado: criarEstadoPolicia(),
               estrategia: "moto",
-              forcaFrente: 72000,
-              forcaRe: 22000,
-              velocidadeExtra: 5,
-              multiplicadorVelocidade: 1.06,
+              forcaFrente: 56000,
+              forcaRe: 17000,
+              velocidadeExtra: 0,
+              multiplicadorVelocidade: 1,
             },
             {
               ...policia3,
               estado: criarEstadoPolicia(),
               estrategia: "interceptadora",
-              forcaFrente: 70000,
-              forcaRe: 25000,
+              forcaFrente: 54000,
+              forcaRe: 18000,
             },
             {
               ...policia4,
               estado: criarEstadoPolicia(),
               estrategia: "flanqueadora",
-              forcaFrente: 75000,
-              forcaRe: 25000,
-            },
-            {
-              ...policia5,
-              estado: criarEstadoPolicia(),
-              estrategia: "pressiona",
-              forcaFrente: 80000,
-              forcaRe: 25000,
-            },
-            {
-              ...policia6,
-              estado: criarEstadoPolicia(),
-              estrategia: "corta-rota",
-              forcaFrente: 96000,
-              forcaRe: 32000,
-              velocidadeExtra: 8,
-              multiplicadorVelocidade: 1.12,
-            },
-            {
-              ...policia7,
-              estado: criarEstadoPolicia(),
-              estrategia: "cercadora",
-              forcaFrente: 88000,
-              forcaRe: 30000,
-              velocidadeExtra: 10,
-              multiplicadorVelocidade: 1.14,
-            },
-            {
-              ...policia8,
-              estado: criarEstadoPolicia(),
-              estrategia: "varredora",
-              forcaFrente: 102000,
-              forcaRe: 34000,
-              velocidadeExtra: 12,
-              multiplicadorVelocidade: 1.17,
+              forcaFrente: 58000,
+              forcaRe: 19000,
             },
           ];
           policiais.forEach((policial, indice) => {
@@ -4981,6 +5187,9 @@
           const botaoTrocarCarroJogo = document.getElementById(
             "btn-trocar-carro-jogo",
           );
+          const botaoRespawnManual = document.getElementById(
+            "btn-respawn-manual",
+          );
           const hudFase = document.getElementById("fase-info");
           const alvoEmojiHud = document.getElementById("alvo-emoji-hud");
           const infoSerie = document.getElementById("info-serie");
@@ -4993,11 +5202,14 @@
             "barra-risco-preenchimento",
           );
           const controlesTouch = document.getElementById("controles-touch");
-          const blocosSilabas = document.getElementById("blocos-silabas");
+          blocosSilabas = document.getElementById("blocos-silabas");
           const statusA11y = document.getElementById("status-a11y");
-          const textoDesafioHud = document.getElementById("texto-desafio-hud");
-          const efeitoVelocidade = document.getElementById("efeito-velocidade");
-          const impactoOverlay = document.getElementById("impacto-overlay");
+          const efeitoVelocidade = PERFIL_EXECUCAO.firefoxEconomia
+            ? null
+            : document.getElementById("efeito-velocidade");
+          const impactoOverlay = PERFIL_EXECUCAO.firefoxEconomia
+            ? null
+            : document.getElementById("impacto-overlay");
           const setaSilaba = document.getElementById("seta-silaba");
           radarCanvas = document.getElementById("radar-canvas");
           radarCtx = radarCanvas?.getContext("2d");
@@ -5302,6 +5514,91 @@
             atualizarIndicadorContato();
           }
 
+          function encontrarSpawnJogadorSeguro() {
+            const silabaAtual = obterSilabaAtual();
+            for (let tentativa = 0; tentativa < 80; tentativa++) {
+              const angulo = Math.random() * Math.PI * 2;
+              const raio = 30 + Math.random() * 90;
+              const ponto = limitarPontoAoMapa(
+                Math.cos(angulo) * raio,
+                Math.sin(angulo) * raio,
+                24,
+              );
+              if (!posicaoLivreNoMapa(ponto.x, ponto.z, 10)) continue;
+
+              let longeDaPolicia = true;
+              for (let i = 0; i < totalPoliciasAtivas; i++) {
+                const policial = policiais[i];
+                if (!policial?.visual.visible) continue;
+                if (
+                  Math.hypot(
+                    ponto.x - policial.corpo.position.x,
+                    ponto.z - policial.corpo.position.z,
+                  ) < 42
+                ) {
+                  longeDaPolicia = false;
+                  break;
+                }
+              }
+              if (!longeDaPolicia) continue;
+
+              if (
+                silabaAtual &&
+                !silabaAtual.coletada &&
+                Math.hypot(
+                  ponto.x - silabaAtual.mesh.position.x,
+                  ponto.z - silabaAtual.mesh.position.z,
+                ) < 18
+              ) {
+                continue;
+              }
+
+              return { x: ponto.x, y: 3, z: ponto.z };
+            }
+
+            return { x: 0, y: 3, z: 20 };
+          }
+
+          function respawnJogadorEmPontoSeguro(origem = "manual") {
+            if (estadoJogo !== "jogando" || rodadaEncerrada) return;
+            if (cooldownRespawnJogador > 0) return;
+
+            const spawn = encontrarSpawnJogadorSeguro();
+            const silabaAtual = obterSilabaAtual();
+            const alvoX = silabaAtual?.mesh.position.x ?? 0;
+            const alvoZ = silabaAtual?.mesh.position.z ?? 0;
+            const yaw = Math.atan2(alvoX - spawn.x, -(alvoZ - spawn.z));
+
+            resetarCorpo(carroCorpo, spawn.x, spawn.y, spawn.z);
+            carroCorpo.quaternion.setFromAxisAngle(eixoRotacaoY, yaw);
+            for (let i = 0; i < policiais.length; i++) {
+              reposicionarPolicia(policiais[i], i);
+            }
+            sincronizarVisibilidadePolicias();
+            resetarContextoTaticoPolicia();
+            acumuladorAnalisePolicial =
+              CONFIG_OTIMIZACAO.intervaloAnalisePolicial;
+            atrasoPoliciaRestante = 1.9;
+            tempoReforcoPolicia = 0;
+            tempoContatoPolicia = 0;
+            cooldownImpactoColisao = 0;
+            intensidadeImpactoVisual = 0;
+            pausaCapturaAposColisao = 0;
+            cooldownRespawnJogador = COOLDOWN_RESPAWN_MANUAL;
+            cameraPosicaoSuave.set(0, 0, 0);
+            cameraAlvoSuave.set(0, 0, 0);
+            carroVisual.position.copy(carroCorpo.position);
+            carroVisual.quaternion.copy(carroCorpo.quaternion);
+            if (efeitoVelocidade) efeitoVelocidade.style.opacity = "0";
+            if (impactoOverlay) impactoOverlay.style.opacity = "0";
+            atualizarIndicadorContato();
+            anunciarStatus(
+              origem === "capotado"
+                ? "Carro reposicionado automaticamente."
+                : "Carro reposicionado.",
+            );
+          }
+
           function resetarEstadoPolicia(estado) {
             estado.tempoTravado = 0;
             estado.tempoRe = 0;
@@ -5313,6 +5610,7 @@
             estado.alvoPatrulha = null;
             estado.planoAtual = null;
             estado.tempoSobreposicaoJogador = 0;
+            estado.tempoDesgrudeJogador = 0;
             limparRotaPolicial(estado);
           }
 
@@ -5875,28 +6173,30 @@
             // Passo 5: pacote final de agressividade e resposta do veículo.
             const agressividadeFinal = THREE.MathUtils.clamp(
               perfil.agressividade +
-                pressaoLocal * 0.2 +
-                oportunidadeObjetivo * 0.16 +
-                (modoCapturaDireta ? 0.22 : 0) +
-                (jogadorMuitoRapido ? 0.06 : 0),
-              0.3,
-              0.96,
+                pressaoLocal * 0.12 +
+                oportunidadeObjetivo * 0.08 +
+                (modoCapturaDireta ? 0.08 : 0) +
+                (jogadorMuitoRapido ? 0.03 : 0),
+              0.22,
+              0.64,
             );
+            const respostaCurvaSuave =
+              perfil.curva * 0.9 +
+              pressaoLocal * 0.06 +
+              (modoCapturaDireta ? 0.08 : 0) +
+              (jogadorMuitoRapido ? 0.04 : 0);
+            const bonusVelocidadeSuave =
+              perfil.bonusVelocidade * 0.42 +
+              oportunidadeObjetivo * 0.02 +
+              (modoCapturaDireta ? 0.03 : 0) +
+              Math.min(0.04, velocidadeJogadorModulo / 260);
             return {
               alvo: alvoCorrigido,
               agressividade: agressividadeFinal,
-              respostaCurva:
-                perfil.curva +
-                pressaoLocal * 0.12 +
-                (modoCapturaDireta ? 0.22 : 0) +
-                (jogadorMuitoRapido ? 0.08 : 0),
-              bonusVelocidade:
-                perfil.bonusVelocidade +
-                oportunidadeObjetivo * 0.05 +
-                (modoCapturaDireta ? 0.1 : 0) +
-                Math.min(0.12, velocidadeJogadorModulo / 180),
-              amortecimento: 0.988 + agressividadeFinal * 0.004,
-              modoCerco: jogadorParado || distPolicialJogador < 12,
+              respostaCurva: respostaCurvaSuave,
+              bonusVelocidade: bonusVelocidadeSuave,
+              amortecimento: 0.989 + agressividadeFinal * 0.003,
+              modoCerco: jogadorParado || distPolicialJogador < 8,
               modoCapturaDireta,
             };
           }
@@ -5913,6 +6213,7 @@
             for (let idx = 0; idx < totalPoliciasAtivas; idx++) {
               const policial = policiais[idx];
               if (!policial?.visual.visible) continue;
+              if ((policial.estado?.tempoDesgrudeJogador || 0) > 0) continue;
 
               const distHorizontal = Math.hypot(
                 carroCorpo.position.x - policial.corpo.position.x,
@@ -6128,29 +6429,56 @@
               1.6,
               3.6,
             );
+            const frenteJogador = obterDirecaoFrente(
+              corpoJogador,
+              direcaoFrontalTemp,
+            );
+            const impulsoFugaFrontal = THREE.MathUtils.clamp(
+              1.8 + Math.max(0, 8 - velocidadeJogadorAntes) * 0.24,
+              1.8,
+              3.8,
+            );
+            const policial = policiais.find(
+              (candidato) => candidato.corpo === corpoPolicial,
+            );
 
             corpoJogador.velocity.x +=
-              direcaoX * impulso + lateralX * impulsoLateral * sentidoLateral;
+              direcaoX * impulso +
+              lateralX * impulsoLateral * sentidoLateral +
+              frenteJogador.x * impulsoFugaFrontal;
             corpoJogador.velocity.z +=
-              direcaoZ * impulso + lateralZ * impulsoLateral * sentidoLateral;
+              direcaoZ * impulso +
+              lateralZ * impulsoLateral * sentidoLateral +
+              frenteJogador.z * impulsoFugaFrontal;
             corpoJogador.velocity.y = Math.max(corpoJogador.velocity.y, 2.4);
-            corpoPolicial.velocity.x -= direcaoX * impulso * 0.46;
-            corpoPolicial.velocity.z -= direcaoZ * impulso * 0.46;
-            const separacao = Math.max(1.2, 5.1 - distancia);
+            corpoPolicial.velocity.x -=
+              direcaoX * impulso * 0.7 + lateralX * impulsoLateral * 0.38;
+            corpoPolicial.velocity.z -=
+              direcaoZ * impulso * 0.7 + lateralZ * impulsoLateral * 0.38;
+            const separacao = Math.max(1.6, 5.8 - distancia);
             corpoJogador.position.x +=
-              direcaoX * separacao * 0.56 + lateralX * 0.34 * sentidoLateral;
+              direcaoX * separacao * 0.72 + lateralX * 0.48 * sentidoLateral;
             corpoJogador.position.z +=
-              direcaoZ * separacao * 0.56 + lateralZ * 0.34 * sentidoLateral;
-            corpoPolicial.position.x -= direcaoX * separacao * 0.34;
-            corpoPolicial.position.z -= direcaoZ * separacao * 0.34;
-            corpoJogador.velocity.x *= 0.82;
-            corpoJogador.velocity.z *= 0.82;
+              direcaoZ * separacao * 0.72 + lateralZ * 0.48 * sentidoLateral;
+            corpoPolicial.position.x -=
+              direcaoX * separacao * 0.58 + lateralX * 0.18 * sentidoLateral;
+            corpoPolicial.position.z -=
+              direcaoZ * separacao * 0.58 + lateralZ * 0.18 * sentidoLateral;
+            corpoJogador.velocity.x *= 0.96;
+            corpoJogador.velocity.z *= 0.96;
             limitarVelocidadeHorizontal(
               corpoJogador,
-              Math.max(2.8, velocidadeJogadorAntes * 0.58),
+              Math.max(9, velocidadeJogadorAntes * 0.96),
             );
-            cooldownImpactoColisao = 0.24;
-            pausaCapturaAposColisao = 0.42;
+            if (policial?.estado) {
+              policial.estado.tempoSobreposicaoJogador = 0;
+              policial.estado.tempoDesgrudeJogador = Math.max(
+                policial.estado.tempoDesgrudeJogador || 0,
+                0.72,
+              );
+            }
+            cooldownImpactoColisao = 0.18;
+            pausaCapturaAposColisao = 0.7;
             aplicarImpactoVisual(THREE.MathUtils.clamp(impulso / 8, 0.22, 0.6));
           }
 
@@ -6180,16 +6508,20 @@
               );
               if (contatoFisico) {
                 policial.estado.tempoSobreposicaoJogador += delta;
+                policial.estado.tempoDesgrudeJogador = Math.max(
+                  policial.estado.tempoDesgrudeJogador || 0,
+                  0.38,
+                );
               } else {
                 policial.estado.tempoSobreposicaoJogador = Math.max(
                   0,
                   policial.estado.tempoSobreposicaoJogador - delta * 2,
                 );
               }
-              if (distHorizontal >= 4.3 || distVertical >= 1.8) continue;
+              if (distHorizontal >= 4.6 || distVertical >= 1.9) continue;
               if (
                 contatoFisico &&
-                policial.estado.tempoSobreposicaoJogador < 0.35
+                policial.estado.tempoSobreposicaoJogador < 0.22
               ) {
                 continue;
               }
@@ -6197,15 +6529,15 @@
               const nx = dx / Math.max(distHorizontal, 0.001);
               const nz = dz / Math.max(distHorizontal, 0.001);
               const escape =
-                (4.4 - distHorizontal) * Math.max(0.1, delta * 3.2);
-              carroCorpo.position.x += nx * escape;
-              carroCorpo.position.z += nz * escape;
-              policial.corpo.position.x -= nx * escape * 0.52;
-              policial.corpo.position.z -= nz * escape * 0.52;
-              carroCorpo.velocity.x += nx * (0.8 + escape * 1.8);
-              carroCorpo.velocity.z += nz * (0.8 + escape * 1.8);
-              policial.corpo.velocity.x -= nx * (0.3 + escape);
-              policial.corpo.velocity.z -= nz * (0.3 + escape);
+                (4.8 - distHorizontal) * Math.max(0.18, delta * 4.1);
+              carroCorpo.position.x += nx * escape * 1.26;
+              carroCorpo.position.z += nz * escape * 1.26;
+              policial.corpo.position.x -= nx * escape * 0.38;
+              policial.corpo.position.z -= nz * escape * 0.38;
+              carroCorpo.velocity.x += nx * (1.15 + escape * 2.3);
+              carroCorpo.velocity.z += nz * (1.15 + escape * 2.3);
+              policial.corpo.velocity.x -= nx * (0.42 + escape * 1.2);
+              policial.corpo.velocity.z -= nz * (0.42 + escape * 1.2);
             }
           }
 
@@ -6418,15 +6750,15 @@
                 tempoCapturaPolicia,
                 tempoContatoPolicia +
                   delta *
-                    (serieAtual <= 2 ? 0.58 : 0.72) *
-                    (0.64 + pressaoPolicial * 0.52) *
+                    (serieAtual <= 2 ? 0.42 : 0.54) *
+                    (0.48 + pressaoPolicial * 0.32) *
                     (pausaCapturaAposColisao > 0 ? 0.18 : 1),
               );
             } else {
               tempoContatoPolicia = Math.max(
                 0,
                 tempoContatoPolicia -
-                  delta * (pausaCapturaAposColisao > 0 ? 0.72 : 1.22),
+                  delta * (pausaCapturaAposColisao > 0 ? 0.96 : 1.48),
               );
             }
 
@@ -6616,37 +6948,36 @@
           }
 
           function obterVelocidadeMaximaPolicial(policial, carroAtual) {
-            // A polícia continua variando por estratégia, força e curva,
-            // mas a velocidade final fica sempre 5% abaixo do carro escolhido.
-            return carroAtual.velocidadeMaxima * 0.95;
+            const fatorPorIndice = 0.82 + Math.min(policial?.indice || 0, 3) * 0.025;
+            return carroAtual.velocidadeMaxima * Math.min(0.9, fatorPorIndice);
           }
 
           function obterForcaFrentePolicial(policial) {
             const multiplicadorPosicao =
-              1 + Math.min(policial?.indice || 0, 7) * 0.05;
+              1 + Math.min(policial?.indice || 0, 3) * 0.03;
             return (
               policial.forcaFrente *
               fatorForcaPolicialAtual *
-              0.84 *
+              0.68 *
               multiplicadorPosicao
             );
           }
 
           function obterForcaRePolicial(policial) {
             const multiplicadorPosicao =
-              1 + Math.min(policial?.indice || 0, 7) * 0.04;
+              1 + Math.min(policial?.indice || 0, 3) * 0.025;
             return (
               policial.forcaRe *
-              Math.min(1.2, 1 + (fatorForcaPolicialAtual - 1) * 0.45) *
-              0.82 *
+              Math.min(1.05, 1 + (fatorForcaPolicialAtual - 1) * 0.2) *
+              0.62 *
               multiplicadorPosicao
             );
           }
 
           function configurarDificuldadeDaFase(indice) {
-            totalPoliciasAtivas = Math.min(indice + 1, 8);
-            bonusVelocidadePolicialAtual = 2.5 + indice * 3.0;
-            fatorForcaPolicialAtual = 1 + indice * 0.05;
+            totalPoliciasAtivas = Math.min(indice + 1, MAX_POLICIAS_ATIVAS);
+            bonusVelocidadePolicialAtual = 0;
+            fatorForcaPolicialAtual = 0.92 + indice * 0.015;
             const policialDaFase =
               ordemPoliciasPorFase[
                 Math.min(indice, ordemPoliciasPorFase.length - 1)
@@ -6711,10 +7042,6 @@
             marcadorObjetivo3D.visible = false;
             helicopteroPolicia.visible = false;
             hudFase.textContent = "SÉRIE 1 · FASE 1";
-            if (textoDesafioHud) {
-              textoDesafioHud.textContent =
-                "Complete a vogal inicial e fuja da polícia.";
-            }
             infoSerie.textContent = "1º Ano";
             alvoEmojiHud.textContent = "🎯";
             alvoEmojiHud.classList.remove("emoji-destaque");
@@ -6796,12 +7123,18 @@
             // Limpa objetos do mapa anterior (caso reuse)
             limparObjetosRegistrados(objetosDoMapa);
             limparObjetosRegistrados(objetosDestaFase);
-            const fatorMapaLeve = PERFIL_EXECUCAO.pcFraco ? 0.72 : 1;
+            const fatorMapaLeve = PERFIL_EXECUCAO.firefoxEconomia
+              ? 0.58
+              : PERFIL_EXECUCAO.pcFraco
+                ? 0.72
+                : 1;
 
             // === RAMPAS ALEATÓRIAS (5 a 7 rampas em posições variadas) ===
-            const numRampas = PERFIL_EXECUCAO.pcFraco
-              ? 4 + Math.floor(Math.random() * 2)
-              : 5 + Math.floor(Math.random() * 3);
+            const numRampas = PERFIL_EXECUCAO.firefoxEconomia
+              ? 3 + Math.floor(Math.random() * 2)
+              : PERFIL_EXECUCAO.pcFraco
+                ? 4 + Math.floor(Math.random() * 2)
+                : 5 + Math.floor(Math.random() * 3);
             for (let i = 0; i < numRampas; i++) {
               let rx = (Math.random() - 0.5) * 240;
               let rz = (Math.random() - 0.5) * 240;
@@ -6908,6 +7241,7 @@
               );
               blocosSilabas.appendChild(blocoPalavra);
               sincronizarLayoutHUDIframe();
+              agendarAjusteBlocosSilabas();
               return;
             }
 
@@ -6936,6 +7270,7 @@
               blocosSilabas.appendChild(bloco);
             }
             sincronizarLayoutHUDIframe();
+            agendarAjusteBlocosSilabas();
           }
 
           function carregarFase(indice) {
@@ -6969,8 +7304,6 @@
             const fase = niveisAtuais[indice];
             hudFase.textContent = `${serieAtual}º ANO · FASE ${indice + 1} / ${niveisAtuais.length}`;
             infoSerie.textContent = `${serieAtual}º Ano`;
-            if (textoDesafioHud)
-              textoDesafioHud.textContent = obterTextoDesafio(fase);
             atualizarDicaVisual(fase.palavra);
 
             // Gera posições aleatórias para as sílabas, longe do centro e entre si
@@ -7087,6 +7420,9 @@
             "click",
             trocarParaProximoCarro,
           );
+          botaoRespawnManual?.addEventListener("click", () => {
+            respawnJogadorEmPontoSeguro("manual");
+          });
           carregarProgressoLocal();
           atualizarPainelPontos();
           atualizarGaragemUI();
@@ -7222,20 +7558,17 @@
 
             const cima = preencherVetorCima(carroCorpo, vetorCimaCapotagemTemp);
             const velocidade = carroCorpo.velocity.length();
-            const capotadoOuDeLado = cima.y < 0.18;
+            const capotadoOuDeLado = cima.y < 0.16;
 
-            if (capotadoOuDeLado && velocidade < 5) {
+            if (capotadoOuDeLado && velocidade < 4.5) {
               reposicionarCarroSeCapotado.tempo += delta;
             } else {
               reposicionarCarroSeCapotado.tempo = 0;
             }
 
-            if (reposicionarCarroSeCapotado.tempo >= 1.1) {
+            if (reposicionarCarroSeCapotado.tempo >= TEMPO_RESPAWN_CAPOTADO) {
               reposicionarCarroSeCapotado.tempo = 0;
-              carroCorpo.position.y += 3.2;
-              carroCorpo.quaternion.setFromAxisAngle(eixoRotacaoY, 0);
-              carroCorpo.velocity.set(0, 0, 0);
-              carroCorpo.angularVelocity.set(0, 0, 0);
+              respawnJogadorEmPontoSeguro("capotado");
             }
           }
 
@@ -7360,12 +7693,12 @@
               contextoTaticoPolicia.policialIndice === policial.indice;
             const multiplicadorTatico = policialTatico
               ? contextoTaticoPolicia.modo === "colisao"
-                ? 1.14
-                : 1.08
+                ? 1.06
+                : 1.03
               : 1 +
-                planoIA.agressividade * 0.12 +
-                (planoIA.modoCerco ? 0.08 : 0) +
-                (planoIA.modoCapturaDireta ? 0.12 : 0);
+                planoIA.agressividade * 0.06 +
+                (planoIA.modoCerco ? 0.04 : 0) +
+                (planoIA.modoCapturaDireta ? 0.05 : 0);
             const fatorSpawn = Math.min(
               estado.tempoSpawn > 0 ? (2.0 - estado.tempoSpawn) / 2.0 : 1,
               1,
@@ -7375,7 +7708,7 @@
               forcaFrente *
               fatorSpawn *
               multiplicadorTatico *
-              (1 + planoIA.bonusVelocidade * 0.2);
+              (1 + planoIA.bonusVelocidade * 0.1);
             // O teto de velocidade da polícia precisa respeitar o carro
             // escolhido pelo jogador. A IA pode variar na força e na curva,
             // mas não pode ultrapassar esse limite final.
@@ -7406,6 +7739,10 @@
             estado.tempoEstrategia = Math.max(
               0,
               estado.tempoEstrategia - delta,
+            );
+            estado.tempoDesgrudeJogador = Math.max(
+              0,
+              estado.tempoDesgrudeJogador - delta,
             );
 
             if (
@@ -7438,6 +7775,13 @@
               const anguloAlvo = Math.atan2(alvoDx, -alvoDz);
               const yawAtual = obterYawCorpo(corpo);
               const diffAngulo = normalizarAngulo(anguloAlvo - yawAtual);
+              const anguloEscapeJogador = Math.atan2(
+                corpo.position.x - carroCorpo.position.x,
+                -(corpo.position.z - carroCorpo.position.z),
+              );
+              const diffEscapeJogador = normalizarAngulo(
+                anguloEscapeJogador - yawAtual,
+              );
 
               aplicarTracaoLateral(
                 corpo,
@@ -7449,6 +7793,27 @@
               );
               corpo.angularVelocity.x = 0;
               corpo.angularVelocity.z = 0;
+
+              if (estado.tempoDesgrudeJogador > 0) {
+                corpo.angularVelocity.y = THREE.MathUtils.clamp(
+                  -diffEscapeJogador * 2.4,
+                  -2.4,
+                  2.4,
+                );
+                corpo.velocity.x +=
+                  (corpo.position.x - carroCorpo.position.x) *
+                  Math.min(0.02, delta * 0.14);
+                corpo.velocity.z +=
+                  (corpo.position.z - carroCorpo.position.z) *
+                  Math.min(0.02, delta * 0.14);
+                aplicarForcaDirecional(corpo, -forcaRe * 0.72);
+                corpo.velocity.x *= 0.992;
+                corpo.velocity.z *= 0.992;
+                limitarVelocidadeHorizontal(corpo, velMaximaEfetiva * 0.34);
+                visual.quaternion.copy(corpo.quaternion);
+                if (typeof corpo.wakeUp === "function") corpo.wakeUp();
+                return true;
+              }
 
               if (
                 estado.tempoRe <= 0 &&
@@ -7711,7 +8076,7 @@
 
             if (estadoJogo === "jogando") {
               const carroAtual = obterCarroAtual();
-              velMaxPolicia = carroAtual.velocidadeMaxima * 0.95;
+              velMaxPolicia = carroAtual.velocidadeMaxima * 0.9;
               for (let indice = 0; indice < totalPoliciasAtivas; indice++) {
                 velMaxPolicia = Math.max(
                   velMaxPolicia,
@@ -7719,6 +8084,10 @@
                 );
               }
               cooldownRampa = Math.max(0, cooldownRampa - delta);
+              cooldownRespawnJogador = Math.max(
+                0,
+                cooldownRespawnJogador - delta,
+              );
               atrasoPoliciaRestante = Math.max(
                 0,
                 atrasoPoliciaRestante - delta,
@@ -8025,47 +8394,60 @@
               renderizador.setScissorTest(true);
               renderizador.render(cena, camera);
 
-              const larguraMapa = Math.max(
-                1,
-                tamanhoMiniMapa - CONFIG_RADAR_REAL.inset * 2,
-              );
-              const alturaMapa = Math.max(
-                1,
-                tamanhoMiniMapa - CONFIG_RADAR_REAL.inset * 2,
-              );
-              const origemMapaX =
-                Math.max(10, larguraViewport - tamanhoMiniMapa - 20) +
-                CONFIG_RADAR_REAL.inset;
-              const origemMapaY = 20 + CONFIG_RADAR_REAL.inset;
-              const alcanceMapa = tamanhoMapa / 2 + CONFIG_RADAR_REAL.folgaMapa;
-              cameraMiniMapa.left = -alcanceMapa;
-              cameraMiniMapa.right = alcanceMapa;
-              cameraMiniMapa.top = alcanceMapa;
-              cameraMiniMapa.bottom = -alcanceMapa;
-              cameraMiniMapa.position.set(0, CONFIG_RADAR_REAL.altitude, 0);
-              cameraMiniMapa.lookAt(0, 0, 0);
-              cameraMiniMapa.updateProjectionMatrix();
+              if (EXIBIR_HUD_SECUNDARIA && !hudCompactaAtiva) {
+                const larguraMapa = Math.max(
+                  1,
+                  tamanhoMiniMapa - CONFIG_RADAR_REAL.inset * 2,
+                );
+                const alturaMapa = Math.max(
+                  1,
+                  tamanhoMiniMapa - CONFIG_RADAR_REAL.inset * 2,
+                );
+                const origemMapaX =
+                  Math.max(10, larguraViewport - tamanhoMiniMapa - 20) +
+                  CONFIG_RADAR_REAL.inset;
+                const origemMapaY = 20 + CONFIG_RADAR_REAL.inset;
+                const alcanceMapa =
+                  tamanhoMapa / 2 + CONFIG_RADAR_REAL.folgaMapa;
+                cameraMiniMapa.left = -alcanceMapa;
+                cameraMiniMapa.right = alcanceMapa;
+                cameraMiniMapa.top = alcanceMapa;
+                cameraMiniMapa.bottom = -alcanceMapa;
+                cameraMiniMapa.position.set(0, CONFIG_RADAR_REAL.altitude, 0);
+                cameraMiniMapa.lookAt(0, 0, 0);
+                cameraMiniMapa.updateProjectionMatrix();
 
-              renderizador.setViewport(
-                origemMapaX,
-                origemMapaY,
-                larguraMapa,
-                alturaMapa,
-              );
-              renderizador.setScissor(
-                origemMapaX,
-                origemMapaY,
-                larguraMapa,
-                alturaMapa,
-              );
-              renderizador.setScissorTest(true);
-              renderizador.clearDepth();
-              const neblinaRadar = cena.fog;
-              cena.fog = null;
-              renderizador.render(cena, cameraMiniMapa);
-              cena.fog = neblinaRadar;
-              renderizador.setScissorTest(false);
-              atualizarRadar(delta);
+                renderizador.setViewport(
+                  origemMapaX,
+                  origemMapaY,
+                  larguraMapa,
+                  alturaMapa,
+                );
+                renderizador.setScissor(
+                  origemMapaX,
+                  origemMapaY,
+                  larguraMapa,
+                  alturaMapa,
+                );
+                renderizador.setScissorTest(true);
+                renderizador.clearDepth();
+                const neblinaRadar = cena.fog;
+                cena.fog = null;
+                renderizador.render(cena, cameraMiniMapa);
+                cena.fog = neblinaRadar;
+                renderizador.setScissorTest(false);
+                atualizarRadar(delta);
+              } else {
+                renderizador.setScissorTest(false);
+                if (radarCtx && radarCanvas) {
+                  radarCtx.clearRect(
+                    0,
+                    0,
+                    radarCanvas.clientWidth || 0,
+                    radarCanvas.clientHeight || 0,
+                  );
+                }
+              }
               atualizarSetaSilaba();
             } else if (radarCtx && radarCanvas) {
               radarCtx.clearRect(
