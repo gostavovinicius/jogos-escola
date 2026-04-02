@@ -942,22 +942,17 @@
         gap: 8px;
         align-self: flex-start;
         width: 100%;
-        max-width: 100%;
-        min-width: 0;
       }
 
       .hud-meta {
         min-width: 0;
         display: grid;
         gap: 8px;
-        max-width: 100%;
       }
 
       #objetivo-principal-hud {
         display: grid;
         gap: 8px;
-        max-width: 100%;
-        min-width: 0;
       }
 
       #palavra-alvo-hud {
@@ -1038,7 +1033,6 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        flex-wrap: wrap;
       }
 
       #interface.modo-silabas #alvo-emoji-hud {
@@ -1056,9 +1050,6 @@
         order: 1;
         flex: 0 0 auto;
         gap: 10px;
-        flex-wrap: wrap;
-        max-width: 100%;
-        overflow: visible;
       }
 
       #interface.modo-silabas #palavra-alvo-hud {
@@ -1232,13 +1223,13 @@
         gap: var(--silabas-gap);
         justify-content: flex-start;
         align-items: center;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         flex: 0 1 auto;
         min-width: 0;
         width: auto;
         max-width: 100%;
-        overflow: visible;
-        white-space: normal;
+        overflow: hidden;
+        white-space: nowrap;
       }
 
       .bloco-silaba {
@@ -2119,10 +2110,6 @@
           const projecaoSilabaTemp = new THREE.Vector3();
           const alvoHelicopteroTemp = new THREE.Vector3();
           const olharHelicopteroTemp = new THREE.Vector3();
-          const direcaoTiroHelicopteroTemp = new THREE.Vector3();
-          const origemTiroHelicopteroTemp = new THREE.Vector3();
-          const direcaoRecuoHelicopteroTemp = new THREE.Vector3();
-          const alvoPrevistoHelicopteroTemp = new THREE.Vector3();
           let tamanhoSombraAtual = 0;
           let luzDirecional = null;
           let radarCanvas = null;
@@ -2143,16 +2130,6 @@
           const MAX_POLICIAS_ATIVAS = 4;
           const TEMPO_RESPAWN_CAPOTADO = 5;
           const COOLDOWN_RESPAWN_MANUAL = 1.2;
-          const TEMPO_INATIVIDADE_HELICOPTERO = 30;
-          const INTERVALO_ATAQUE_HELICOPTERO = 1.2;
-          const MAX_PROJETEIS_HELICOPTERO = 4;
-          const geoProjetilHelicoptero = new THREE.SphereGeometry(0.48, 8, 8);
-          const matProjetilHelicoptero = new THREE.MeshBasicMaterial({
-            color: 0xffb703,
-            transparent: true,
-            opacity: 0.96,
-          });
-          const geoParticulaFogos = new THREE.SphereGeometry(1, 5, 5);
 
           function preencherVetorCima(corpo, destino) {
             destino.set(0, 1, 0);
@@ -4528,7 +4505,7 @@
               nome: "Fase Fácil",
               descricao: "Palavras com vogal inicial",
               destaque: true,
-              multiplicadorMapa: 0.72,
+              multiplicadorMapa: 1,
               pressaoPolicia: 0.42,
               fases: [
                 {
@@ -4627,7 +4604,7 @@
               nome: "Fase Média",
               descricao: "Palavras com sílabas simples",
               destaque: false,
-              multiplicadorMapa: 1,
+              multiplicadorMapa: 1.18,
               pressaoPolicia: 0.5,
               fases: [
                 {
@@ -4711,7 +4688,7 @@
               nome: "Fase Difícil",
               descricao: "Palavras com sílabas complexas",
               destaque: false,
-              multiplicadorMapa: 1.55,
+              multiplicadorMapa: 1.36,
               pressaoPolicia: 0.58,
               fases: [
                 {
@@ -4828,11 +4805,6 @@
           let cooldownImpactoColisao = 0;
           let intensidadeImpactoVisual = 0;
           let pausaCapturaAposColisao = 0;
-          let tempoSemColetarObjetivo = 0;
-          let punicaoHelicopteroAtiva = false;
-          let cooldownAtaqueHelicoptero = 0;
-          let intensidadePunicaoHelicoptero = 0;
-          let projeteisHelicoptero = [];
           const CHAVE_PONTOS = "corridaDoSaber:pontos";
           const CHAVE_CARRO = "corridaDoSaber:carroSelecionado";
           const CHAVE_CARROS_DESBLOQUEADOS =
@@ -5481,25 +5453,10 @@
           function limparEfeitosFogos() {
             for (const efeito of efeitosFogos) {
               cena.remove(efeito.mesh);
-              if (efeito.mesh.geometry !== geoParticulaFogos) {
-                efeito.mesh.geometry.dispose();
-              }
+              efeito.mesh.geometry.dispose();
               efeito.mesh.material.dispose();
             }
             efeitosFogos = [];
-          }
-
-          function limparProjeteisHelicoptero() {
-            for (const projetil of projeteisHelicoptero) {
-              cena.remove(projetil.mesh);
-              if (projetil.mesh.geometry !== geoProjetilHelicoptero) {
-                projetil.mesh.geometry.dispose();
-              }
-              if (projetil.mesh.material !== matProjetilHelicoptero) {
-                projetil.mesh.material.dispose();
-              }
-            }
-            projeteisHelicoptero = [];
           }
 
           function zerarTeclas() {
@@ -6439,14 +6396,6 @@
             pontosMenu.textContent = `Pontos: ${pontosJogador}`;
           }
 
-          function reiniciarTemporizadorDeObjetivo() {
-            tempoSemColetarObjetivo = 0;
-            punicaoHelicopteroAtiva = false;
-            cooldownAtaqueHelicoptero = 0;
-            intensidadePunicaoHelicoptero = 0;
-            limparProjeteisHelicoptero();
-          }
-
           function atualizarObjetivoHUD() {
             const fase = niveisAtuais[faseAtual];
             if (!fase) return;
@@ -6918,225 +6867,12 @@
           // Helicóptero faz patrulha em círculos pelo mapa, sem depender do
           // jogador. Assim ele passa por diferentes áreas do cenário e fica mais
           // natural visualmente.
-          function calcularAlvoPrevistoHelicoptero(destino) {
-            const alvo = destino || alvoPrevistoHelicopteroTemp;
-            const velocidadeProjetil = 96;
-            const frenteJogador = obterDirecaoFrente(
-              carroCorpo,
-              direcaoIAJogadorTemp,
-            );
-            const velocidadeHorizontal = Math.hypot(
-              carroCorpo.velocity.x,
-              carroCorpo.velocity.z,
-            );
-            const movimentoX =
-              velocidadeHorizontal > 3
-                ? carroCorpo.velocity.x
-                : frenteJogador.x * 8;
-            const movimentoZ =
-              velocidadeHorizontal > 3
-                ? carroCorpo.velocity.z
-                : frenteJogador.z * 8;
-            const distanciaInicial = Math.hypot(
-              helicopteroPolicia.position.x - carroCorpo.position.x,
-              helicopteroPolicia.position.y - (carroCorpo.position.y + 1),
-              helicopteroPolicia.position.z - carroCorpo.position.z,
-            );
-            let tempoInterceptacao = THREE.MathUtils.clamp(
-              distanciaInicial / velocidadeProjetil,
-              0.28,
-              2.2,
-            );
-            alvo.set(
-              carroCorpo.position.x + movimentoX * tempoInterceptacao,
-              carroCorpo.position.y + 1 + carroCorpo.velocity.y * tempoInterceptacao * 0.12,
-              carroCorpo.position.z + movimentoZ * tempoInterceptacao,
-            );
-            const distanciaRefinada = Math.hypot(
-              helicopteroPolicia.position.x - alvo.x,
-              helicopteroPolicia.position.y - alvo.y,
-              helicopteroPolicia.position.z - alvo.z,
-            );
-            tempoInterceptacao = THREE.MathUtils.clamp(
-              distanciaRefinada / velocidadeProjetil,
-              0.28,
-              2.4,
-            );
-            alvo.set(
-              carroCorpo.position.x + movimentoX * tempoInterceptacao,
-              carroCorpo.position.y + 1 + carroCorpo.velocity.y * tempoInterceptacao * 0.12,
-              carroCorpo.position.z + movimentoZ * tempoInterceptacao,
-            );
-            return alvo;
-          }
-
-          function removerProjetilHelicoptero(projetil) {
-            cena.remove(projetil.mesh);
-            if (projetil.mesh.geometry !== geoProjetilHelicoptero) {
-              projetil.mesh.geometry.dispose();
-            }
-            if (projetil.mesh.material !== matProjetilHelicoptero) {
-              projetil.mesh.material.dispose();
-            }
-          }
-
-          function dispararProjetilHelicoptero() {
-            origemTiroHelicopteroTemp
-              .copy(helicopteroPolicia.position)
-              .setY(helicopteroPolicia.position.y - 1.2);
-            const alvoPrevisto = calcularAlvoPrevistoHelicoptero(
-              alvoPrevistoHelicopteroTemp,
-            );
-            direcaoTiroHelicopteroTemp
-              .set(
-                alvoPrevisto.x - origemTiroHelicopteroTemp.x,
-                alvoPrevisto.y - origemTiroHelicopteroTemp.y,
-                alvoPrevisto.z - origemTiroHelicopteroTemp.z,
-              )
-              .normalize();
-
-            if (projeteisHelicoptero.length >= MAX_PROJETEIS_HELICOPTERO) {
-              const antigo = projeteisHelicoptero.shift();
-              if (antigo) removerProjetilHelicoptero(antigo);
-            }
-
-            const mesh = new THREE.Mesh(
-              geoProjetilHelicoptero,
-              matProjetilHelicoptero,
-            );
-            mesh.position.copy(origemTiroHelicopteroTemp);
-            cena.add(mesh);
-            projeteisHelicoptero.push({
-              mesh,
-              velocidade: direcaoTiroHelicopteroTemp.clone().multiplyScalar(96),
-              vida: 5.4,
-            });
-          }
-
-          function atualizarProjeteisHelicoptero(delta) {
-            if (!projeteisHelicoptero.length) return;
-
-            for (let i = projeteisHelicoptero.length - 1; i >= 0; i--) {
-              const projetil = projeteisHelicoptero[i];
-              projetil.vida -= delta;
-              projetil.mesh.position.addScaledVector(projetil.velocidade, delta);
-
-              const dx = projetil.mesh.position.x - carroCorpo.position.x;
-              const dy = projetil.mesh.position.y - (carroCorpo.position.y + 1);
-              const dz = projetil.mesh.position.z - carroCorpo.position.z;
-              if (dx * dx + dy * dy + dz * dz <= 20) {
-                const moduloVelocidade =
-                  Math.hypot(
-                    projetil.velocidade.x,
-                    projetil.velocidade.y,
-                    projetil.velocidade.z,
-                  ) || 1;
-                const impactoX = projetil.velocidade.x / moduloVelocidade;
-                const impactoY = projetil.velocidade.y / moduloVelocidade;
-                const impactoZ = projetil.velocidade.z / moduloVelocidade;
-                carroCorpo.velocity.x += impactoX * 28;
-                carroCorpo.velocity.z += impactoZ * 28;
-                carroCorpo.velocity.y = Math.max(
-                  carroCorpo.velocity.y,
-                  4.2 + Math.abs(impactoY) * 1.6,
-                );
-                criarFogosSilaba(projetil.mesh.position, "#ff7043", 5);
-                aplicarImpactoVisual(0.56);
-                mostrarMensagemHud(
-                  "Tiro do helicóptero! Pegue o bloco!",
-                  "alerta",
-                );
-                anunciarStatus(
-                  "Tiro do helicóptero acertou o jogador. Colete o proximo bloco para parar a punicao.",
-                );
-                removerProjetilHelicoptero(projetil);
-                projeteisHelicoptero.splice(i, 1);
-                continue;
-              }
-
-              const foraDoMapa =
-                Math.abs(projetil.mesh.position.x) > tamanhoMapa ||
-                Math.abs(projetil.mesh.position.z) > tamanhoMapa ||
-                projetil.mesh.position.y < -2;
-              if (projetil.vida <= 0 || foraDoMapa) {
-                removerProjetilHelicoptero(projetil);
-                projeteisHelicoptero.splice(i, 1);
-              }
-            }
-          }
-
           function atualizarHelicopteroPolicial(delta, tempoAgora) {
             if (!helicopteroPolicia) return;
 
-            const ativo =
-              estadoJogo === "jogando" &&
-              (faseAtual >= 2 || punicaoHelicopteroAtiva);
+            const ativo = estadoJogo === "jogando" && faseAtual >= 2;
             helicopteroPolicia.visible = ativo;
             if (!ativo) return;
-
-            if (punicaoHelicopteroAtiva) {
-              intensidadePunicaoHelicoptero = Math.min(
-                1,
-                intensidadePunicaoHelicoptero + delta * 1.8,
-              );
-              cooldownAtaqueHelicoptero = Math.max(
-                0,
-                cooldownAtaqueHelicoptero - delta,
-              );
-              const orbitaPunicao = tempoAgora * 0.016;
-              const raioBordaX = tamanhoMapa / 2 + 28;
-              const raioBordaZ = tamanhoMapa / 2 + 18;
-              alvoHelicopteroTemp.set(
-                Math.cos(orbitaPunicao) * raioBordaX,
-                29 + Math.sin(tempoAgora * 0.18) * 1.8,
-                Math.sin(orbitaPunicao) * raioBordaZ,
-              );
-              direcaoRecuoHelicopteroTemp.set(
-                helicopteroPolicia.position.x - carroCorpo.position.x,
-                0,
-                helicopteroPolicia.position.z - carroCorpo.position.z,
-              );
-              const distanciaAtual = direcaoRecuoHelicopteroTemp.length();
-              if (distanciaAtual < 60) {
-                helicopteroPolicia.position.set(
-                  alvoHelicopteroTemp.x,
-                  alvoHelicopteroTemp.y,
-                  alvoHelicopteroTemp.z,
-                );
-              }
-              helicopteroPolicia.position.lerp(
-                alvoHelicopteroTemp,
-                THREE.MathUtils.clamp(delta * 0.46, 0.02, 0.05),
-              );
-              const alvoPrevisto = calcularAlvoPrevistoHelicoptero(
-                alvoPrevistoHelicopteroTemp,
-              );
-              olharHelicopteroTemp.set(
-                alvoPrevisto.x,
-                alvoPrevisto.y,
-                alvoPrevisto.z,
-              );
-              helicopteroPolicia.lookAt(olharHelicopteroTemp);
-              if (cooldownAtaqueHelicoptero <= 0 && !rodadaEncerrada) {
-                dispararProjetilHelicoptero();
-                mostrarMensagemHud(
-                  "Helicóptero atirando de longe!",
-                  "alerta",
-                );
-                anunciarStatus(
-                  "Helicoptero atirando de longe. Colete o proximo bloco para parar a punicao.",
-                );
-                cooldownAtaqueHelicoptero = INTERVALO_ATAQUE_HELICOPTERO;
-              }
-              helicopteroPolicia.userData.rotorPrincipal.rotation.y += delta * 30;
-              helicopteroPolicia.userData.rotorCauda.rotation.x += delta * 38;
-              return;
-            }
-
-            intensidadePunicaoHelicoptero = Math.max(
-              0,
-              intensidadePunicaoHelicoptero - delta * 2,
-            );
 
             const orbita = tempoAgora * 0.028;
             const raioPrincipal = 72 + (faseAtual % 3) * 16;
@@ -7172,18 +6908,6 @@
 
           function atualizarSetaSilaba() {
             ocultarSetaSilaba();
-          }
-
-          function atualizarPunicaoPorInatividade(delta) {
-            if (estadoJogo !== "jogando" || rodadaEncerrada) {
-              reiniciarTemporizadorDeObjetivo();
-              return;
-            }
-
-            tempoSemColetarObjetivo += delta;
-            if (tempoSemColetarObjetivo >= TEMPO_INATIVIDADE_HELICOPTERO) {
-              punicaoHelicopteroAtiva = true;
-            }
           }
 
           function atualizarCapturaPorContato(delta) {
@@ -7395,9 +7119,6 @@
           }
 
           function obterVelocidadeMaximaPolicial(policial, carroAtual) {
-            if (grupoFaseAtual === "dificil") {
-              return carroAtual.velocidadeMaxima;
-            }
             const fatorPorIndice =
               0.82 + Math.min(policial?.indice || 0, 3) * 0.025;
             return carroAtual.velocidadeMaxima * Math.min(0.9, fatorPorIndice);
@@ -7426,19 +7147,7 @@
           }
 
           function configurarDificuldadeDaFase(indice) {
-            if (grupoFaseAtual === "facil") {
-              totalPoliciasAtivas = Math.min(
-                1 + Math.floor(indice / 2),
-                MAX_POLICIAS_ATIVAS,
-              );
-            } else if (grupoFaseAtual === "media") {
-              totalPoliciasAtivas = Math.min(
-                2 * Math.pow(2, Math.floor(indice / 2)),
-                MAX_POLICIAS_ATIVAS,
-              );
-            } else {
-              totalPoliciasAtivas = Math.min(indice + 1, MAX_POLICIAS_ATIVAS);
-            }
+            totalPoliciasAtivas = Math.min(indice + 1, MAX_POLICIAS_ATIVAS);
             bonusVelocidadePolicialAtual = 0;
             fatorForcaPolicialAtual = 0.92 + indice * 0.015;
             const policialDaFase =
@@ -7490,7 +7199,6 @@
             limparObjetosRegistrados(objetosDoMapa);
             silabasAtivas = [];
             proximaSilaba = 0;
-            reiniciarTemporizadorDeObjetivo();
             resetarContextoTaticoPolicia();
             acumuladorAnalisePolicial = 0;
             rodadaEncerrada = false;
@@ -7596,7 +7304,6 @@
             tempoContatoPolicia = 0;
             contatoVisualPolicia = 0;
             pausaCapturaAposColisao = 0;
-            reiniciarTemporizadorDeObjetivo();
             limparTransicoes();
             zerarTeclas();
             areasOcupadasMapa = [];
@@ -7611,17 +7318,11 @@
                 : 1;
 
             // === RAMPAS ALEATÓRIAS (5 a 7 rampas em posições variadas) ===
-            const multiplicadorMapa =
-              bancoDeFases[grupoFaseAtual]?.multiplicadorMapa || 1;
-            const numRampasBase = PERFIL_EXECUCAO.firefoxEconomia
+            const numRampas = PERFIL_EXECUCAO.firefoxEconomia
               ? 3 + Math.floor(Math.random() * 2)
               : PERFIL_EXECUCAO.pcFraco
                 ? 4 + Math.floor(Math.random() * 2)
                 : 5 + Math.floor(Math.random() * 3);
-            const numRampas = Math.max(
-              2,
-              Math.round(numRampasBase * Math.max(0.72, multiplicadorMapa)),
-            );
             for (let i = 0; i < numRampas; i++) {
               let rx = (Math.random() - 0.5) * 240;
               let rz = (Math.random() - 0.5) * 240;
@@ -7635,6 +7336,8 @@
             }
 
             // === OBSTÁCULOS ALEATÓRIOS (árvores e pedras) ===
+            const multiplicadorMapa =
+              bancoDeFases[grupoFaseAtual]?.multiplicadorMapa || 1;
             let quantidadeObstaculos = Math.round(
               48 * multiplicadorMapa * fatorMapaLeve,
             );
@@ -7758,7 +7461,6 @@
             rodadaEncerrada = false;
             tempoContatoPolicia = 0;
             contatoVisualPolicia = 0;
-            reiniciarTemporizadorDeObjetivo();
             policiais.forEach((policial) =>
               resetarEstadoPolicia(policial.estado),
             );
@@ -7955,12 +7657,11 @@
             }
           }
 
-          function criarFogosSilaba(posicao, corHex, quantidade = 16) {
+          function criarFogosSilaba(posicao, corHex) {
             const cor = new THREE.Color(corHex);
-            for (let i = 0; i < quantidade; i++) {
-              const escalaParticula = 0.22 + Math.random() * 0.12;
+            for (let i = 0; i < 16; i++) {
               const particula = new THREE.Mesh(
-                geoParticulaFogos,
+                new THREE.SphereGeometry(0.22 + Math.random() * 0.12, 6, 6),
                 new THREE.MeshBasicMaterial({
                   color: cor,
                   transparent: true,
@@ -7968,11 +7669,9 @@
                 }),
               );
               particula.position.copy(posicao);
-              particula.scale.setScalar(escalaParticula);
               cena.add(particula);
               efeitosFogos.push({
                 mesh: particula,
-                escalaBase: escalaParticula,
                 velocidade: new THREE.Vector3(
                   (Math.random() - 0.5) * 8,
                   4 + Math.random() * 6,
@@ -7984,17 +7683,13 @@
           }
 
           function atualizarFogos(delta) {
-            for (let i = efeitosFogos.length - 1; i >= 0; i--) {
-              const efeito = efeitosFogos[i];
+            efeitosFogos = efeitosFogos.filter((efeito) => {
               efeito.vida -= delta;
               if (efeito.vida <= 0) {
                 cena.remove(efeito.mesh);
-                if (efeito.mesh.geometry !== geoParticulaFogos) {
-                  efeito.mesh.geometry.dispose();
-                }
+                efeito.mesh.geometry.dispose();
                 efeito.mesh.material.dispose();
-                efeitosFogos.splice(i, 1);
-                continue;
+                return false;
               }
 
               efeito.velocidade.y -= 12 * delta;
@@ -8002,10 +7697,9 @@
               efeito.mesh.position.y += efeito.velocidade.y * delta;
               efeito.mesh.position.z += efeito.velocidade.z * delta;
               efeito.mesh.material.opacity = Math.max(efeito.vida, 0);
-              const escalaAtual =
-                efeito.escalaBase * (0.8 + efeito.vida * 0.5);
-              efeito.mesh.scale.setScalar(escalaAtual);
-            }
+              efeito.mesh.scale.setScalar(0.8 + efeito.vida * 0.5);
+              return true;
+            });
           }
 
           function estaEmRampa(corpo) {
@@ -8163,7 +7857,6 @@
           function iniciarDerrota() {
             if (rodadaEncerrada) return;
             removerPontos(PENALIDADE_POLICIA);
-            reiniciarTemporizadorDeObjetivo();
             rodadaEncerrada = true;
             estadoJogo = "derrota";
             ocultarSetaSilaba();
@@ -8569,7 +8262,6 @@
               ocultarSetaSilaba();
               marcadorObjetivo3D.visible = false;
               helicopteroPolicia.visible = false;
-              limparProjeteisHelicoptero();
               if (efeitoVelocidade) efeitoVelocidade.style.opacity = "0";
               if (impactoOverlay) impactoOverlay.style.opacity = "0";
               if (radarCtx && radarCanvas) {
@@ -8614,7 +8306,6 @@
                 0,
                 cooldownImpactoColisao - delta,
               );
-              atualizarPunicaoPorInatividade(delta);
               acumuladorAnalisePolicial += delta;
               intensidadeImpactoVisual = Math.max(
                 0,
@@ -8759,7 +8450,6 @@
               });
               atualizarMarcadorObjetivo3D(tempoAgora);
               atualizarHelicopteroPolicial(delta, tempoAgora);
-              atualizarProjeteisHelicoptero(delta);
 
               // Sílabas — coleta em ordem, revela próxima ao coletar atual
               const agora = performance.now();
@@ -8793,7 +8483,6 @@
                   if (dxSilaba * dxSilaba + dzSilaba * dzSilaba < 16) {
                     criarFogosSilaba(silaba.mesh.position, silaba.corHex);
                     adicionarPontos(PONTOS_POR_BLOCO);
-                    reiniciarTemporizadorDeObjetivo();
                     silaba.coletada = true;
                     cena.remove(silaba.mesh);
                     cena.remove(silaba.luz);
@@ -8864,7 +8553,6 @@
               ocultarSetaSilaba();
               marcadorObjetivo3D.visible = false;
               helicopteroPolicia.visible = false;
-              limparProjeteisHelicoptero();
             }
 
             if (estadoJogo !== "menu") {
