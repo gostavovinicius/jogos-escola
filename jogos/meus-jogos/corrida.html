@@ -33,6 +33,13 @@
         --palavra-font-size: 1.34rem;
         --palavra-padding-y: 12px;
         --palavra-padding-x: 20px;
+        --facil-bloco-min-largura: 58px;
+        --facil-bloco-font-size: 1.8rem;
+        --facil-bloco-padding-y: 14px;
+        --facil-bloco-padding-x: 18px;
+        --facil-palavra-font-size: 2rem;
+        --facil-palavra-padding-y: 10px;
+        --facil-palavra-padding-x: 16px;
       }
 
       *,
@@ -973,16 +980,26 @@
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
       }
 
+      #interface.modo-facil {
+        max-width: calc(100% - 20px);
+      }
+
       #interface.modo-facil #objetivo-hud {
-        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-columns: auto max-content;
         gap: 12px;
         align-items: center;
+        width: fit-content;
       }
 
       #interface.modo-facil #objetivo-principal-hud {
         display: flex;
         align-items: center;
         gap: 10px;
+        width: fit-content;
+      }
+
+      #interface.modo-facil .hud-meta {
+        width: fit-content;
       }
 
       #interface.modo-facil #alvo-emoji-hud {
@@ -999,22 +1016,23 @@
 
       #interface.modo-facil #palavra-alvo-hud {
         order: 2;
-        padding: 10px 16px;
+        padding: var(--facil-palavra-padding-y) var(--facil-palavra-padding-x);
         border-radius: 18px;
         background: rgba(255, 255, 255, 0.68);
-        font-size: 2rem;
+        font-size: var(--facil-palavra-font-size);
         line-height: 1;
         letter-spacing: 0.08em;
+        white-space: nowrap;
         box-shadow:
           inset 0 1px 0 rgba(255, 255, 255, 0.9),
           0 8px 18px rgba(17, 78, 141, 0.08);
       }
 
       #interface.modo-facil .bloco-silaba {
-        min-width: 58px;
-        padding: 14px 18px;
+        min-width: var(--facil-bloco-min-largura);
+        padding: var(--facil-bloco-padding-y) var(--facil-bloco-padding-x);
         border-radius: 18px;
-        font-size: 1.8rem;
+        font-size: var(--facil-bloco-font-size);
         box-shadow: 0 10px 20px rgba(17, 78, 141, 0.16);
       }
 
@@ -1034,11 +1052,17 @@
         align-items: center;
       }
 
+      #interface.modo-silabas {
+        max-width: calc(100% - 20px);
+      }
+
       #interface.modo-silabas #objetivo-principal-hud {
         display: flex;
         align-items: center;
         gap: 12px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        width: 100%;
+        min-width: 0;
       }
 
       #interface.modo-silabas #alvo-emoji-hud {
@@ -1054,11 +1078,13 @@
 
       #interface.modo-silabas #blocos-silabas {
         order: 1;
-        flex: 0 0 auto;
+        flex: 1 1 auto;
         gap: 10px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        width: 100%;
+        min-width: 0;
         max-width: 100%;
-        overflow: visible;
+        overflow: hidden;
       }
 
       #interface.modo-silabas #palavra-alvo-hud {
@@ -1066,10 +1092,11 @@
       }
 
       #interface.modo-silabas .bloco-silaba {
-        min-width: 58px;
-        padding: 14px 18px;
+        min-width: var(--silabas-modo-min-largura, 58px);
+        padding: var(--silabas-modo-padding-y, 14px)
+          var(--silabas-modo-padding-x, 18px);
         border-radius: 18px;
-        font-size: 1.72rem;
+        font-size: var(--silabas-modo-font-size, 1.72rem);
         box-shadow: 0 10px 20px rgba(17, 78, 141, 0.14);
       }
 
@@ -1543,6 +1570,11 @@
         padding: 9px 11px 11px;
       }
 
+      .hud-compacta #interface.modo-facil,
+      .hud-compacta #interface.modo-silabas {
+        max-width: calc(100% - 16px);
+      }
+
       .hud-compacta #barra-superior-jogo,
       .hud-compacta #objetivo-hud {
         gap: 6px;
@@ -1677,6 +1709,11 @@
           padding-inline: 14px;
         }
 
+        #interface.modo-facil,
+        #interface.modo-silabas {
+          max-width: calc(100% - 20px);
+        }
+
         #info-lateral {
           top: auto;
           bottom: calc(var(--minimapa-size) + 24px);
@@ -1719,6 +1756,11 @@
           left: auto;
           transform: none;
           padding: 10px 12px 12px;
+        }
+
+        #interface.modo-facil,
+        #interface.modo-silabas {
+          max-width: calc(100% - 16px);
         }
 
         #btn-respawn-manual {
@@ -2329,6 +2371,7 @@
               blocosSilabas || document.getElementById("blocos-silabas");
             if (!container) return;
             const escalaLimitada = Math.max(0.64, Math.min(1, escala));
+            const hudEscalavel = interfaceHud || container;
             container.style.setProperty(
               "--silabas-gap",
               `${Math.max(4, Math.round(6 * escalaLimitada))}px`,
@@ -2361,18 +2404,100 @@
               "--palavra-padding-x",
               `${Math.max(12, Math.round(20 * escalaLimitada))}px`,
             );
+            container.style.setProperty(
+              "--silabas-modo-min-largura",
+              `${Math.max(40, Math.round(58 * escalaLimitada))}px`,
+            );
+            container.style.setProperty(
+              "--silabas-modo-padding-y",
+              `${Math.max(8, Math.round(14 * escalaLimitada))}px`,
+            );
+            container.style.setProperty(
+              "--silabas-modo-padding-x",
+              `${Math.max(10, Math.round(18 * escalaLimitada))}px`,
+            );
+            container.style.setProperty(
+              "--silabas-modo-font-size",
+              `${(1.72 * escalaLimitada).toFixed(3)}rem`,
+            );
+            hudEscalavel.style.setProperty(
+              "--facil-bloco-min-largura",
+              `${Math.max(42, Math.round(58 * escalaLimitada))}px`,
+            );
+            hudEscalavel.style.setProperty(
+              "--facil-bloco-font-size",
+              `${(1.8 * escalaLimitada).toFixed(3)}rem`,
+            );
+            hudEscalavel.style.setProperty(
+              "--facil-bloco-padding-y",
+              `${Math.max(8, Math.round(14 * escalaLimitada))}px`,
+            );
+            hudEscalavel.style.setProperty(
+              "--facil-bloco-padding-x",
+              `${Math.max(10, Math.round(18 * escalaLimitada))}px`,
+            );
+            hudEscalavel.style.setProperty(
+              "--facil-palavra-font-size",
+              `${(2 * escalaLimitada).toFixed(3)}rem`,
+            );
+            hudEscalavel.style.setProperty(
+              "--facil-palavra-padding-y",
+              `${Math.max(8, Math.round(10 * escalaLimitada))}px`,
+            );
+            hudEscalavel.style.setProperty(
+              "--facil-palavra-padding-x",
+              `${Math.max(10, Math.round(16 * escalaLimitada))}px`,
+            );
+          }
+
+          function obterMedidasAjusteBlocosSilabas() {
+            const container =
+              blocosSilabas || document.getElementById("blocos-silabas");
+            if (!container) return null;
+
+            if (
+              grupoFaseAtual === "facil" &&
+              interfaceHud &&
+              objetivoHud &&
+              objetivoPrincipalHud
+            ) {
+              const estiloPainel = window.getComputedStyle(interfaceHud);
+              const estiloObjetivo = window.getComputedStyle(objetivoHud);
+              const paddingHorizontal =
+                parseFloat(estiloPainel.paddingLeft || "0") +
+                parseFloat(estiloPainel.paddingRight || "0");
+              const gapObjetivo =
+                parseFloat(estiloObjetivo.columnGap || estiloObjetivo.gap || "0") ||
+                0;
+
+              return {
+                larguraDisponivel: Math.max(
+                  0,
+                  (interfaceHud.clientWidth || 0) -
+                    paddingHorizontal -
+                    (alvoEmojiHud?.offsetWidth || 0) -
+                    gapObjetivo,
+                ),
+                larguraNecessaria: objetivoPrincipalHud.scrollWidth || 0,
+              };
+            }
+
+            return {
+              larguraDisponivel: container.clientWidth || 0,
+              larguraNecessaria: container.scrollWidth || 0,
+            };
           }
 
           function ajustarBlocosSilabasAoEspaco() {
-            const container =
-              blocosSilabas || document.getElementById("blocos-silabas");
-            if (!container) return;
+            if (!(blocosSilabas || document.getElementById("blocos-silabas"))) {
+              return;
+            }
             aplicarEscalaBlocosSilabas(1);
-            const larguraDisponivel = container.clientWidth || 0;
-            if (larguraDisponivel <= 0) return;
             let escalaAtual = 1;
             for (let tentativa = 0; tentativa < 4; tentativa++) {
-              const larguraNecessaria = container.scrollWidth || 0;
+              const medidas = obterMedidasAjusteBlocosSilabas();
+              if (!medidas || medidas.larguraDisponivel <= 0) return;
+              const { larguraDisponivel, larguraNecessaria } = medidas;
               if (
                 larguraNecessaria <= larguraDisponivel ||
                 escalaAtual <= 0.64
@@ -5383,6 +5508,10 @@
             document.getElementById("btn-respawn-manual");
           const hudFase = document.getElementById("fase-info");
           const interfaceHud = document.getElementById("interface");
+          const objetivoHud = document.getElementById("objetivo-hud");
+          const objetivoPrincipalHud = document.getElementById(
+            "objetivo-principal-hud",
+          );
           const alvoEmojiHud = document.getElementById("alvo-emoji-hud");
           const infoSerie = document.getElementById("info-serie");
           const infoPontos = document.getElementById("info-pontos");
