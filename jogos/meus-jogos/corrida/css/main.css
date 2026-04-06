@@ -1,0 +1,313 @@
+/* Corrida do Saber - Base e Responsividade */
+
+:root {
+  --cor-painel: rgba(249, 253, 255, 0.94);
+  --cor-painel-secundario: rgba(235, 245, 255, 0.94);
+  --cor-borda: rgba(44, 127, 255, 0.24);
+  --cor-acento: #ffb703;
+  --cor-acento-2: #52d273;
+  --cor-texto-hud: #14324f;
+  --cor-texto-forte: #0f172a;
+  --cor-texto-suave: #4d6b8b;
+  --cor-radar-fundo: rgba(251, 254, 255, 0.76);
+  --cor-radar-borda: rgba(29, 119, 242, 0.7);
+  --sombra-painel: 0 18px 44px rgba(17, 78, 141, 0.16);
+  --menu-largura: min(1080px, calc(100% - 28px));
+  --hud-largura: min(380px, calc(100% - 20px));
+  --minimapa-size: 190px;
+  --touch-size: 62px;
+  --iframe-hud-right: 12px;
+  --iframe-hud-top: 12px;
+  --iframe-hud-width: min(320px, calc(100% - 24px));
+  --iframe-info-top: 224px;
+  --silabas-gap: 6px;
+  --silabas-min-largura: 54px;
+  --silabas-padding-y: 10px;
+  --silabas-padding-x: 12px;
+  --silabas-font-size: 1.08rem;
+  --palavra-font-size: 1.34rem;
+  --palavra-padding-y: 12px;
+  --palavra-padding-x: 20px;
+  --facil-bloco-min-largura: 58px;
+  --facil-bloco-font-size: 1.8rem;
+  --facil-bloco-padding-y: 14px;
+  --facil-bloco-padding-x: 18px;
+  --facil-palavra-font-size: 2rem;
+  --facil-palavra-padding-y: 10px;
+  --facil-palavra-padding-x: 16px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(255, 215, 118, 0.28),
+      transparent 30%
+    ),
+    linear-gradient(180deg, #80cfff 0%, #4f9fe2 38%, #163a6b 100%);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+}
+
+#efeito-velocidade,
+#impacto-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 18;
+  opacity: 0;
+  transition: opacity 0.08s linear;
+}
+
+#efeito-velocidade {
+  background:
+    radial-gradient(
+      circle at center,
+      transparent 42%,
+      rgba(132, 220, 255, 0.1) 72%,
+      rgba(132, 220, 255, 0.26) 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 18px,
+      rgba(255, 255, 255, 0.08) 18px 20px,
+      transparent 20px 42px
+    );
+  mix-blend-mode: screen;
+}
+
+#impacto-overlay {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 82, 82, 0.18) 46%,
+    rgba(90, 0, 0, 0.32)
+  );
+}
+
+#seta-silaba {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+}
+
+.firefox #menu-inicial,
+.firefox #interface,
+.firefox #info-lateral,
+.firefox #moldura-minimapa,
+.firefox .tela-centro {
+  backdrop-filter: none;
+  box-shadow: 0 10px 26px rgba(17, 78, 141, 0.16);
+}
+
+.firefox-economia #efeito-velocidade,
+.firefox-economia #impacto-overlay {
+  display: none;
+}
+
+.em-iframe #interface {
+  left: auto;
+  right: var(--iframe-hud-right);
+  top: var(--iframe-hud-top);
+  transform: none;
+  width: max-content;
+  min-width: 0;
+  max-width: min(var(--iframe-hud-width), calc(100% - 24px));
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.em-iframe #barra-superior-jogo {
+  justify-content: flex-start;
+  justify-items: flex-start;
+  align-items: flex-start;
+}
+
+.em-iframe #objetivo-hud {
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.em-iframe #blocos-silabas {
+  justify-content: flex-start;
+}
+
+.em-iframe #info-lateral {
+  left: auto;
+  right: var(--iframe-hud-right);
+  top: var(--iframe-info-top);
+  width: var(--iframe-hud-width);
+  max-width: calc(100% - 24px);
+}
+
+.em-iframe #moldura-minimapa {
+  right: var(--iframe-hud-right);
+  bottom: 12px;
+}
+
+#menu-inicial,
+#interface-jogo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 920px) {
+  .menu-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  }
+}
+
+@media (max-width: 860px) {
+  #interface {
+    top: 10px;
+    right: 10px;
+    left: auto;
+    transform: none;
+    width: max-content;
+    min-width: 0;
+    max-width: min(340px, calc(100% - 20px));
+    padding-inline: 14px;
+  }
+
+  #interface.modo-facil,
+  #interface.modo-silabas {
+    max-width: calc(100% - 20px);
+  }
+
+  #info-lateral {
+    top: auto;
+    bottom: calc(var(--minimapa-size) + 24px);
+  }
+
+  .em-iframe #interface {
+    top: var(--iframe-hud-top);
+    right: var(--iframe-hud-right);
+    left: auto;
+  }
+
+  .em-iframe #info-lateral {
+    top: var(--iframe-info-top);
+    right: var(--iframe-hud-right);
+    bottom: auto;
+    left: auto;
+  }
+}
+
+@media (max-width: 620px) {
+  #menu-inicial {
+    padding: 12px;
+  }
+
+  .btn-serie {
+    width: calc(50% - 8px);
+    min-width: 120px;
+  }
+
+  .opcoes-carro {
+    grid-template-columns: 1fr;
+  }
+
+  #interface {
+    width: max-content;
+    min-width: 0;
+    max-width: min(320px, calc(100% - 16px));
+    top: 8px;
+    right: 8px;
+    left: auto;
+    transform: none;
+    padding: 10px 12px 12px;
+  }
+
+  #interface.modo-facil,
+  #interface.modo-silabas {
+    max-width: calc(100% - 16px);
+  }
+
+  #btn-respawn-manual {
+    top: 8px;
+    left: 8px;
+    padding: 7px 10px;
+    font-size: 0.76rem;
+  }
+
+  #info-lateral {
+    left: 10px;
+    right: 10px;
+    bottom: calc(var(--minimapa-size) + 18px);
+    max-width: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 12px;
+  }
+
+  .dica-lateral {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+
+  .radar-legenda {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    gap: 6px;
+  }
+
+  .radar-tag {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+
+  .em-iframe #interface {
+    width: max-content;
+    min-width: 0;
+    max-width: min(320px, calc(100% - 16px));
+    top: 8px;
+    right: 8px;
+    left: auto;
+    transform: none;
+  }
+
+  .em-iframe #info-lateral {
+    width: min(320px, calc(100% - 16px));
+    right: 8px;
+    left: auto;
+    top: var(--iframe-info-top);
+    bottom: auto;
+    display: block;
+  }
+}

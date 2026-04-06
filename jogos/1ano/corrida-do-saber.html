@@ -5,17 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Jogo: Corrida do Saber</title>
     <link rel="stylesheet" href="../../jogo_focado.css" />
+    <style>
+      :root {
+        --embed-aspect: 1.7778;
+        --embed-max-width: min(1180px, calc(100vw - 20px));
+      }
+    </style>
   </head>
   <body>
-    <div class="game-page-container game-page-container--embed-focus game-page-container--heavy">
+    <div
+      class="game-page-container game-page-container--embed-focus game-page-container--heavy"
+    >
       <a href="../../index.html" class="back-button">← Voltar para o Início</a>
       <h1>Corrida do Saber</h1>
-      <p>
-        No 1º ano, complete a vogal inicial; nas outras fases, colete as
-        sílabas e fuja da polícia.
-      </p>
 
-      <div class="game-iframe-wrap game-iframe-wrap--embed-focus game-iframe-wrap--heavy">
+      <div
+        class="game-iframe-wrap game-iframe-wrap--embed-focus game-iframe-wrap--heavy"
+      >
         <iframe
           src="../meus-jogos/corrida.html"
           title="Corrida do Saber"

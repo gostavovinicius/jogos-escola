@@ -1,26 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jogo: Arrastar Sílabas</title>
+    <title>Jogo: Sílabas</title>
     <link rel="stylesheet" href="../../jogo_focado.css" />
+    <style>
+      :root {
+        --embed-aspect: 1.4224;
+        --embed-max-width: min(862px, calc(100vw - 20px));
+      }
+    </style>
   </head>
   <body>
-    <div class="game-page-container">
+    <div class="game-page-container game-page-container--embed-focus game-page-container--heavy">
       <h1>Arrastar Sílabas</h1>
-      <div class="game-iframe-wrap">
+      <div class="game-iframe-wrap game-iframe-wrap--embed-focus game-iframe-wrap--heavy">
         <iframe
-          width="1000"
-          height="600"
+          title="Jogo das Sílabas"
           frameborder="0"
           scrolling="no"
           allowfullscreen="true"
-          src="https://www.digipuzzle.net/digipuzzle/kids/puzzles/syllablesdrag_pt.htm?language=portuguese"
+          loading="eager"
+          src="../meus-jogos/jogo-das-silabas.html"
           sandbox="allow-scripts allow-same-origin"
         ></iframe>
       </div>
-      <a href="../../index.html" class="back-button">← Voltar para o Início</a>
+      <a href="../../index.html" class="back-button">← Voltar</a>
     </div>
   </body>
 </html>
