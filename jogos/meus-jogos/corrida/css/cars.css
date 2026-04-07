@@ -1,8 +1,8 @@
 /* Corrida do Saber - Garagem e Carros */
 
 .btn-carro {
-  min-height: 170px;
-  padding: 12px;
+  min-height: clamp(136px, 22vh, 170px);
+  padding: clamp(10px, 1.4vh, 12px);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: rgba(7, 15, 28, 0.46);
@@ -41,7 +41,7 @@
 
 .carro-preview {
   position: relative;
-  height: 60px;
+  height: clamp(52px, 8vh, 60px);
   border-radius: 14px;
   overflow: hidden;
   background:

@@ -9,8 +9,8 @@
 /* HUD clara: cartões grandes, alto contraste e leitura rápida para crianças. */
 #interface {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: var(--overlay-gap);
+  right: var(--overlay-gap);
   left: auto;
   transform: none;
   display: flex;
@@ -19,7 +19,7 @@
   gap: var(--hud-gap, 8px);
   width: max-content;
   min-width: 0;
-  max-width: min(var(--hud-largura), calc(100% - 20px));
+  max-width: min(var(--hud-largura), calc(100% - (var(--overlay-gap) * 2)));
   color: var(--cor-texto-forte);
   background: linear-gradient(
     180deg,
@@ -39,16 +39,16 @@
 
 #btn-respawn-manual {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: var(--overlay-gap);
+  left: var(--overlay-gap);
   z-index: 22;
-  padding: 8px 12px;
+  padding: clamp(7px, 1.2vh, 8px) clamp(10px, 1.4vw, 12px);
   border: 1px solid rgba(30, 116, 237, 0.2);
-  border-radius: 14px;
+  border-radius: clamp(12px, 2vw, 14px);
   background: rgba(255, 255, 255, 0.9);
   color: #16324f;
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: clamp(0.74rem, 1vw, 0.82rem);
   font-weight: 800;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -507,19 +507,19 @@
 
 #info-lateral {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  max-width: min(248px, calc(100% - 24px));
+  top: var(--overlay-gap);
+  left: var(--overlay-gap);
+  max-width: min(248px, calc(100% - (var(--overlay-gap) * 2)));
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.96),
     rgba(235, 245, 255, 0.94)
   );
   border: 1px solid rgba(82, 210, 115, 0.28);
-  border-radius: 20px;
-  padding: 12px 16px;
+  border-radius: clamp(18px, 3vw, 20px);
+  padding: clamp(10px, 1.6vh, 12px) clamp(12px, 1.8vw, 16px);
   color: var(--cor-texto-hud);
-  font-size: 14px;
+  font-size: clamp(0.82rem, 1.2vw, 0.88rem);
   pointer-events: auto;
   backdrop-filter: blur(10px);
   box-shadow: var(--sombra-painel);
@@ -587,12 +587,12 @@
 /* Radar em vista superior real: a moldura fica por cima do render 3D. */
 #moldura-minimapa {
   position: absolute;
-  right: clamp(10px, 2vw, 20px);
-  bottom: clamp(10px, 2vw, 20px);
+  right: var(--overlay-gap);
+  bottom: var(--overlay-gap);
   width: var(--minimapa-size);
   height: var(--minimapa-size);
   border: 2px solid rgba(160, 214, 255, 0.82);
-  border-radius: 20px;
+  border-radius: clamp(16px, 2.6vw, 20px);
   background: rgba(10, 25, 18, 0.1);
   box-shadow:
     0 14px 30px rgba(7, 28, 52, 0.18),
@@ -695,15 +695,15 @@
 }
 
 .hud-compacta #interface {
-  top: 8px;
-  right: 8px;
+  top: var(--overlay-gap);
+  right: var(--overlay-gap);
   left: auto;
-  max-width: calc(100% - 12px);
+  max-width: calc(100% - (var(--overlay-gap) * 2));
 }
 
 .em-iframe.iframe-compacto #btn-respawn-manual {
-  top: 8px;
-  left: 8px;
+  top: var(--overlay-gap);
+  left: var(--overlay-gap);
   padding: 6px 10px;
   font-size: 0.74rem;
 }
@@ -779,17 +779,17 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(92vw, 560px);
+  width: min(90vw, 520px);
   color: var(--cor-texto-forte);
-  font-size: clamp(1.6rem, 4vw, 2.25rem);
+  font-size: clamp(1.45rem, 3.4vw, 2.1rem);
   display: none;
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.98),
     rgba(234, 244, 255, 0.94)
   );
-  padding: 30px 24px;
-  border-radius: 20px;
+  padding: clamp(22px, 4vh, 30px) clamp(18px, 3vw, 24px);
+  border-radius: clamp(18px, 3vw, 20px);
   text-align: center;
   z-index: 50;
   font-weight: bold;

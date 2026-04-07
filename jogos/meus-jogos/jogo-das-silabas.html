@@ -31,6 +31,11 @@
         --row-tile-h: 68px;
         --row-icon-w: 82px;
         --row-check-size: 38px;
+        --surface-inset: clamp(6px, 1vh, 8px);
+        --surface-gap: clamp(8px, 1.5vh, 12px);
+        --surface-padding: clamp(10px, 2vh, 16px);
+        --panel-gap: clamp(10px, 1.4vh, 14px);
+        --bank-panel-width: clamp(196px, 29%, 246px);
         --shadow-soft: 0 10px 26px rgba(82, 56, 24, 0.12);
         --shadow-card: 0 12px 28px rgba(103, 69, 33, 0.16);
         --shadow-glow: 0 0 0 1px rgba(89, 195, 195, 0.14), 0 0 22px rgba(89, 195, 195, 0.24);
@@ -47,47 +52,46 @@
 
       html,
       body {
+        width: 100%;
+        height: 100%;
         min-height: 100%;
       }
 
       body {
         margin: 0;
-        display: grid;
-        place-items: center;
-        padding: 12px;
-        background:
-          radial-gradient(circle at top, rgba(255, 245, 225, 0.6), transparent 28%),
-          radial-gradient(circle at bottom right, rgba(255, 215, 157, 0.24), transparent 22%),
-          linear-gradient(180deg, #d1bca5 0%, var(--bg-page) 60%, var(--bg-page-deep) 100%);
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: hidden;
+        background: linear-gradient(180deg, #2a231f, var(--frame));
         color: var(--ink);
         font-family: "Poppins", "Trebuchet MS", sans-serif;
       }
 
       #game-wrapper {
-        width: min(100%, 862px);
-        aspect-ratio: 862 / 606;
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+        min-height: 100dvh;
         position: relative;
         overflow: hidden;
         background: linear-gradient(180deg, #2a231f, var(--frame));
         border: 4px solid rgba(0, 0, 0, 0.72);
-        border-radius: 28px;
-        box-shadow:
-          0 28px 60px rgba(46, 28, 10, 0.34),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border-radius: clamp(20px, 3vw, 28px);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
       }
 
       .game-surface {
         position: absolute;
-        inset: 8px;
+        inset: var(--surface-inset);
         display: grid;
         grid-template-rows: auto 1fr auto;
-        gap: 12px;
-        padding: 16px;
+        gap: var(--surface-gap);
+        padding: var(--surface-padding);
         background:
           radial-gradient(circle at top, rgba(255, 255, 255, 0.75), transparent 35%),
           radial-gradient(circle at right, rgba(255, 218, 173, 0.3), transparent 26%),
           linear-gradient(180deg, var(--cream-0) 0%, var(--cream-1) 100%);
-        border-radius: 22px;
+        border-radius: clamp(18px, 3vw, 22px);
         box-shadow:
           inset 0 0 0 1px rgba(84, 58, 34, 0.12),
           inset 0 10px 28px rgba(255, 255, 255, 0.45);
@@ -121,17 +125,19 @@
 
       .hud {
         display: grid;
-        grid-template-columns: auto 1fr auto;
+        grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
         align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
-        border-radius: 22px;
+        gap: clamp(8px, 1vw, 10px);
+        padding: clamp(8px, 1.6vh, 10px) clamp(10px, 1.6vw, 14px);
+        border-radius: clamp(18px, 3vw, 22px);
       }
 
       .hud-title {
         display: flex;
         align-items: center;
         gap: 10px;
+        min-width: 0;
+        flex-wrap: wrap;
       }
 
       .hud-title strong {
@@ -154,14 +160,15 @@
         flex-wrap: wrap;
         gap: 8px;
         justify-content: center;
+        min-width: 0;
       }
 
       .badge {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 42px;
-        padding: 8px 16px;
+        min-height: clamp(34px, 6.5vh, 42px);
+        padding: clamp(6px, 1vh, 8px) clamp(12px, 1.4vw, 16px);
         border: 2px solid rgba(79, 57, 37, 0.5);
         border-radius: 999px;
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 244, 226, 0.92));
@@ -203,9 +210,9 @@
 
       .hud-button,
       .level-button {
-        min-height: 48px;
-        padding: 10px 18px;
-        border-radius: 16px;
+        min-height: clamp(42px, 7vh, 48px);
+        padding: clamp(8px, 1.2vh, 10px) clamp(14px, 2vw, 18px);
+        border-radius: clamp(14px, 2.5vw, 16px);
       }
 
       .hud-button:hover,
@@ -227,25 +234,25 @@
 
       .board {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 246px;
-        gap: 14px;
+        grid-template-columns: minmax(0, 1fr) var(--bank-panel-width);
+        gap: var(--panel-gap);
         min-height: 0;
       }
 
       .rows-panel {
         display: grid;
         grid-template-rows: repeat(4, minmax(0, 1fr));
-        gap: 14px;
+        gap: var(--panel-gap);
         min-height: 0;
       }
 
       .word-row {
         display: grid;
         grid-template-columns: var(--row-icon-w) minmax(0, 1fr) var(--row-check-size);
-        gap: 14px;
+        gap: var(--panel-gap);
         width: 100%;
-        padding: 12px 14px;
-        border-radius: 24px;
+        padding: clamp(10px, 1.6vh, 12px) clamp(10px, 1.5vw, 14px);
+        border-radius: clamp(18px, 3vw, 24px);
         min-height: 0;
         align-self: center;
         align-items: center;
@@ -270,8 +277,8 @@
         min-width: var(--row-icon-w);
         height: var(--row-tile-h);
         min-height: var(--row-tile-h);
-        padding: 8px;
-        border-radius: 20px;
+        padding: clamp(6px, 1.1vh, 8px);
+        border-radius: clamp(16px, 2.6vw, 20px);
         background:
           radial-gradient(circle at top, rgba(255, 255, 255, 0.95), transparent 48%),
           linear-gradient(180deg, #fffefe, #f6efe6);
@@ -312,14 +319,14 @@
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 10px;
+        gap: clamp(8px, 1vw, 10px);
       }
 
       .drop-slot {
         width: var(--row-tile-w);
         min-width: var(--row-tile-w);
         height: var(--row-tile-h);
-        border-radius: 20px;
+        border-radius: clamp(16px, 2.6vw, 20px);
         background-color: #f0ebe4;
         background-image: var(--check-pattern);
         background-position:
@@ -374,9 +381,9 @@
       .bank-panel {
         display: grid;
         grid-template-rows: auto 1fr;
-        gap: 10px;
-        padding: 14px;
-        border-radius: 24px;
+        gap: clamp(8px, 1.2vh, 10px);
+        padding: clamp(10px, 1.8vh, 14px);
+        border-radius: clamp(18px, 3vw, 24px);
         min-height: 0;
         background:
           radial-gradient(circle at top, rgba(255, 255, 255, 0.7), transparent 50%),
@@ -396,7 +403,7 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-auto-rows: minmax(0, 1fr);
-        gap: 10px;
+        gap: clamp(8px, 1.1vh, 10px);
         align-content: stretch;
         min-height: 0;
         height: 100%;
@@ -406,15 +413,15 @@
 
       .syllable-card,
       .placed-card {
-        min-height: 62px;
-        padding: 8px 10px;
-        border-radius: 18px;
+        min-height: clamp(50px, 10vh, 62px);
+        padding: clamp(6px, 1.2vh, 8px) clamp(8px, 1.2vw, 10px);
+        border-radius: clamp(14px, 2.6vw, 18px);
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 251, 247, 0.98));
         display: inline-flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        font-size: clamp(1rem, 1.5vw, 1.34rem);
+        font-size: clamp(0.98rem, 1.45vw, 1.28rem);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.03em;
@@ -529,9 +536,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        padding: 12px 14px;
-        border-radius: 18px;
+        gap: clamp(8px, 1vw, 12px);
+        padding: clamp(10px, 1.8vh, 12px) clamp(12px, 1.5vw, 14px);
+        border-radius: clamp(16px, 2.8vw, 18px);
         background:
           linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 244, 0.86)),
           var(--card-soft);
@@ -550,10 +557,10 @@
       }
 
       .next-phase-button {
-        width: 62px;
-        height: 48px;
-        border-radius: 16px;
-        font-size: 1.28rem;
+        width: clamp(52px, 7vh, 62px);
+        height: clamp(42px, 6.8vh, 48px);
+        border-radius: clamp(14px, 2.5vw, 16px);
+        font-size: clamp(1.05rem, 1.8vw, 1.28rem);
         line-height: 1;
       }
 
@@ -567,7 +574,7 @@
         display: none;
         align-items: center;
         justify-content: center;
-        padding: 24px;
+        padding: clamp(16px, 4vh, 24px);
         background: rgba(0, 0, 0, 0.34);
         z-index: 5;
       }
@@ -578,8 +585,8 @@
 
       .modal-card {
         width: min(100%, 360px);
-        padding: 24px 20px 20px;
-        border-radius: 24px;
+        padding: clamp(18px, 4vh, 24px) clamp(16px, 3vw, 20px) clamp(16px, 3vh, 20px);
+        border-radius: clamp(18px, 3vw, 24px);
         background:
           radial-gradient(circle at top, rgba(255, 255, 255, 0.95), transparent 52%),
           linear-gradient(180deg, #fffdf9, #f7ecd8);
@@ -595,16 +602,24 @@
       }
 
       .level-button {
-        min-height: 74px;
-        padding: 12px;
-        font-size: 1.04rem;
+        min-height: clamp(64px, 12vh, 74px);
+        padding: clamp(10px, 1.8vh, 12px);
+        font-size: clamp(0.96rem, 1.5vw, 1.04rem);
+      }
+
+      .level-button.is-aee {
+        grid-column: 1 / -1;
+        justify-self: center;
+        width: min(100%, 280px);
+        background: linear-gradient(180deg, #2ec27e, #16995f);
+        box-shadow: 0 10px 18px rgba(22, 153, 95, 0.22);
       }
 
       .touch-ghost {
         position: fixed;
         left: 0;
         top: 0;
-        z-index: 999;
+        z-index: 99999;
         display: none;
         width: max-content;
         min-width: 88px;
@@ -616,6 +631,193 @@
         box-shadow:
           0 18px 30px rgba(89, 195, 195, 0.2),
           var(--shadow-glow);
+      }
+
+      #game-wrapper.aee-mode {
+        background: #f4f0e8;
+        border-color: #111111;
+      }
+
+      #game-wrapper.aee-mode .game-surface {
+        background: #fffdf7;
+        box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.08);
+      }
+
+      #game-wrapper.aee-mode .hud,
+      #game-wrapper.aee-mode .status-bar,
+      #game-wrapper.aee-mode .word-row {
+        background: #ffffff;
+        box-shadow: none;
+      }
+
+      #game-wrapper.aee-mode .board {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 32px;
+        width: 100%;
+      }
+
+      #game-wrapper.aee-mode .rows-panel {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+      }
+
+      #game-wrapper.aee-mode .word-row {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 32px;
+        width: min(100%, 880px);
+        padding: 30px;
+        min-height: 430px;
+        border-width: 3px;
+        border-radius: 28px;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+      }
+
+      #game-wrapper.aee-mode .word-main {
+        width: 100%;
+        justify-content: center;
+      }
+
+      #game-wrapper.aee-mode .word-figure {
+        width: auto;
+        min-width: 0;
+        height: auto;
+        min-height: 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      #game-wrapper.aee-mode .word-row.is-complete .word-figure {
+        background: transparent;
+      }
+
+      #game-wrapper.aee-mode .word-emoji {
+        font-size: clamp(120px, 16vw, 160px);
+        line-height: 1;
+        transform: none;
+        filter: drop-shadow(0 10px 16px rgba(73, 54, 40, 0.16));
+      }
+
+      #game-wrapper.aee-mode .row-check {
+        display: none;
+      }
+
+      #game-wrapper.aee-mode .slots {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      #game-wrapper.aee-mode .drop-slot {
+        width: clamp(132px, 16vw, 160px);
+        min-width: clamp(132px, 16vw, 160px);
+        height: clamp(104px, 14vh, 124px);
+        border-width: 4px;
+        border-style: dashed;
+        border-radius: 26px;
+        border-color: #6d5d4e;
+        background: #fffdf7;
+        background-image: none;
+      }
+
+      #game-wrapper.aee-mode .drop-slot::after {
+        font-size: 1.6rem;
+      }
+
+      #game-wrapper.aee-mode .drop-slot.is-filled {
+        background: #effaf1;
+        box-shadow: none;
+      }
+
+      #game-wrapper.aee-mode .bank-panel {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        align-self: stretch;
+        width: 100%;
+        max-width: 920px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      #game-wrapper.aee-mode .bank-header {
+        display: none;
+      }
+
+      #game-wrapper.aee-mode .bank-grid {
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        grid-auto-rows: auto;
+        gap: 20px;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+        padding-right: 0;
+      }
+
+      #game-wrapper.aee-mode .syllable-card,
+      #game-wrapper.aee-mode .placed-card {
+        min-height: 108px;
+        min-width: 170px;
+        padding: 18px 20px;
+        border-width: 4px;
+        border-radius: 24px;
+        background: #ffffff;
+        border-color: #356d73;
+        box-shadow: none;
+        font-size: clamp(2rem, 3vw, 2.5rem);
+        font-weight: 800;
+      }
+
+      #game-wrapper.aee-mode .syllable-card:hover:not(.is-used),
+      #game-wrapper.aee-mode .syllable-card.is-selected,
+      #game-wrapper.aee-mode .syllable-card.is-lifted {
+        box-shadow: none;
+      }
+
+      #game-wrapper.aee-mode .status-text {
+        font-size: clamp(0.98rem, 1.3vw, 1.08rem);
+      }
+
+      #game-wrapper.aee-mode .touch-ghost {
+        z-index: 99999;
+        min-width: 150px;
+        padding: 18px 24px;
+        border-width: 4px;
+        font-size: clamp(1.9rem, 3vw, 2.3rem);
+      }
+
+      #game-wrapper.aee-mode .next-phase-button {
+        width: auto;
+        min-width: 260px;
+        height: auto;
+        padding: 16px 28px;
+        border-width: 3px;
+        border-color: #116737;
+        border-radius: 20px;
+        background: #18a957;
+        box-shadow: none;
+        font-size: clamp(1.15rem, 1.8vw, 1.35rem);
+      }
+
+      #game-wrapper.aee-mode .next-phase-button:hover {
+        box-shadow: none;
+        background: #16924c;
       }
 
       @keyframes shake {
@@ -666,41 +868,39 @@
         }
       }
 
-      @media (max-width: 760px) {
+      @media (max-width: 840px), (max-height: 680px) {
         :root {
-          --row-tile-w: 64px;
-          --row-tile-h: 54px;
-          --row-icon-w: 64px;
-          --row-check-size: 30px;
+          --row-tile-w: 72px;
+          --row-tile-h: 58px;
+          --row-icon-w: 72px;
+          --row-check-size: 32px;
+          --surface-gap: 10px;
+          --surface-padding: 10px;
+          --panel-gap: 10px;
+          --bank-panel-width: clamp(172px, 24%, 198px);
         }
 
-        body {
-          padding: 6px;
+        .hud {
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: start;
         }
 
-        #game-wrapper {
-          border-radius: 20px;
+        .hud-title {
+          grid-column: 1;
+          grid-row: 1;
         }
 
-        .game-surface {
-          gap: 10px;
-          padding: 10px;
+        .hud-badges {
+          grid-column: 1 / -1;
+          justify-content: flex-start;
         }
 
-        .hud,
-        .status-bar,
-        .word-row,
-        .bank-panel {
-          border-radius: 16px;
-        }
-
-        .board {
-          grid-template-columns: minmax(0, 1fr) 184px;
-          gap: 10px;
+        .hud-button {
+          grid-column: 2;
+          grid-row: 1;
         }
 
         .word-row {
-          gap: 10px;
           padding: 10px;
         }
 
@@ -722,6 +922,44 @@
           width: 50px;
           height: 40px;
         }
+
+        #game-wrapper.aee-mode .word-row {
+          padding: 20px;
+          min-height: 0;
+          gap: 30px;
+        }
+
+        #game-wrapper.aee-mode .word-figure {
+          width: auto;
+          min-width: 0;
+          min-height: 0;
+        }
+
+        #game-wrapper.aee-mode .word-emoji {
+          font-size: clamp(120px, 28vw, 144px);
+        }
+
+        #game-wrapper.aee-mode .drop-slot {
+          width: clamp(118px, 26vw, 146px);
+          min-width: clamp(118px, 26vw, 146px);
+          height: 100px;
+        }
+
+        #game-wrapper.aee-mode .bank-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 16px;
+        }
+
+        #game-wrapper.aee-mode .syllable-card,
+        #game-wrapper.aee-mode .placed-card {
+          min-height: 94px;
+          min-width: 0;
+          font-size: clamp(2rem, 6vw, 2.2rem);
+        }
+
+        #game-wrapper.aee-mode .next-phase-button {
+          min-width: 220px;
+        }
       }
     </style>
   </head>
@@ -731,7 +969,7 @@
         <header class="hud">
           <div class="hud-title">
             <strong>Sílabas</strong>
-            <span>4 por rodada</span>
+            <span id="hud-subtitle">4 por rodada</span>
           </div>
 
           <div class="hud-badges">
@@ -745,9 +983,9 @@
         <main class="board">
           <section class="rows-panel" id="rows-panel" aria-live="polite"></section>
 
-          <aside class="bank-panel">
+          <aside class="bank-panel" id="bank-panel">
             <div class="bank-header">
-              <h2>Sílabas</h2>
+              <h2 id="bank-title">Sílabas</h2>
             </div>
             <div class="bank-grid" id="bank-grid"></div>
           </aside>
@@ -782,6 +1020,9 @@
           <div class="level-actions">
             <button class="level-button" type="button" data-level="2">2 sílabas</button>
             <button class="level-button" type="button" data-level="3">3 sílabas</button>
+            <button class="level-button is-aee" type="button" data-mode="aee">
+              Modo AEE (Foco Único)
+            </button>
           </div>
         </div>
       </div>
@@ -790,6 +1031,9 @@
 
     <script>
       const ROWS_PER_ROUND = 4;
+      const AEE_WORDS_PER_SESSION = 10;
+      const AEE_INTRUDER_COUNT = 2;
+      const ARASAAC_BASE_URL = "https://static.arasaac.org/pictograms";
 
       // Troque os emojis abaixo se quiser personalizar os objetos.
       const g_wordEmojiMap = {
@@ -854,6 +1098,21 @@
         58: "🦈",
         59: "🧶",
         60: "🎸",
+      };
+
+      // IDs iniciais do ARASAAC para o Modo AEE.
+      // O formato final da imagem segue: /{id}/{id}_500.png
+      const g_aeeArasaacMap = {
+        0: 3382, // MALA
+        1: 6242, // VELA
+        2: 2412, // BONE
+        3: 9091, // CAFE
+        4: 2502, // BOLO
+        5: 25640, // VACA
+        6: 2543, // SAPO
+        7: 5566, // RODA
+        8: 4952, // GALO
+        9: 4931, // FACA
       };
 
       // Lista baseada no exemplo original.
@@ -925,23 +1184,36 @@
         const parts = item.syllables
           .split("|")
           .map((part) => part.trim().toUpperCase());
+        const plainWord = parts.join("");
+        const arasaacId = g_aeeArasaacMap[item.index] || null;
 
         return {
           ...item,
           parts,
           syllableCount: parts.length,
           label: parts.join("-"),
-          plainWord: parts.join(""),
+          plainWord,
+          arasaacId,
+          arasaacUrl: arasaacId
+            ? `${ARASAAC_BASE_URL}/${arasaacId}/${arasaacId}_500.png`
+            : "",
         };
       });
+
+      const allSyllables = [
+        ...new Set(wordsDatabase.flatMap((word) => word.parts)),
+      ];
 
       const elements = {
         wrapper: document.getElementById("game-wrapper"),
         modal: document.getElementById("start-modal"),
         rowsPanel: document.getElementById("rows-panel"),
+        bankPanel: document.getElementById("bank-panel"),
         bankGrid: document.getElementById("bank-grid"),
+        bankTitle: document.querySelector(".bank-header h2"),
         levelBadge: document.getElementById("level-badge"),
         roundBadge: document.getElementById("round-badge"),
+        hudSubtitle: document.getElementById("hud-subtitle"),
         statusText: document.getElementById("status-text"),
         nextPhaseButton: document.getElementById("next-phase-button"),
         changeLevelButton: document.getElementById("change-level-button"),
@@ -950,7 +1222,9 @@
 
       const state = {
         level: null,
+        isAEEMode: false,
         round: 0,
+        sessionTotal: 0,
         eligibleWords: [],
         deck: [],
         currentWords: [],
@@ -976,6 +1250,60 @@
         return g_wordEmojiMap[word.index] || "🔤";
       }
 
+      function getWordsPerRound() {
+        return state.isAEEMode ? 1 : ROWS_PER_ROUND;
+      }
+
+      function getCurrentWord() {
+        return state.currentWords[0] || null;
+      }
+
+      function getAEEProgressLabel(currentRound = state.round) {
+        const safeTotal = state.sessionTotal || AEE_WORDS_PER_SESSION;
+        return `Palavra ${currentRound} de ${safeTotal}`;
+      }
+
+      function setAdvanceButtonLabel(label) {
+        elements.nextPhaseButton.textContent = label;
+        elements.nextPhaseButton.setAttribute("aria-label", label);
+      }
+
+      function updateModeUi() {
+        elements.wrapper.classList.toggle("aee-mode", state.isAEEMode);
+        if (elements.hudSubtitle) {
+          elements.hudSubtitle.textContent = state.isAEEMode
+            ? "1 palavra por vez"
+            : "4 por rodada";
+        }
+        if (elements.bankTitle) {
+          elements.bankTitle.textContent = state.isAEEMode
+            ? "Banco focal"
+            : "Sílabas";
+        }
+      }
+
+      function buildWordFigureMarkup(word) {
+        return `<span class="word-emoji" aria-hidden="true">${getWordEmoji(word)}</span>`;
+      }
+
+      function buildSlotsMarkup(word) {
+        return word.parts
+          .map(
+            (part, partIndex) => `
+              <div
+                class="drop-slot"
+                data-slot-id="${word.index}-${partIndex}"
+                data-word-index="${word.index}"
+                data-expected="${part}"
+                tabindex="0"
+                role="button"
+                aria-label="Espaço ${partIndex + 1}"
+              ></div>
+            `,
+          )
+          .join("");
+      }
+
       function setStatus(text, emphasis = "Pronto") {
         elements.statusText.innerHTML = `<strong>${emphasis}:</strong> ${text}`;
       }
@@ -991,11 +1319,16 @@
       }
 
       function rebuildDeck() {
+        if (state.isAEEMode) {
+          state.deck = shuffle(state.eligibleWords).slice(0, state.sessionTotal);
+          return;
+        }
+
         state.deck = shuffle(state.eligibleWords);
       }
 
       function ensureDeckHasEnoughWords() {
-        if (state.deck.length >= ROWS_PER_ROUND) {
+        if (state.isAEEMode || state.deck.length >= ROWS_PER_ROUND) {
           return;
         }
 
@@ -1005,16 +1338,39 @@
       }
 
       function createRoundPieces(words) {
-        const pieces = words.flatMap((word) =>
+        const createWordPieces = (word) =>
           word.parts.map((text, partIndex) => ({
             id: `${word.index}-${partIndex}-${pieceSequence += 1}`,
             text,
             wordIndex: word.index,
             partIndex,
             placed: false,
-          })),
-        );
+            intruder: false,
+          }));
 
+        if (state.isAEEMode) {
+          const currentWord = words[0];
+          if (!currentWord) {
+            return [];
+          }
+
+          const intruderPieces = shuffle(
+            allSyllables.filter((syllable) => !currentWord.parts.includes(syllable)),
+          )
+            .slice(0, AEE_INTRUDER_COUNT)
+            .map((text) => ({
+              id: `intruder-${pieceSequence += 1}`,
+              text,
+              wordIndex: null,
+              partIndex: null,
+              placed: false,
+              intruder: true,
+            }));
+
+          return shuffle([...createWordPieces(currentWord), ...intruderPieces]);
+        }
+
+        const pieces = words.flatMap((word) => createWordPieces(word));
         return shuffle(pieces);
       }
 
@@ -1127,6 +1483,22 @@
         }
 
         elements.nextPhaseButton.hidden = false;
+
+        if (state.isAEEMode) {
+          const isLastWord = state.round >= state.sessionTotal;
+          setAdvanceButtonLabel(
+            isLastWord ? "Jogar Novamente" : "Próxima Palavra",
+          );
+          setStatus(
+            isLastWord
+              ? "Sessão concluída. Toque em Jogar Novamente."
+              : "Palavra concluída. Toque em Próxima Palavra.",
+            "Muito bem",
+          );
+          return;
+        }
+
+        setAdvanceButtonLabel(">>");
         setStatus("4 de 4. Toque em >>.", "Muito bem");
       }
 
@@ -1162,11 +1534,33 @@
         updateCompletionState(slotElement.dataset.wordIndex);
         clearHoverSlot();
 
-        const finishedWords = [
-          ...elements.rowsPanel.querySelectorAll(".word-row.is-complete"),
-        ].length;
+        if (state.isAEEMode) {
+          const currentWord = getCurrentWord();
+          const filledSlots = currentWord
+            ? elements.rowsPanel.querySelectorAll(
+                `[data-word-index="${currentWord.index}"] .drop-slot.is-filled`,
+              ).length
+            : 0;
+          const missingSlots = currentWord
+            ? currentWord.parts.length - filledSlots
+            : 0;
 
-        setStatus(`${finishedWords} de ${ROWS_PER_ROUND}.`, "Boa");
+          if (missingSlots > 0) {
+            setStatus(
+              missingSlots === 1
+                ? "Falta 1 sílaba."
+                : `Faltam ${missingSlots} sílabas.`,
+              "Boa",
+            );
+          }
+        } else {
+          const finishedWords = [
+            ...elements.rowsPanel.querySelectorAll(".word-row.is-complete"),
+          ].length;
+
+          setStatus(`${finishedWords} de ${ROWS_PER_ROUND}.`, "Boa");
+        }
+
         finishRoundIfNeeded();
         return true;
       }
@@ -1174,37 +1568,23 @@
       function renderRows() {
         const rowsMarkup = state.currentWords
           .map(
-            (word, rowIndex) => `
+            (word) => `
               <article class="word-row" data-row-word-index="${word.index}">
                 <figure
                   class="word-figure"
                   role="img"
-                  aria-label="Objeto da palavra ${word.plainWord}"
+                  aria-label="${state.isAEEMode ? "Emoji" : "Objeto"} da palavra ${word.plainWord}"
                 >
-                  <span class="word-emoji" aria-hidden="true">${getWordEmoji(word)}</span>
+                  ${buildWordFigureMarkup(word)}
                 </figure>
 
                 <div class="word-main">
                   <div class="slots" data-word-index="${word.index}">
-                    ${word.parts
-                      .map(
-                        (part, partIndex) => `
-                          <div
-                            class="drop-slot"
-                            data-slot-id="${word.index}-${partIndex}"
-                            data-word-index="${word.index}"
-                            data-expected="${part}"
-                            tabindex="0"
-                            role="button"
-                            aria-label="Espaço ${partIndex + 1}"
-                          ></div>
-                        `,
-                      )
-                      .join("")}
+                    ${buildSlotsMarkup(word)}
                   </div>
                 </div>
 
-                <span class="row-check" aria-hidden="true">✓</span>
+                <span class="row-check" aria-hidden="true">&#10003;</span>
               </article>
             `,
           )
@@ -1233,6 +1613,16 @@
       }
 
       function updateHud() {
+        updateModeUi();
+
+        if (state.isAEEMode) {
+          elements.levelBadge.textContent = "Modo AEE";
+          elements.roundBadge.textContent = getAEEProgressLabel(
+            state.round || 0,
+          );
+          return;
+        }
+
         elements.levelBadge.textContent = state.level
           ? `${state.level} sílabas`
           : "Selecione o nível";
@@ -1240,12 +1630,13 @@
       }
 
       function drawWordsForRound() {
+        const wordsPerRound = getWordsPerRound();
         ensureDeckHasEnoughWords();
 
         const nextWords = [];
         const usedIndexes = new Set();
 
-        while (nextWords.length < ROWS_PER_ROUND && state.deck.length > 0) {
+        while (nextWords.length < wordsPerRound && state.deck.length > 0) {
           const word = state.deck.pop();
           if (!word || usedIndexes.has(word.index)) {
             continue;
@@ -1254,7 +1645,10 @@
           nextWords.push(word);
         }
 
-        if (nextWords.length < ROWS_PER_ROUND) {
+        if (nextWords.length < wordsPerRound) {
+          if (state.isAEEMode) {
+            return nextWords;
+          }
           rebuildDeck();
           return drawWordsForRound();
         }
@@ -1268,7 +1662,7 @@
       }
 
       function loadRound() {
-        if (!state.level) {
+        if (!state.level && !state.isAEEMode) {
           return;
         }
 
@@ -1276,11 +1670,18 @@
           rebuildDeck();
         }
 
+        const nextWords = drawWordsForRound();
+        if (nextWords.length === 0) {
+          return;
+        }
+
         state.round += 1;
-        state.currentWords = drawWordsForRound();
+        state.currentWords = nextWords;
         state.currentPieces = createRoundPieces(state.currentWords);
+        state.selectedPieceId = null;
         state.placements = new Map();
         state.pointerDrag = null;
+        setAdvanceButtonLabel(state.isAEEMode ? "Próxima Palavra" : ">>");
         elements.nextPhaseButton.hidden = true;
 
         renderRows();
@@ -1289,16 +1690,49 @@
         clearHoverSlot();
         hideTouchGhost();
 
-        setStatus("Monte as 4 palavras.", "Valendo");
+        setStatus(
+          state.isAEEMode
+            ? "Arraste as sílabas para montar a palavra."
+            : "Monte as 4 palavras.",
+          state.isAEEMode ? "Modo AEE" : "Valendo",
+        );
       }
 
       function startGame(level) {
+        state.isAEEMode = false;
         state.level = level;
         state.round = 0;
+        state.sessionTotal = 0;
+        state.currentWords = [];
+        state.currentPieces = [];
+        state.selectedPieceId = null;
+        state.placements = new Map();
+        state.pointerDrag = null;
         state.eligibleWords = wordsDatabase.filter(
           (word) => word.syllableCount === level,
         );
         rebuildDeck();
+        updateModeUi();
+        closeModal();
+        loadRound();
+      }
+
+      function startAEEMode() {
+        state.isAEEMode = true;
+        state.level = null;
+        state.round = 0;
+        state.currentWords = [];
+        state.currentPieces = [];
+        state.selectedPieceId = null;
+        state.placements = new Map();
+        state.pointerDrag = null;
+        state.eligibleWords = wordsDatabase.filter((word) => Boolean(word.arasaacId));
+        state.sessionTotal = Math.min(
+          AEE_WORDS_PER_SESSION,
+          state.eligibleWords.length,
+        );
+        rebuildDeck();
+        updateModeUi();
         closeModal();
         loadRound();
       }
@@ -1460,6 +1894,12 @@
       }
 
       elements.modal.addEventListener("click", (event) => {
+        const aeeButton = event.target.closest("[data-mode='aee']");
+        if (aeeButton) {
+          startAEEMode();
+          return;
+        }
+
         const button = event.target.closest("[data-level]");
         if (!button) {
           return;
@@ -1470,10 +1910,15 @@
 
       elements.changeLevelButton.addEventListener("click", () => {
         openModal();
-        setStatus("Escolha 2 ou 3 sílabas.", "Pausa");
+        setStatus("Escolha 2 ou 3 sílabas ou o Modo AEE.", "Pausa");
       });
 
       elements.nextPhaseButton.addEventListener("click", () => {
+        if (state.isAEEMode && state.round >= state.sessionTotal) {
+          startAEEMode();
+          return;
+        }
+
         loadRound();
       });
 
@@ -1527,8 +1972,9 @@
       document.addEventListener("pointerup", (event) => finishPointerDrag(event));
       document.addEventListener("pointercancel", () => finishPointerDrag(null, true));
 
+      updateModeUi();
       updateHud();
-      setStatus("Escolha 2 ou 3 sílabas.", "Pronto");
+      setStatus("Escolha 2 ou 3 sílabas ou o Modo AEE.", "Pronto");
     </script>
   </body>
 </html>
