@@ -420,15 +420,15 @@
       );
       hud.style.setProperty(
         "--hud-silabas-objetivo-gap",
-        `${Math.max(8, Math.round(14 * escalaLimitada))}px`,
+        `${Math.max(6, Math.round(10 * escalaLimitada))}px`,
       );
       hud.style.setProperty(
         "--hud-silabas-principal-gap",
-        `${Math.max(8, Math.round(12 * escalaLimitada))}px`,
+        `${Math.max(5, Math.round(8 * escalaLimitada))}px`,
       );
       hud.style.setProperty(
         "--hud-silabas-blocos-gap",
-        `${Math.max(6, Math.round(10 * escalaLimitada))}px`,
+        `${Math.max(4, Math.round(8 * escalaLimitada))}px`,
       );
       hud.style.setProperty(
         "--hud-emoji-facil-size",
@@ -468,43 +468,15 @@
       );
       hud.style.setProperty(
         "--hud-emoji-silabas-size",
-        `${Math.max(60, Math.round(88 * escalaLimitada))}px`,
+        `${Math.max(52, Math.round(76 * escalaLimitada))}px`,
       );
       hud.style.setProperty(
         "--hud-emoji-silabas-font-size",
-        `${Math.max(30, Math.round(46 * escalaLimitada))}px`,
+        `${Math.max(28, Math.round(40 * escalaLimitada))}px`,
       );
       hud.style.setProperty(
         "--hud-emoji-silabas-radius",
-        `${Math.max(14, Math.round(22 * escalaLimitada))}px`,
-      );
-      hud.style.setProperty(
-        "--hud-mensagem-font-size",
-        `${(0.85 * Math.max(0.82, escalaLimitada)).toFixed(3)}rem`,
-      );
-      hud.style.setProperty(
-        "--hud-mensagem-modo-font-size",
-        `${(0.96 * Math.max(0.8, escalaLimitada)).toFixed(3)}rem`,
-      );
-      hud.style.setProperty(
-        "--hud-mensagem-pad-y-base",
-        `${Math.max(5, Math.round(6 * escalaLimitada))}px`,
-      );
-      hud.style.setProperty(
-        "--hud-mensagem-pad-x-base",
-        `${Math.max(8, Math.round(10 * escalaLimitada))}px`,
-      );
-      hud.style.setProperty(
-        "--hud-mensagem-pad-y",
-        `${Math.max(6, Math.round(8 * escalaLimitada))}px`,
-      );
-      hud.style.setProperty(
-        "--hud-mensagem-pad-x",
-        `${Math.max(10, Math.round(14 * escalaLimitada))}px`,
-      );
-      hud.style.setProperty(
-        "--hud-mensagem-radius",
-        `${Math.max(10, Math.round(12 * escalaLimitada))}px`,
+        `${Math.max(12, Math.round(18 * escalaLimitada))}px`,
       );
       hud.style.setProperty(
         "--hud-button-padding-y",
@@ -627,19 +599,19 @@
       );
       container.style.setProperty(
         "--silabas-modo-min-largura",
-        `${Math.max(40, Math.round(58 * escalaLimitada))}px`,
+        `${Math.max(36, Math.round(52 * escalaLimitada))}px`,
       );
       container.style.setProperty(
         "--silabas-modo-padding-y",
-        `${Math.max(8, Math.round(14 * escalaLimitada))}px`,
+        `${Math.max(7, Math.round(12 * escalaLimitada))}px`,
       );
       container.style.setProperty(
         "--silabas-modo-padding-x",
-        `${Math.max(10, Math.round(18 * escalaLimitada))}px`,
+        `${Math.max(9, Math.round(16 * escalaLimitada))}px`,
       );
       container.style.setProperty(
         "--silabas-modo-font-size",
-        `${(1.72 * escalaLimitada).toFixed(3)}rem`,
+        `${(1.62 * escalaLimitada).toFixed(3)}rem`,
       );
       hudEscalavel.style.setProperty(
         "--facil-bloco-min-largura",
@@ -3208,10 +3180,8 @@
     const emojiVitoria = document.getElementById("emoji-vitoria");
     const mensagemDerrota = document.getElementById("mensagem-derrota");
     const palavraAlvoHud = document.getElementById("palavra-alvo-hud");
-    const hudMensagem = document.getElementById("hud-mensagem");
     let timeoutMensagemA11y = null;
     let ultimaMensagemA11y = "";
-    let timeoutHudMensagem = null;
     if (controlesTouch && !PERFIL_EXECUCAO.usarControlesTouch) {
       controlesTouch.hidden = true;
       controlesTouch.style.display = "none";
@@ -3225,20 +3195,8 @@
       };
     }
 
-    function mostrarMensagemHud(mensagem, tipo = "info") {
-      if (!hudMensagem) return;
-      hudMensagem.textContent = mensagem;
-      hudMensagem.classList.toggle("alerta", tipo === "alerta");
-      hudMensagem.classList.toggle("boa", tipo === "boa");
-      if (timeoutHudMensagem) clearTimeout(timeoutHudMensagem);
-      if (tipo !== "fixa") {
-        timeoutHudMensagem = setTimeout(() => {
-          if (estadoJogo === "jogando") {
-            hudMensagem.textContent = "Colete o próximo bloco!";
-            hudMensagem.classList.remove("alerta", "boa");
-          }
-        }, 1800);
-      }
+    function mostrarMensagemHud() {
+      // A mensagem visual foi removida da HUD para priorizar o espaço dos blocos.
     }
 
     function anunciarStatus(mensagem) {

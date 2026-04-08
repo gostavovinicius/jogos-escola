@@ -125,7 +125,7 @@
 
       .hud {
         display: grid;
-        grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: clamp(8px, 1vw, 10px);
         padding: clamp(8px, 1.6vh, 10px) clamp(10px, 1.6vw, 14px);
@@ -134,10 +134,11 @@
 
       .hud-title {
         display: flex;
-        align-items: center;
-        gap: 10px;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 2px;
         min-width: 0;
-        flex-wrap: wrap;
       }
 
       .hud-title strong {
@@ -145,6 +146,7 @@
         text-transform: uppercase;
         letter-spacing: 0.02em;
         font-weight: 800;
+        line-height: 1;
       }
 
       .hud-title span {
@@ -153,42 +155,7 @@
         text-transform: uppercase;
         letter-spacing: 0.04em;
         font-weight: 600;
-      }
-
-      .hud-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
-        min-width: 0;
-      }
-
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: clamp(34px, 6.5vh, 42px);
-        padding: clamp(6px, 1vh, 8px) clamp(12px, 1.4vw, 16px);
-        border: 2px solid rgba(79, 57, 37, 0.5);
-        border-radius: 999px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 244, 226, 0.92));
-        font-size: clamp(0.82rem, 1vw, 0.95rem);
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
-      }
-
-      #level-badge {
-        background:
-          linear-gradient(180deg, rgba(137, 224, 222, 0.92), rgba(96, 196, 197, 0.92));
-        color: #214548;
-      }
-
-      #round-badge {
-        background:
-          linear-gradient(180deg, rgba(255, 226, 192, 0.92), rgba(247, 201, 132, 0.92));
-        color: #744c1c;
+        line-height: 1.1;
       }
 
       .hud-button,
@@ -639,6 +606,9 @@
       }
 
       #game-wrapper.aee-mode .game-surface {
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: clamp(6px, 1.1vh, 10px);
+        padding: clamp(8px, 1.4vh, 12px);
         background: #fffdf7;
         box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.08);
       }
@@ -650,46 +620,81 @@
         box-shadow: none;
       }
 
+      #game-wrapper.aee-mode .hud,
+      #game-wrapper.aee-mode .status-bar {
+        position: relative;
+        z-index: 2;
+        border-color: rgba(79, 57, 37, 0.35);
+      }
+
       #game-wrapper.aee-mode .board {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 32px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1.2fr) minmax(0, 0.8fr);
+        grid-template-areas:
+          "word"
+          "bank";
+        align-items: stretch;
+        align-content: stretch;
+        justify-items: stretch;
+        gap: clamp(8px, 1.1vh, 12px);
         width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        overflow: visible;
       }
 
       #game-wrapper.aee-mode .rows-panel {
-        display: flex;
-        width: 100%;
-        justify-content: center;
-      }
-
-      #game-wrapper.aee-mode .word-row {
+        grid-area: word;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
-        gap: 32px;
-        width: min(100%, 880px);
-        padding: 30px;
-        min-height: 430px;
-        border-width: 3px;
-        border-radius: 28px;
+        justify-content: stretch;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        min-width: 0;
+        padding-top: 0;
+      }
+
+      #game-wrapper.aee-mode .word-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
+        justify-items: center;
+        align-items: stretch;
+        gap: clamp(10px, 1.2vh, 14px);
+        width: min(100%, 780px);
+        height: 100%;
+        max-height: 100%;
+        padding: clamp(14px, 1.8vh, 18px) clamp(18px, 2.2vw, 24px);
+        min-height: 0;
+        margin: 0 auto;
+        border-width: 2px;
+        border-color: rgba(79, 57, 37, 0.38);
+        border-radius: 20px;
         text-align: center;
-        position: relative;
-        z-index: 1;
       }
 
       #game-wrapper.aee-mode .word-main {
         width: 100%;
+        display: flex;
+        min-height: 0;
+        max-width: 100%;
+        align-items: flex-start;
         justify-content: center;
       }
 
       #game-wrapper.aee-mode .word-figure {
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
         width: auto;
+        height: 100%;
         min-width: 0;
-        height: auto;
         min-height: 0;
         padding: 0;
         border: none;
@@ -702,8 +707,9 @@
       }
 
       #game-wrapper.aee-mode .word-emoji {
-        font-size: clamp(120px, 16vw, 160px);
-        line-height: 1;
+        margin: 0;
+        font-size: clamp(6rem, 12.5vw, 9rem);
+        line-height: 0.9;
         transform: none;
         filter: drop-shadow(0 10px 16px rgba(73, 54, 40, 0.16));
       }
@@ -717,25 +723,26 @@
         flex-wrap: wrap;
         justify-content: center;
         align-items: center;
-        gap: 30px;
+        gap: clamp(12px, 1.6vw, 16px);
         width: 100%;
+        max-width: 100%;
         margin: 0 auto;
       }
 
       #game-wrapper.aee-mode .drop-slot {
-        width: clamp(132px, 16vw, 160px);
-        min-width: clamp(132px, 16vw, 160px);
-        height: clamp(104px, 14vh, 124px);
-        border-width: 4px;
+        width: clamp(116px, 10.5vw, 136px);
+        min-width: clamp(116px, 10.5vw, 136px);
+        height: clamp(84px, 10.8vh, 98px);
+        border-width: 3px;
         border-style: dashed;
-        border-radius: 26px;
+        border-radius: 20px;
         border-color: #6d5d4e;
         background: #fffdf7;
         background-image: none;
       }
 
       #game-wrapper.aee-mode .drop-slot::after {
-        font-size: 1.6rem;
+        font-size: 1.35rem;
       }
 
       #game-wrapper.aee-mode .drop-slot.is-filled {
@@ -744,12 +751,17 @@
       }
 
       #game-wrapper.aee-mode .bank-panel {
+        grid-area: bank;
         display: flex;
-        flex-direction: column;
-        align-items: center;
+        align-items: stretch;
+        justify-content: center;
         align-self: stretch;
-        width: 100%;
-        max-width: 920px;
+        justify-self: center;
+        width: min(100%, 780px);
+        max-width: 780px;
+        height: 100%;
+        min-height: 0;
+        margin-top: 0;
         padding: 0;
         border: none;
         background: transparent;
@@ -761,27 +773,40 @@
       }
 
       #game-wrapper.aee-mode .bank-grid {
-        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-        grid-auto-rows: auto;
-        gap: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(124px, 1fr));
+        justify-content: center;
+        justify-items: stretch;
+        align-content: center;
+        align-items: stretch;
+        gap: clamp(10px, 1.2vh, 12px);
         width: 100%;
-        height: auto;
+        height: 100%;
         overflow: visible;
         padding-right: 0;
       }
 
       #game-wrapper.aee-mode .syllable-card,
       #game-wrapper.aee-mode .placed-card {
-        min-height: 108px;
-        min-width: 170px;
-        padding: 18px 20px;
-        border-width: 4px;
-        border-radius: 24px;
+        min-height: clamp(74px, 9vh, 88px);
+        padding: 12px 14px;
+        border-width: 2px;
+        border-radius: 18px;
         background: #ffffff;
         border-color: #356d73;
         box-shadow: none;
-        font-size: clamp(2rem, 3vw, 2.5rem);
+        font-size: clamp(1.5rem, 2.1vw, 1.9rem);
         font-weight: 800;
+      }
+
+      #game-wrapper.aee-mode .syllable-card {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+      }
+
+      #game-wrapper.aee-mode .placed-card {
+        min-width: 0;
       }
 
       #game-wrapper.aee-mode .syllable-card:hover:not(.is-used),
@@ -791,28 +816,34 @@
       }
 
       #game-wrapper.aee-mode .status-text {
-        font-size: clamp(0.98rem, 1.3vw, 1.08rem);
+        font-size: clamp(0.94rem, 1.1vw, 1.02rem);
       }
 
       #game-wrapper.aee-mode .touch-ghost {
         z-index: 99999;
-        min-width: 150px;
-        padding: 18px 24px;
-        border-width: 4px;
-        font-size: clamp(1.9rem, 3vw, 2.3rem);
+        min-width: 132px;
+        padding: 14px 18px;
+        border-width: 3px;
+        font-size: clamp(1.6rem, 2.4vw, 2rem);
+      }
+
+      #game-wrapper.aee-mode .status-bar {
+        padding: clamp(8px, 1.2vh, 10px) clamp(12px, 1.4vw, 14px);
+        background: #ffffff;
+        box-shadow: none;
       }
 
       #game-wrapper.aee-mode .next-phase-button {
         width: auto;
-        min-width: 260px;
+        min-width: clamp(168px, 20vw, 210px);
         height: auto;
-        padding: 16px 28px;
-        border-width: 3px;
+        padding: 10px 20px;
+        border-width: 2px;
         border-color: #116737;
-        border-radius: 20px;
+        border-radius: 18px;
         background: #18a957;
         box-shadow: none;
-        font-size: clamp(1.15rem, 1.8vw, 1.35rem);
+        font-size: clamp(1rem, 1.4vw, 1.15rem);
       }
 
       #game-wrapper.aee-mode .next-phase-button:hover {
@@ -882,22 +913,7 @@
 
         .hud {
           grid-template-columns: minmax(0, 1fr) auto;
-          align-items: start;
-        }
-
-        .hud-title {
-          grid-column: 1;
-          grid-row: 1;
-        }
-
-        .hud-badges {
-          grid-column: 1 / -1;
-          justify-content: flex-start;
-        }
-
-        .hud-button {
-          grid-column: 2;
-          grid-row: 1;
+          align-items: center;
         }
 
         .word-row {
@@ -923,10 +939,22 @@
           height: 40px;
         }
 
+        #game-wrapper.aee-mode .game-surface {
+          gap: 8px;
+          padding: 8px;
+        }
+
+        #game-wrapper.aee-mode .board {
+          grid-template-rows: minmax(0, 1fr) auto;
+          gap: 8px;
+        }
+
         #game-wrapper.aee-mode .word-row {
-          padding: 20px;
+          width: 100%;
+          max-width: 680px;
+          padding: 12px 14px;
           min-height: 0;
-          gap: 30px;
+          gap: 10px;
         }
 
         #game-wrapper.aee-mode .word-figure {
@@ -936,29 +964,36 @@
         }
 
         #game-wrapper.aee-mode .word-emoji {
-          font-size: clamp(120px, 28vw, 144px);
+          font-size: clamp(5.2rem, 20vw, 7.4rem);
         }
 
         #game-wrapper.aee-mode .drop-slot {
-          width: clamp(118px, 26vw, 146px);
-          min-width: clamp(118px, 26vw, 146px);
-          height: 100px;
+          width: clamp(98px, 28vw, 114px);
+          min-width: clamp(98px, 28vw, 114px);
+          height: clamp(72px, 18vw, 84px);
         }
 
         #game-wrapper.aee-mode .bank-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 16px;
+          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+          gap: 10px;
+          height: auto;
         }
 
         #game-wrapper.aee-mode .syllable-card,
         #game-wrapper.aee-mode .placed-card {
-          min-height: 94px;
-          min-width: 0;
-          font-size: clamp(2rem, 6vw, 2.2rem);
+          min-height: 64px;
+          padding: 10px 12px;
+          font-size: clamp(1.3rem, 4.5vw, 1.7rem);
+        }
+
+        #game-wrapper.aee-mode .status-bar {
+          justify-content: center;
+          flex-wrap: wrap;
+          text-align: center;
         }
 
         #game-wrapper.aee-mode .next-phase-button {
-          min-width: 220px;
+          min-width: 180px;
         }
       }
     </style>
@@ -971,12 +1006,6 @@
             <strong>Sílabas</strong>
             <span id="hud-subtitle">4 por rodada</span>
           </div>
-
-          <div class="hud-badges">
-            <span class="badge" id="level-badge">Selecione o nível</span>
-            <span class="badge" id="round-badge">Fase 0</span>
-          </div>
-
           <button class="hud-button" id="change-level-button" type="button">✦ Nível</button>
         </header>
 
@@ -1031,9 +1060,8 @@
 
     <script>
       const ROWS_PER_ROUND = 4;
-      const AEE_WORDS_PER_SESSION = 10;
+      const AEE_WORDS_PER_SESSION = 50;
       const AEE_INTRUDER_COUNT = 2;
-      const ARASAAC_BASE_URL = "https://static.arasaac.org/pictograms";
 
       // Troque os emojis abaixo se quiser personalizar os objetos.
       const g_wordEmojiMap = {
@@ -1098,21 +1126,6 @@
         58: "🦈",
         59: "🧶",
         60: "🎸",
-      };
-
-      // IDs iniciais do ARASAAC para o Modo AEE.
-      // O formato final da imagem segue: /{id}/{id}_500.png
-      const g_aeeArasaacMap = {
-        0: 3382, // MALA
-        1: 6242, // VELA
-        2: 2412, // BONE
-        3: 9091, // CAFE
-        4: 2502, // BOLO
-        5: 25640, // VACA
-        6: 2543, // SAPO
-        7: 5566, // RODA
-        8: 4952, // GALO
-        9: 4931, // FACA
       };
 
       // Lista baseada no exemplo original.
@@ -1185,7 +1198,10 @@
           .split("|")
           .map((part) => part.trim().toUpperCase());
         const plainWord = parts.join("");
-        const arasaacId = g_aeeArasaacMap[item.index] || null;
+        const hasEmoji = Object.prototype.hasOwnProperty.call(
+          g_wordEmojiMap,
+          item.index,
+        );
 
         return {
           ...item,
@@ -1193,12 +1209,11 @@
           syllableCount: parts.length,
           label: parts.join("-"),
           plainWord,
-          arasaacId,
-          arasaacUrl: arasaacId
-            ? `${ARASAAC_BASE_URL}/${arasaacId}/${arasaacId}_500.png`
-            : "",
+          hasEmoji,
         };
       });
+
+      const aeeWordsDatabase = wordsDatabase.filter((word) => word.hasEmoji);
 
       const allSyllables = [
         ...new Set(wordsDatabase.flatMap((word) => word.parts)),
@@ -1211,8 +1226,6 @@
         bankPanel: document.getElementById("bank-panel"),
         bankGrid: document.getElementById("bank-grid"),
         bankTitle: document.querySelector(".bank-header h2"),
-        levelBadge: document.getElementById("level-badge"),
-        roundBadge: document.getElementById("round-badge"),
         hudSubtitle: document.getElementById("hud-subtitle"),
         statusText: document.getElementById("status-text"),
         nextPhaseButton: document.getElementById("next-phase-button"),
@@ -1614,19 +1627,6 @@
 
       function updateHud() {
         updateModeUi();
-
-        if (state.isAEEMode) {
-          elements.levelBadge.textContent = "Modo AEE";
-          elements.roundBadge.textContent = getAEEProgressLabel(
-            state.round || 0,
-          );
-          return;
-        }
-
-        elements.levelBadge.textContent = state.level
-          ? `${state.level} sílabas`
-          : "Selecione o nível";
-        elements.roundBadge.textContent = `Fase ${state.round}`;
       }
 
       function drawWordsForRound() {
@@ -1692,7 +1692,7 @@
 
         setStatus(
           state.isAEEMode
-            ? "Arraste as sílabas para montar a palavra."
+            ? `${getAEEProgressLabel()}. Arraste as sílabas para montar a palavra.`
             : "Monte as 4 palavras.",
           state.isAEEMode ? "Modo AEE" : "Valendo",
         );
@@ -1726,7 +1726,7 @@
         state.selectedPieceId = null;
         state.placements = new Map();
         state.pointerDrag = null;
-        state.eligibleWords = wordsDatabase.filter((word) => Boolean(word.arasaacId));
+        state.eligibleWords = [...aeeWordsDatabase];
         state.sessionTotal = Math.min(
           AEE_WORDS_PER_SESSION,
           state.eligibleWords.length,

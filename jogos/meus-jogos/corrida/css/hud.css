@@ -84,6 +84,7 @@
   min-width: 0;
   display: grid;
   gap: var(--hud-meta-gap, 8px);
+  width: 100%;
   max-width: 100%;
 }
 
@@ -173,15 +174,9 @@
   transform: scale(1.08);
 }
 
-#interface.modo-facil #hud-mensagem {
-  width: fit-content;
-  padding: var(--hud-mensagem-pad-y, 8px) var(--hud-mensagem-pad-x, 14px);
-  font-size: var(--hud-mensagem-modo-font-size, 0.95rem);
-}
-
 #interface.modo-silabas #objetivo-hud {
   grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--hud-silabas-objetivo-gap, 14px);
+  gap: var(--hud-silabas-objetivo-gap, 10px);
   align-items: center;
 }
 
@@ -190,46 +185,51 @@
 }
 
 #interface.modo-silabas #objetivo-principal-hud {
-  display: flex;
-  align-items: center;
-  gap: var(--hud-silabas-principal-gap, 12px);
-  flex-wrap: nowrap;
+  display: grid;
+  gap: var(--hud-silabas-principal-gap, 8px);
+  align-content: center;
   width: 100%;
   min-width: 0;
 }
 
 #interface.modo-silabas #alvo-emoji-hud {
-  width: var(--hud-emoji-silabas-size, 88px);
-  height: var(--hud-emoji-silabas-size, 88px);
-  font-size: var(--hud-emoji-silabas-font-size, 46px);
-  border-radius: var(--hud-emoji-silabas-radius, 22px);
+  width: var(--hud-emoji-silabas-size, 76px);
+  height: var(--hud-emoji-silabas-size, 76px);
+  font-size: var(--hud-emoji-silabas-font-size, 40px);
+  border-radius: var(--hud-emoji-silabas-radius, 18px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.84),
     0 0 18px rgba(111, 191, 255, 0.18),
     0 12px 28px rgba(17, 78, 141, 0.16);
 }
 
+#interface.modo-silabas #palavra-alvo-hud {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 #interface.modo-silabas #blocos-silabas {
-  order: 1;
-  flex: 1 1 auto;
-  gap: var(--hud-silabas-blocos-gap, 10px);
+  gap: var(--hud-silabas-blocos-gap, 8px);
   flex-wrap: nowrap;
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  overflow: hidden;
-}
-
-#interface.modo-silabas #palavra-alvo-hud {
-  display: none;
+  overflow: visible;
 }
 
 #interface.modo-silabas .bloco-silaba {
-  min-width: var(--silabas-modo-min-largura, 58px);
-  padding: var(--silabas-modo-padding-y, 14px)
-    var(--silabas-modo-padding-x, 18px);
+  flex: 0 0 auto;
+  min-width: var(--silabas-modo-min-largura, 52px);
+  padding: var(--silabas-modo-padding-y, 12px)
+    var(--silabas-modo-padding-x, 16px);
   border-radius: 18px;
-  font-size: var(--silabas-modo-font-size, 1.72rem);
+  font-size: var(--silabas-modo-font-size, 1.62rem);
+  line-height: 1;
   box-shadow: 0 10px 20px rgba(17, 78, 141, 0.14);
 }
 
@@ -244,34 +244,6 @@
     0 0 0 4px rgba(255, 183, 3, 0.16),
     0 12px 26px rgba(255, 183, 3, 0.24);
   animation: pulsar-forte 0.85s ease-in-out infinite alternate;
-}
-
-#interface.modo-silabas #hud-mensagem {
-  width: fit-content;
-  padding: var(--hud-mensagem-pad-y, 8px) var(--hud-mensagem-pad-x, 14px);
-  font-size: var(--hud-mensagem-modo-font-size, 0.98rem);
-}
-
-#hud-mensagem {
-  min-height: 24px;
-  padding: var(--hud-mensagem-pad-y-base, 6px)
-    var(--hud-mensagem-pad-x-base, 10px);
-  border-radius: var(--hud-mensagem-radius, 12px);
-  background: rgba(255, 243, 205, 0.82);
-  color: #8a4a00;
-  font-size: var(--hud-mensagem-font-size, 0.85rem);
-  font-weight: 900;
-  letter-spacing: 0.02em;
-}
-
-#hud-mensagem.alerta {
-  background: rgba(255, 228, 228, 0.92);
-  color: #b42318;
-}
-
-#hud-mensagem.boa {
-  background: rgba(223, 252, 229, 0.92);
-  color: #166534;
 }
 
 #hud-perseguicao {
@@ -710,7 +682,7 @@
 
 .hud-compacta #interface.modo-silabas #blocos-silabas,
 .em-iframe.iframe-compacto #interface.modo-silabas #blocos-silabas {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   overflow: visible;
 }
 

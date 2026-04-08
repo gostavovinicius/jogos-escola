@@ -2,7 +2,7 @@
   const grid = document.querySelector("[data-random-games]");
   if (!grid) return;
 
-  const maxShow = Math.max(1, Number(grid.dataset.maxShow || "8"));
+  const maxShow = Math.max(1, Number(grid.dataset.maxShow || "10"));
   const storageKey =
     grid.dataset.storageKey || `catalogo:${window.location.pathname}`;
 
@@ -40,7 +40,10 @@
 
     for (let tentativa = 0; tentativa < 12; tentativa += 1) {
       const embaralhados = shuffle(cards.slice());
-      escolhidos = embaralhados.slice(0, Math.min(maxShow, embaralhados.length));
+      escolhidos = embaralhados.slice(
+        0,
+        Math.min(maxShow, embaralhados.length),
+      );
       const hrefs = escolhidos.map((card) => card.getAttribute("href"));
 
       if (!mesmaSelecao(ultimaSelecao, hrefs)) {
