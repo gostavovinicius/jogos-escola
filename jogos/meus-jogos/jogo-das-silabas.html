@@ -1063,145 +1063,140 @@
       const AEE_WORDS_PER_SESSION = 50;
       const AEE_INTRUDER_COUNT = 2;
 
-      // Troque os emojis abaixo se quiser personalizar os objetos.
-      const g_wordEmojiMap = {
-        0: "🧳",
-        1: "🕯️",
-        2: "🧢",
-        3: "☕",
-        4: "🎂",
-        5: "🐄",
-        6: "🐸",
-        7: "🛞",
-        8: "🐓",
-        9: "🔪",
-        10: "🦭",
-        11: "👢",
-        12: "⚽",
-        13: "🦆",
-        14: "🐱",
-        15: "🐭",
-        16: "🍬",
-        17: "🦁",
-        18: "🤖",
-        19: "🍲",
-        20: "🧤",
-        21: "🐺",
-        22: "🏺",
-        23: "🍽️",
-        24: "🛋️",
-        25: "👜",
-        26: "🐎",
-        27: "🐒",
-        28: "🍌",
-        29: "🖊️",
-        30: "🦅",
-        31: "🐊",
-        32: "🍅",
-        33: "🍐",
-        34: "👄",
-        35: "👟",
-        36: "🪁",
-        37: "🦉",
-        38: "🪆",
-        39: "🥔",
-        40: "🍝",
-        41: "✂️",
-        42: "🥘",
-        43: "✈️",
-        44: "🕷️",
-        45: "🐜",
-        46: "🦒",
-        47: "🐝",
-        48: "🍌",
-        49: "🤡",
-        50: "🐑",
-        51: "🥕",
-        52: "🎒",
-        53: "📯",
-        54: "🐫",
-        55: "☕",
-        56: "👕",
-        57: "🏴‍☠️",
-        58: "🦈",
-        59: "🧶",
-        60: "🎸",
-      };
-
-      // Lista baseada no exemplo original.
-      const g_syllablesList = [
-        { q: "", syllables: "MA|LA", index: 0 },
-        { q: "", syllables: "VE|LA", index: 1 },
-        { q: "", syllables: "BO|NÉ", index: 2 },
-        { q: "", syllables: "CA|FÉ", index: 3 },
-        { q: "", syllables: "BO|LO", index: 4 },
-        { q: "", syllables: "VA|CA", index: 5 },
-        { q: "", syllables: "SA|PO", index: 6 },
-        { q: "", syllables: "RO|DA", index: 7 },
-        { q: "", syllables: "GA|LO", index: 8 },
-        { q: "", syllables: "FA|CA", index: 9 },
-        { q: "", syllables: "FO|CA", index: 10 },
-        { q: "", syllables: "BO|TA", index: 11 },
-        { q: "", syllables: "BO|LA", index: 12 },
-        { q: "", syllables: "PA|TO", index: 13 },
-        { q: "", syllables: "GA|TO", index: 14 },
-        { q: "", syllables: "RA|TO", index: 15 },
-        { q: "", syllables: "BA|LA", index: 16 },
-        { q: "", syllables: "LE|ÃO", index: 17 },
-        { q: "", syllables: "RO|BÔ", index: 18 },
-        { q: "", syllables: "SO|PA", index: 19 },
-        { q: "", syllables: "LU|VA", index: 20 },
-        { q: "", syllables: "LO|BO", index: 21 },
-        { q: "", syllables: "VA|SO", index: 22 },
-        { q: "", syllables: "ME|SA", index: 23 },
-        { q: "", syllables: "SO|FÁ", index: 24 },
-        { q: "", syllables: "SA|CO", index: 25 },
-        { q: "", syllables: "CA|VA|LO", index: 26 },
-        { q: "", syllables: "MA|CA|CO", index: 27 },
-        { q: "", syllables: "BA|NA|NA", index: 28 },
-        { q: "", syllables: "CA|NE|TA", index: 29 },
-        { q: "", syllables: "U|RU|BU", index: 30 },
-        { q: "", syllables: "JA|CA|RÉ", index: 31 },
-        { q: "", syllables: "TO|MA|TE", index: 32 },
-        { q: "", syllables: "PE|RA", index: 33 },
-        { q: "", syllables: "BO|CA", index: 34 },
-        { q: "", syllables: "SA|PA|TO", index: 35 },
-        { q: "", syllables: "PI|PA", index: 36 },
-        { q: "", syllables: "CO|RU|JA", index: 37 },
-        { q: "", syllables: "BO|NE|CA", index: 38 },
-        { q: "", syllables: "BA|TA|TA", index: 39 },
-        { q: "", syllables: "MA|CAR|RÃO", index: 40 },
-        { q: "", syllables: "TE|SOU|RA", index: 41 },
-        { q: "", syllables: "PA|NE|LA", index: 42 },
-        { q: "", syllables: "A|VI|ÃO", index: 43 },
-        { q: "", syllables: "A|RA|NHA", index: 44 },
-        { q: "", syllables: "FOR|MI|GA", index: 45 },
-        { q: "", syllables: "GI|RA|FA", index: 46 },
-        { q: "", syllables: "A|BE|LHA", index: 47 },
-        { q: "", syllables: "BA|NA|NA", index: 48 },
-        { q: "", syllables: "PA|LHA|ÇO", index: 49 },
-        { q: "", syllables: "O|VE|LHA", index: 50 },
-        { q: "", syllables: "CE|NOU|RA", index: 51 },
-        { q: "", syllables: "MO|CHI|LA", index: 52 },
-        { q: "", syllables: "A|PI|TO", index: 53 },
-        { q: "", syllables: "CA|ME|LO", index: 54 },
-        { q: "", syllables: "CA|NE|CA", index: 55 },
-        { q: "", syllables: "CA|BI|DE", index: 56 },
-        { q: "", syllables: "PI|RA|TA", index: 57 },
-        { q: "", syllables: "TU|BA|RÃO", index: 58 },
-        { q: "", syllables: "TA|PE|TE", index: 59 },
-        { q: "", syllables: "VI|O|LÃO", index: 60 },
+      const wordsMode2Source = [
+        { emoji: "🍌", syllables: "BA|NA|NA" },
+        { emoji: "🐒", syllables: "MA|CA|CO" },
+        { emoji: "🏠", syllables: "CA|SA" },
+        { emoji: "🚗", syllables: "CA|RRO" },
+        { emoji: "🐶", syllables: "CA|CHOR|RO" },
+        { emoji: "🐱", syllables: "GA|TO" },
+        { emoji: "🐸", syllables: "SA|PO" },
+        { emoji: "🐮", syllables: "VA|CA" },
+        { emoji: "🐴", syllables: "CA|VA|LO" },
+        { emoji: "🐓", syllables: "GA|LO" },
+        { emoji: "🐟", syllables: "PEI|XE" },
+        { emoji: "🌞", syllables: "SOL" },
+        { emoji: "🌙", syllables: "LU|A" },
+        { emoji: "⭐", syllables: "ES|TRE|LA" },
+        { emoji: "☁️", syllables: "NU|VEM" },
+        { emoji: "🌧️", syllables: "CHU|VA" },
+        { emoji: "🌳", syllables: "ÁR|VO|RE" },
+        { emoji: "🌸", syllables: "FLOR" },
+        { emoji: "🍎", syllables: "MA|ÇÃ" },
+        { emoji: "🍇", syllables: "U|VA" },
+        { emoji: "🍉", syllables: "ME|LAN|CI|A" },
+        { emoji: "🍍", syllables: "A|BA|CA|XI" },
+        { emoji: "🥥", syllables: "CO|CO" },
+        { emoji: "🍞", syllables: "PÃO" },
+        { emoji: "🥛", syllables: "LEI|TE" },
+        { emoji: "🍰", syllables: "BO|LO" },
+        { emoji: "🍬", syllables: "BA|LA" },
+        { emoji: "⚽", syllables: "BO|LA" },
+        { emoji: "🪁", syllables: "PI|PA" },
+        { emoji: "🧸", syllables: "UR|SO" },
       ];
+
+      const wordsMode3Source = [
+        { emoji: "🚲", syllables: "BI|CI|CLE|TA" },
+        { emoji: "✈️", syllables: "A|VI|ÃO" },
+        { emoji: "🚤", syllables: "BAR|CO" },
+        { emoji: "👑", syllables: "CO|RO|A" },
+        { emoji: "👟", syllables: "SA|PA|TO" },
+        { emoji: "👕", syllables: "CA|MI|SA" },
+        { emoji: "🛏️", syllables: "CA|MA" },
+        { emoji: "🚪", syllables: "POR|TA" },
+        { emoji: "📘", syllables: "LI|VRO" },
+        { emoji: "🐘", syllables: "E|LE|FAN|TE" },
+        { emoji: "🦒", syllables: "GI|RA|FA" },
+        { emoji: "🐊", syllables: "JA|CA|RÉ" },
+        { emoji: "🦋", syllables: "BOR|BO|LE|TA" },
+        { emoji: "🐢", syllables: "TAR|TA|RU|GA" },
+        { emoji: "🍓", syllables: "MO|RAN|GO" },
+        { emoji: "🍅", syllables: "TO|MA|TE" },
+        { emoji: "🥕", syllables: "CE|NOU|RA" },
+        { emoji: "🍍", syllables: "A|BA|CA|XI" },
+        { emoji: "🍌", syllables: "BA|NA|NA" },
+        { emoji: "🧀", syllables: "QUEI|JO" },
+        { emoji: "🐔", syllables: "GA|LI|NHA" },
+        { emoji: "🪥", syllables: "ES|CO|VA" },
+        { emoji: "🧼", syllables: "SA|BÃO" },
+        { emoji: "🪑", syllables: "CA|DEI|RA" },
+        { emoji: "🪟", syllables: "JA|NE|LA" },
+        { emoji: "🧢", syllables: "BO|NÉ" },
+        { emoji: "🎈", syllables: "BA|LÃO" },
+        { emoji: "🕯️", syllables: "VE|LA" },
+        { emoji: "🐬", syllables: "GOL|FI|NHO" },
+        { emoji: "🐞", syllables: "JO|A|NI|NHA" },
+      ];
+
+      const wordsModeAEESource = [
+        { emoji: "🐵", syllables: "MA|CA|CO" },
+        { emoji: "🐶", syllables: "CA|CHOR|RO" },
+        { emoji: "🐱", syllables: "GA|TO" },
+        { emoji: "🐮", syllables: "VA|CA" },
+        { emoji: "🐸", syllables: "SA|PO" },
+        { emoji: "🐟", syllables: "PEI|XE" },
+        { emoji: "🐔", syllables: "GA|LI|NHA" },
+        { emoji: "🐴", syllables: "CA|VA|LO" },
+        { emoji: "🐷", syllables: "POR|CO" },
+        { emoji: "🐰", syllables: "CO|E|LHO" },
+        { emoji: "🍎", syllables: "MA|ÇÃ" },
+        { emoji: "🍌", syllables: "BA|NA|NA" },
+        { emoji: "🍇", syllables: "U|VA" },
+        { emoji: "🍉", syllables: "ME|LAN|CI|A" },
+        { emoji: "🍓", syllables: "MO|RAN|GO" },
+        { emoji: "🍍", syllables: "A|BA|CA|XI" },
+        { emoji: "🥥", syllables: "CO|CO" },
+        { emoji: "🍅", syllables: "TO|MA|TE" },
+        { emoji: "🥕", syllables: "CE|NOU|RA" },
+        { emoji: "🍞", syllables: "PÃO" },
+        { emoji: "🥛", syllables: "LEI|TE" },
+        { emoji: "🍰", syllables: "BO|LO" },
+        { emoji: "🍬", syllables: "BA|LA" },
+        { emoji: "⚽", syllables: "BO|LA" },
+        { emoji: "🪁", syllables: "PI|PA" },
+        { emoji: "🧸", syllables: "UR|SO" },
+        { emoji: "🚗", syllables: "CA|RRO" },
+        { emoji: "🚲", syllables: "BI|CI|CLE|TA" },
+        { emoji: "✈️", syllables: "A|VI|ÃO" },
+        { emoji: "🚤", syllables: "BAR|CO" },
+        { emoji: "🏠", syllables: "CA|SA" },
+        { emoji: "🚪", syllables: "POR|TA" },
+        { emoji: "🪟", syllables: "JA|NE|LA" },
+        { emoji: "🛏️", syllables: "CA|MA" },
+        { emoji: "🪑", syllables: "CA|DEI|RA" },
+        { emoji: "📘", syllables: "LI|VRO" },
+        { emoji: "👟", syllables: "SA|PA|TO" },
+        { emoji: "👕", syllables: "CA|MI|SA" },
+        { emoji: "☀️", syllables: "SOL" },
+        { emoji: "🌙", syllables: "LU|A" },
+      ];
+
+      function createModeEntries(sourceList, mode, startIndex) {
+        return sourceList.map((item, offset) => ({
+          q: "",
+          index: startIndex + offset,
+          mode,
+          emoji: item.emoji,
+          syllables: item.syllables,
+        }));
+      }
+
+      const mode2Entries = createModeEntries(wordsMode2Source, "2", 0);
+      const mode3Entries = createModeEntries(wordsMode3Source, "3", 100);
+      const modeAEEEntries = createModeEntries(wordsModeAEESource, "aee", 200);
+
+      const g_syllablesList = [...mode2Entries, ...mode3Entries, ...modeAEEEntries];
+
+      const g_wordEmojiMap = Object.fromEntries(
+        g_syllablesList.map((item) => [item.index, item.emoji]),
+      );
 
       const wordsDatabase = g_syllablesList.map((item) => {
         const parts = item.syllables
           .split("|")
           .map((part) => part.trim().toUpperCase());
         const plainWord = parts.join("");
-        const hasEmoji = Object.prototype.hasOwnProperty.call(
-          g_wordEmojiMap,
-          item.index,
-        );
 
         return {
           ...item,
@@ -1209,14 +1204,23 @@
           syllableCount: parts.length,
           label: parts.join("-"),
           plainWord,
-          hasEmoji,
+          hasEmoji: true,
         };
       });
 
-      const aeeWordsDatabase = wordsDatabase.filter((word) => word.hasEmoji);
+      const wordsMode2 = wordsDatabase.filter((word) => word.mode === "2");
+      const wordsMode3 = wordsDatabase.filter((word) => word.mode === "3");
+      const wordsModeAEE = wordsDatabase.filter((word) => word.mode === "aee");
 
-      const allSyllables = [
-        ...new Set(wordsDatabase.flatMap((word) => word.parts)),
+      const wordsByMode = {
+        2: wordsMode2,
+        3: wordsMode3,
+      };
+
+      const aeeWordsDatabase = [...wordsModeAEE];
+
+      const aeeSyllablesPool = [
+        ...new Set(wordsModeAEE.flatMap((word) => word.parts)),
       ];
 
       const elements = {
@@ -1260,7 +1264,7 @@
       }
 
       function getWordEmoji(word) {
-        return g_wordEmojiMap[word.index] || "🔤";
+        return word.emoji || g_wordEmojiMap[word.index] || "🔤";
       }
 
       function getWordsPerRound() {
@@ -1368,7 +1372,7 @@
           }
 
           const intruderPieces = shuffle(
-            allSyllables.filter((syllable) => !currentWord.parts.includes(syllable)),
+            aeeSyllablesPool.filter((syllable) => !currentWord.parts.includes(syllable)),
           )
             .slice(0, AEE_INTRUDER_COUNT)
             .map((text) => ({
@@ -1708,9 +1712,7 @@
         state.selectedPieceId = null;
         state.placements = new Map();
         state.pointerDrag = null;
-        state.eligibleWords = wordsDatabase.filter(
-          (word) => word.syllableCount === level,
-        );
+        state.eligibleWords = [...(wordsByMode[level] || [])];
         rebuildDeck();
         updateModeUi();
         closeModal();
