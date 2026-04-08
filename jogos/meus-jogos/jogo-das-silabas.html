@@ -583,7 +583,7 @@
       }
 
       .touch-ghost {
-        position: fixed;
+        position: absolute;
         left: 0;
         top: 0;
         z-index: 99999;
@@ -630,7 +630,7 @@
       #game-wrapper.aee-mode .board {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: minmax(0, 1.2fr) minmax(0, 0.8fr);
+        grid-template-rows: minmax(0, 1fr) auto;
         grid-template-areas:
           "word"
           "bank";
@@ -759,7 +759,7 @@
         justify-self: center;
         width: min(100%, 780px);
         max-width: 780px;
-        height: 100%;
+        height: auto;
         min-height: 0;
         margin-top: 0;
         padding: 0;
@@ -781,7 +781,7 @@
         align-items: stretch;
         gap: clamp(10px, 1.2vh, 12px);
         width: 100%;
-        height: 100%;
+        height: auto;
         overflow: visible;
         padding-right: 0;
       }
@@ -849,6 +849,84 @@
       #game-wrapper.aee-mode .next-phase-button:hover {
         box-shadow: none;
         background: #16924c;
+      }
+
+      #game-wrapper.aee-mode:fullscreen,
+      #game-wrapper.aee-mode:-webkit-full-screen {
+        border-width: 0;
+        border-radius: 0;
+      }
+
+      #game-wrapper.aee-mode:fullscreen .game-surface,
+      #game-wrapper.aee-mode:-webkit-full-screen .game-surface {
+        gap: clamp(10px, 1.6vh, 16px);
+        padding: clamp(12px, 1.8vh, 18px);
+      }
+
+      #game-wrapper.aee-mode:fullscreen .board,
+      #game-wrapper.aee-mode:-webkit-full-screen .board {
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: clamp(10px, 1.6vh, 16px);
+      }
+
+      #game-wrapper.aee-mode:fullscreen .rows-panel,
+      #game-wrapper.aee-mode:-webkit-full-screen .rows-panel {
+        justify-content: center;
+      }
+
+      #game-wrapper.aee-mode:fullscreen .word-row,
+      #game-wrapper.aee-mode:-webkit-full-screen .word-row {
+        width: min(100%, 940px);
+        padding: clamp(16px, 2vh, 24px) clamp(18px, 2.6vw, 30px);
+        gap: clamp(14px, 1.8vh, 20px);
+      }
+
+      #game-wrapper.aee-mode:fullscreen .word-main,
+      #game-wrapper.aee-mode:-webkit-full-screen .word-main {
+        align-items: center;
+      }
+
+      #game-wrapper.aee-mode:fullscreen .word-emoji,
+      #game-wrapper.aee-mode:-webkit-full-screen .word-emoji {
+        font-size: clamp(6.8rem, 14vw, 11rem);
+      }
+
+      #game-wrapper.aee-mode:fullscreen .slots,
+      #game-wrapper.aee-mode:-webkit-full-screen .slots {
+        gap: clamp(14px, 1.8vw, 20px);
+      }
+
+      #game-wrapper.aee-mode:fullscreen .drop-slot,
+      #game-wrapper.aee-mode:-webkit-full-screen .drop-slot {
+        width: clamp(124px, 11vw, 150px);
+        min-width: clamp(124px, 11vw, 150px);
+        height: clamp(90px, 11vh, 108px);
+      }
+
+      #game-wrapper.aee-mode:fullscreen .bank-panel,
+      #game-wrapper.aee-mode:-webkit-full-screen .bank-panel {
+        width: min(100%, 940px);
+        max-width: 940px;
+      }
+
+      #game-wrapper.aee-mode:fullscreen .bank-grid,
+      #game-wrapper.aee-mode:-webkit-full-screen .bank-grid {
+        grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
+        gap: clamp(12px, 1.4vh, 16px);
+      }
+
+      #game-wrapper.aee-mode:fullscreen .syllable-card,
+      #game-wrapper.aee-mode:fullscreen .placed-card,
+      #game-wrapper.aee-mode:-webkit-full-screen .syllable-card,
+      #game-wrapper.aee-mode:-webkit-full-screen .placed-card {
+        min-height: clamp(78px, 9.5vh, 96px);
+        font-size: clamp(1.65rem, 2.5vw, 2.2rem);
+      }
+
+      #game-wrapper.aee-mode:fullscreen .touch-ghost,
+      #game-wrapper.aee-mode:-webkit-full-screen .touch-ghost {
+        min-width: 148px;
+        font-size: clamp(1.8rem, 2.6vw, 2.3rem);
       }
 
       @keyframes shake {
@@ -1237,6 +1315,14 @@
         touchGhost: document.getElementById("touch-ghost"),
       };
 
+      if (
+        elements.wrapper &&
+        elements.touchGhost &&
+        elements.touchGhost.parentElement !== elements.wrapper
+      ) {
+        elements.wrapper.appendChild(elements.touchGhost);
+      }
+
       const state = {
         level: null,
         isAEEMode: false,
@@ -1333,6 +1419,55 @@
       function closeModal() {
         elements.wrapper.classList.remove("modal-open");
         elements.modal.classList.remove("is-visible");
+      }
+
+      function requestGameFullscreen() {
+        const fullscreenElement =
+          document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.msFullscreenElement ||
+          null;
+
+        if (fullscreenElement) {
+          return;
+        }
+
+        const primaryTarget = elements.wrapper || document.documentElement;
+        const fallbackTarget =
+          primaryTarget === document.documentElement
+            ? null
+            : document.documentElement;
+
+        const requestFullscreenForTarget = (target) => {
+          if (!target) {
+            return false;
+          }
+
+          const requestMethod =
+            target.requestFullscreen ||
+            target.webkitRequestFullscreen ||
+            target.msRequestFullscreen;
+
+          if (typeof requestMethod !== "function") {
+            return false;
+          }
+
+          try {
+            const result = requestMethod.call(target);
+            if (result && typeof result.catch === "function") {
+              result.catch(() => {});
+            }
+            return true;
+          } catch (error) {
+            return false;
+          }
+        };
+
+        if (requestFullscreenForTarget(primaryTarget)) {
+          return;
+        }
+
+        requestFullscreenForTarget(fallbackTarget);
       }
 
       function rebuildDeck() {
@@ -1737,6 +1872,7 @@
         updateModeUi();
         closeModal();
         loadRound();
+        requestGameFullscreen();
       }
 
       function getSlotFromEventTarget(target) {
@@ -1748,8 +1884,9 @@
       }
 
       function updateTouchGhostPosition(clientX, clientY) {
-        elements.touchGhost.style.left = `${clientX}px`;
-        elements.touchGhost.style.top = `${clientY}px`;
+        const wrapperRect = elements.wrapper.getBoundingClientRect();
+        elements.touchGhost.style.left = `${clientX - wrapperRect.left}px`;
+        elements.touchGhost.style.top = `${clientY - wrapperRect.top}px`;
       }
 
       function showTouchGhost(text, clientX, clientY) {
@@ -1973,6 +2110,8 @@
       document.addEventListener("pointermove", movePointerDrag);
       document.addEventListener("pointerup", (event) => finishPointerDrag(event));
       document.addEventListener("pointercancel", () => finishPointerDrag(null, true));
+      document.addEventListener("fullscreenchange", clearHoverSlot);
+      document.addEventListener("webkitfullscreenchange", clearHoverSlot);
 
       updateModeUi();
       updateHud();
