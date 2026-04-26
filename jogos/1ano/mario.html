@@ -1,0 +1,41 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jogo: Mario</title>
+    <link rel="stylesheet" href="../../jogo_focado.css" />
+  </head>
+  <body>
+    <div class="game-page-container">
+      <h1>Mario</h1>
+
+      <div class="game-iframe-wrap">
+        <iframe
+          data-src-desk="https://supermario-game.com/mario-game/mario.html"
+          data-src-mob="https://supermario-game.com/mario-game/mobilemario.html"
+          loading="lazy"
+          id="game"
+          src="https://supermario-game.com/mario-game/mario.html"
+        ></iframe>
+      </div>
+
+      <script>
+        const iframe = document.getElementById("game");
+        const src =
+          window.innerWidth < 991
+            ? iframe.dataset.srcMob
+            : iframe.dataset.srcDesk;
+
+        if (window.innerWidth < 991) {
+          iframe.classList.add("mobilegame");
+        }
+
+        iframe.src = src;
+        iframe.addEventListener("load", () => iframe.contentWindow.focus());
+      </script>
+
+      <a href="../../index.html" class="back-button">← Voltar para o Início</a>
+    </div>
+  </body>
+</html>
