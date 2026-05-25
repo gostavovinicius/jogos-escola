@@ -2,9 +2,8 @@
   const grid = document.querySelector("[data-random-games]");
   if (!grid) return;
 
-  const maxShow = Math.max(1, Number(grid.dataset.maxShow || "10"));
-  const storageKey =
-    grid.dataset.storageKey || `catalogo:${window.location.pathname}`;
+  const maxShow = Math.max(1, Number(grid.dataset.maxShow || "15"));
+  const marioChance = 0.1;
 
   function shuffle(items) {
     for (let i = items.length - 1; i > 0; i -= 1) {
@@ -14,52 +13,27 @@
     return items;
   }
 
-  function obterUltimaSelecao() {
-    try {
-      return JSON.parse(sessionStorage.getItem(storageKey) || "[]");
-    } catch {
-      return [];
-    }
-  }
-
-  function salvarSelecao(cards) {
-    const hrefs = cards.map((card) => card.getAttribute("href"));
-    sessionStorage.setItem(storageKey, JSON.stringify(hrefs));
-  }
-
-  function mesmaSelecao(anterior, atual) {
-    return (
-      anterior.length === atual.length &&
-      anterior.every((href) => atual.includes(href))
-    );
+  function ehMario(card) {
+    const href = card.getAttribute("href") || "";
+    const titulo = card.querySelector("h3")?.textContent || "";
+    return /mario/i.test(`${href} ${titulo}`);
   }
 
   function escolherCards(cards) {
-    const ultimaSelecao = obterUltimaSelecao();
-    let escolhidos = cards.slice(0, maxShow);
+    const mario = cards.find(ehMario);
+    const comuns = cards.filter((card) => card !== mario);
+    const limite = Math.min(maxShow, cards.length);
 
-    for (let tentativa = 0; tentativa < 12; tentativa += 1) {
-      const embaralhados = shuffle(cards.slice());
-      escolhidos = embaralhados.slice(
-        0,
-        Math.min(maxShow, embaralhados.length),
-      );
-      const hrefs = escolhidos.map((card) => card.getAttribute("href"));
-
-      if (!mesmaSelecao(ultimaSelecao, hrefs)) {
-        salvarSelecao(escolhidos);
-        return escolhidos;
-      }
+    if (mario && Math.random() < marioChance) {
+      const escolhidos = shuffle(comuns.slice()).slice(0, limite - 1);
+      return shuffle([...escolhidos, mario]);
     }
 
-    salvarSelecao(escolhidos);
-    return escolhidos;
+    return shuffle(comuns.slice()).slice(0, limite);
   }
 
   function atualizarGrid() {
     const cards = Array.from(grid.querySelectorAll(".game-card"));
-    if (cards.length <= maxShow) return;
-
     const escolhidos = escolherCards(cards);
     grid.replaceChildren(...escolhidos);
   }
