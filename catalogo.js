@@ -3,7 +3,10 @@
   if (!grid) return;
 
   const maxShow = Math.max(1, Number(grid.dataset.maxShow || "15"));
-  const marioChance = 0.1;
+  const jogosRaros = [
+    { padrao: /mario/i, chance: 0.1 },
+    { padrao: /corrida-do-saber|corrida do saber/i, chance: 0.1 },
+  ];
 
   function shuffle(items) {
     for (let i = items.length - 1; i > 0; i -= 1) {
@@ -13,23 +16,34 @@
     return items;
   }
 
-  function ehMario(card) {
+  function regraRaraDoCard(card) {
     const href = card.getAttribute("href") || "";
     const titulo = card.querySelector("h3")?.textContent || "";
-    return /mario/i.test(`${href} ${titulo}`);
+    const texto = `${href} ${titulo}`;
+    return jogosRaros.find(({ padrao }) => padrao.test(texto));
   }
 
   function escolherCards(cards) {
-    const mario = cards.find(ehMario);
-    const comuns = cards.filter((card) => card !== mario);
+    const raros = [];
+    const comuns = [];
+
+    cards.forEach((card) => {
+      const regra = regraRaraDoCard(card);
+      if (regra) {
+        raros.push({ card, regra });
+        return;
+      }
+      comuns.push(card);
+    });
+
     const limite = Math.min(maxShow, cards.length);
+    const rarosEscolhidos = raros
+      .filter(({ regra }) => Math.random() < regra.chance)
+      .map(({ card }) => card);
+    const espacoParaComuns = Math.max(0, limite - rarosEscolhidos.length);
+    const escolhidos = shuffle(comuns.slice()).slice(0, espacoParaComuns);
 
-    if (mario && Math.random() < marioChance) {
-      const escolhidos = shuffle(comuns.slice()).slice(0, limite - 1);
-      return shuffle([...escolhidos, mario]);
-    }
-
-    return shuffle(comuns.slice()).slice(0, limite);
+    return shuffle([...escolhidos, ...rarosEscolhidos]);
   }
 
   function atualizarGrid() {
