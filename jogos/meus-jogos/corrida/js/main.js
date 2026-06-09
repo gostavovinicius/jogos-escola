@@ -1972,6 +1972,19 @@
         );
         traseira.position.set(0, 0.92, 1.7);
 
+        const pilotoCorpo = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.3, 0.38, 0.9, 12),
+          matAsa,
+        );
+        pilotoCorpo.position.set(0, 1.55, 0.2);
+        pilotoCorpo.rotation.x = -Math.PI / 7;
+
+        const pilotoCabeca = new THREE.Mesh(
+          new THREE.SphereGeometry(0.34, 16, 12),
+          matVidro,
+        );
+        pilotoCabeca.position.set(0, 2.18, -0.08);
+
         carroVisual.add(base);
         carroVisual.add(capo);
         carroVisual.add(nariz);
@@ -1980,6 +1993,8 @@
         carroVisual.add(fairingDir);
         carroVisual.add(rollBar);
         carroVisual.add(traseira);
+        carroVisual.add(pilotoCorpo);
+        carroVisual.add(pilotoCabeca);
       } else if (carroSelecionado === "rally") {
         const corpo = new THREE.Mesh(
           new THREE.BoxGeometry(2.7, 1.1, 4.35),
@@ -4279,7 +4294,7 @@
 
     function obterClasseVisualCarro(id, modelo) {
       const classesEspecificas = {
-        "moto-urbana": "visual-roadster",
+        "moto-urbana": "visual-moto",
         rally: "visual-rally",
         "moto-trilha": "visual-prototype",
         turbovan: "visual-van",
@@ -5066,6 +5081,8 @@
       <span class="carro-preview__asa"></span>
       <span class="carro-preview__entrada-esq"></span>
       <span class="carro-preview__entrada-dir"></span>
+      <span class="carro-preview__piloto-corpo"></span>
+      <span class="carro-preview__piloto-cabeca"></span>
     </span>
     <span class="btn-carro-titulo">${modelo.nome}</span>
     <span class="btn-carro-descricao">${modelo.descricao}</span>
@@ -5109,6 +5126,7 @@
             "visual-f1",
             "visual-hiper",
             "visual-roadster",
+            "visual-moto",
             "visual-rally",
             "visual-van",
             "visual-prototype",

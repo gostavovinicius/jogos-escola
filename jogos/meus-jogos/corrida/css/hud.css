@@ -89,7 +89,10 @@
 }
 
 #objetivo-principal-hud {
-  display: grid;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: var(--hud-principal-gap, 8px);
   max-width: 100%;
   min-width: 0;
@@ -122,9 +125,8 @@
 }
 
 #interface.modo-facil #objetivo-principal-hud {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   gap: var(--hud-facil-principal-gap, 10px);
   width: 100%;
   max-width: 100%;
@@ -185,9 +187,11 @@
 }
 
 #interface.modo-silabas #objetivo-principal-hud {
-  display: grid;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: var(--hud-silabas-principal-gap, 8px);
-  align-content: center;
   width: 100%;
   min-width: 0;
 }
