@@ -1,0 +1,15 @@
+COLOQUE SEUS GIFS DO PERSONAGEM NESTA PASTA:
+
+neutro.gif
+feliz1.gif
+feliz2.gif
+feliz3.gif
+bravo1.gif
+bravo2.gif
+bravo3.gif
+bravo4.gif
+bravo5.gif
+
+Os caminhos podem ser alterados no objeto PERSONAGENS, no arquivo js/game.js.
+Se um GIF não existir ou falhar ao carregar, o jogo mostra um emoji e continua
+funcionando normalmente.

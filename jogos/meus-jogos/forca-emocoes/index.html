@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forca das Emoções</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <main class="game-shell" id="game-shell">
+      <header class="game-header">
+        <div>
+          <p class="eyebrow">Jogo de palavras</p>
+          <h1>Forca das Emoções</h1>
+          <p class="intro">Descubra a palavra antes que o personagem fique bravo!</p>
+        </div>
+        <button class="secondary-button" id="restart-top" type="button">
+          Nova palavra
+        </button>
+      </header>
+
+      <section class="game-layout" aria-label="Área do jogo">
+        <div class="play-panel">
+          <div class="clue-row">
+            <span class="tag" id="category">Categoria</span>
+            <p><strong>Dica:</strong> <span id="hint"></span></p>
+          </div>
+
+          <figure class="word-image" id="word-image-box" hidden>
+            <img id="word-image" src="" alt="" />
+            <figcaption id="image-credit"></figcaption>
+          </figure>
+
+          <div
+            class="word"
+            id="word"
+            role="group"
+            aria-label="Palavra a descobrir"
+          ></div>
+
+          <div class="status-row">
+            <p class="feedback" id="feedback" aria-live="polite">
+              Escolha uma letra para começar.
+            </p>
+            <p class="errors" id="errors">Erros: 0/5</p>
+          </div>
+
+          <div>
+            <p class="section-label">Letras usadas</p>
+            <div class="used-letters" id="used-letters" aria-live="polite">
+              Nenhuma
+            </div>
+          </div>
+
+          <div>
+            <p class="section-label">Escolha uma letra</p>
+            <div class="keyboard" id="keyboard"></div>
+          </div>
+        </div>
+
+        <aside class="character-panel" aria-label="Emoção do personagem">
+          <div class="emotion-label" id="emotion-label">Calmo</div>
+          <div class="character-stage" id="character-stage">
+            <img id="character-image" src="" alt="" hidden />
+            <span
+              class="character-placeholder"
+              id="character-placeholder"
+              role="img"
+              aria-label="Personagem com expressão neutra"
+            >🙂</span>
+          </div>
+          <p id="character-message">Estou torcendo por você!</p>
+        </aside>
+      </section>
+
+      <section
+        class="result-card"
+        id="result-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="result-title"
+        hidden
+      >
+        <div class="result-content">
+          <p class="result-icon" id="result-icon" aria-hidden="true">⭐</p>
+          <h2 id="result-title"></h2>
+          <p id="result-text"></p>
+          <p class="answer" id="answer"></p>
+          <button class="primary-button" id="play-again" type="button">
+            Jogar novamente
+          </button>
+        </div>
+      </section>
+
+      <footer>
+        <button class="primary-button" id="restart-bottom" type="button">
+          Reiniciar jogo
+        </button>
+      </footer>
+    </main>
+
+    <script src="js/game.js"></script>
+  </body>
+</html>

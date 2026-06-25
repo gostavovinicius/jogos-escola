@@ -1,9 +1,14 @@
+/* ===== Jogos Educativos - Estilos Unificados ===== */
+/* Funde estilo.css (catálogo) + jogo_focado.css (páginas de jogo) */
+
 @import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap");
 
+/* ===== VARIÁVEIS ===== */
 :root {
   --bg-color: #fff0c7;
   --bg-pattern-dot: rgba(255, 234, 167, 0.78);
   --card-bg: rgba(255, 255, 255, 0.96);
+  --header-bg: #ff7675;
   --text-color: #2d3436;
   --accent-blue: #74b9ff;
   --accent-green: #55efc4;
@@ -13,8 +18,16 @@
   --shadow-hard: 5px 5px 0 var(--border-color);
   --page-gutter: clamp(12px, 2.2vw, 22px);
   --shell-width: min(1320px, calc(100% - (var(--page-gutter) * 2)));
+
+  /* Game page vars */
+  --heavy-game-width: min(1500px, calc(100vw - (var(--page-gutter) * 2)));
+  --embed-aspect: 1.6667;
+  --embed-max-width: min(1500px, calc(100vw - (var(--page-gutter) * 2)));
+  --embed-effective-max-width: var(--embed-max-width);
+  --embed-top-space: clamp(88px, 12vh, 116px);
 }
 
+/* ===== RESET ===== */
 *,
 *::before,
 *::after {
@@ -34,9 +47,7 @@ body {
   background-image:
     radial-gradient(var(--bg-pattern-dot) 18%, transparent 18%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 42%);
-  background-size:
-    20px 20px,
-    100% 100%;
+  background-size: 20px 20px, 100% 100%;
   font-family: "Fredoka", sans-serif;
   color: var(--text-color);
   overflow-x: hidden;
@@ -44,6 +55,7 @@ body {
   flex-direction: column;
 }
 
+/* ===== CATÁLOGO - Main ===== */
 main {
   flex: 1 1 auto;
   width: var(--shell-width);
@@ -54,6 +66,7 @@ main {
   justify-content: center;
 }
 
+/* ===== CATÁLOGO - Grid de Jogos ===== */
 .game-grid {
   display: grid;
   width: 100%;
@@ -62,6 +75,7 @@ main {
   align-items: stretch;
 }
 
+/* ===== CATÁLOGO - Card de Jogo ===== */
 .game-card {
   display: flex;
   min-height: 100%;
@@ -124,8 +138,191 @@ main {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  transition: background 0.16s ease;
 }
 
+.game-card:hover .play-btn {
+  background: linear-gradient(180deg, #5ee0b7, #3dce9a);
+}
+
+/* ===== CATÁLOGO - Header (usado em 5ano.html) ===== */
+header {
+  width: 100%;
+  padding: clamp(18px, 3vw, 34px) var(--page-gutter);
+  border-bottom: 4px solid var(--accent-yellow);
+  background: linear-gradient(110deg, #ff8e8c, var(--header-bg));
+  color: #ffffff;
+  text-align: center;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.28);
+}
+
+header h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 4vw, 2.8rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.24);
+}
+
+header .subtitle {
+  max-width: 760px;
+  margin: 10px auto 0;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+/* ===== PÁGINA DE JOGO - Container ===== */
+.game-page-container {
+  --embed-effective-max-width: min(
+    var(--page-embed-max-width, var(--embed-max-width)),
+    100%
+  );
+  width: min(1560px, calc(100% - (var(--page-gutter) * 2)));
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: clamp(8px, 1.2vh, 14px) 0 clamp(10px, 1.4vh, 16px);
+  display: grid;
+  grid-template-columns: minmax(230px, 1fr) auto minmax(230px, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  column-gap: clamp(24px, 4vw, 70px);
+  row-gap: clamp(12px, 1.8vh, 20px);
+  align-items: start;
+  align-content: stretch;
+}
+
+.game-page-container--embed-focus {
+  width: min(1310px, calc(100% - (var(--page-gutter) * 2)));
+  gap: clamp(8px, 1.2vh, 12px);
+}
+
+.game-page-container--heavy {
+  width: min(1560px, calc(100% - (var(--page-gutter) * 2)));
+  --embed-effective-max-width: min(
+    var(--page-embed-max-width, var(--heavy-game-width)),
+    100%
+  );
+}
+
+.game-page-container > h1 {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  margin: 0;
+  padding: clamp(8px, 1.1vh, 11px) clamp(22px, 2.8vw, 36px);
+  border: var(--border-thick);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff8e8c, var(--header-bg));
+  box-shadow: var(--shadow-hard);
+  color: #fff;
+  font-size: clamp(0.96rem, 1.8vw, 1.6rem);
+  line-height: 1.1;
+  text-align: center;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.18);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ===== PÁGINA DE JOGO - Iframe Wrapper ===== */
+.game-iframe-wrap {
+  grid-column: 1 / 4;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 0;
+  width: min(
+    100%,
+    var(--embed-effective-max-width),
+    calc((100dvh - var(--embed-top-space)) * var(--embed-aspect))
+  );
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  aspect-ratio: var(--embed-aspect);
+  justify-self: center;
+  align-self: stretch;
+  overflow: hidden;
+  position: relative;
+  border: var(--border-thick);
+  border-radius: 18px;
+  outline: clamp(4px, 0.45vw, 6px) solid var(--accent-blue);
+  background: #2d3436;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.game-iframe-wrap--embed-focus {
+  border-radius: 16px;
+}
+
+.game-iframe-wrap--heavy {
+  width: min(
+    100%,
+    var(--embed-effective-max-width),
+    calc((100dvh - var(--embed-top-space)) * var(--embed-aspect))
+  );
+  max-width: min(
+    100%,
+    var(--embed-effective-max-width),
+    calc((100dvh - var(--embed-top-space)) * var(--embed-aspect))
+  );
+  justify-self: center;
+}
+
+.game-iframe-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #fff;
+}
+
+/* ===== PÁGINA DE JOGO - Botão Voltar ===== */
+.back-button {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: clamp(215px, 19vw, 270px);
+  min-height: 62px;
+  gap: 12px;
+  padding: clamp(14px, 1.7vh, 18px) clamp(20px, 2.4vw, 30px);
+  border: 5px solid #000;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 7px 0 rgba(0, 0, 0, 0.28);
+  color: #000;
+  font-size: clamp(1.02rem, 1.35vw, 1.22rem);
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease,
+    background 0.1s ease;
+}
+
+.back-button:hover {
+  transform: translateY(2px);
+  background: #fff;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.28);
+}
+
+.back-button:active {
+  transform: translateY(5px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.28);
+}
+
+.back-button:focus-visible {
+  outline: 7px solid #2b7cff;
+  outline-offset: 4px;
+}
+
+/* ===== MEDIA QUERIES - Catálogo ===== */
 @media (max-width: 720px) {
   main {
     padding-bottom: 32px;
@@ -160,5 +357,113 @@ main {
   .game-card .play-btn {
     padding: 8px 10px;
     font-size: 0.8rem;
+  }
+}
+
+/* ===== MEDIA QUERIES - Página de Jogo ===== */
+@media (max-width: 900px) {
+  :root {
+    --embed-top-space: clamp(132px, 20vh, 170px);
+  }
+
+  .game-page-container {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .back-button {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .game-page-container > h1 {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .game-iframe-wrap {
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
+
+  .game-iframe-wrap--heavy {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --embed-top-space: 0px;
+  }
+
+  .game-page-container {
+    width: min(100%, calc(100% - 20px));
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 14px 0 18px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(360px, 1fr);
+    gap: 12px;
+  }
+
+  .back-button,
+  .game-page-container > h1,
+  .game-iframe-wrap {
+    grid-column: 1;
+    justify-self: center;
+  }
+
+  .back-button {
+    grid-row: 1;
+    width: 100%;
+    min-height: 62px;
+  }
+
+  .game-page-container > h1 {
+    grid-row: 2;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .game-iframe-wrap {
+    grid-row: 3;
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    outline-width: 4px;
+    border-radius: 14px;
+  }
+}
+
+@media (max-height: 760px) {
+  :root {
+    --embed-top-space: clamp(102px, 16vh, 126px);
+  }
+
+  .game-page-container,
+  .game-page-container--embed-focus,
+  .game-page-container--heavy {
+    padding: 8px 0 12px;
+    gap: 8px;
+  }
+
+  .game-page-container > h1 {
+    padding: 8px 20px;
+  }
+}
+
+/* ===== ACESSIBILIDADE - Movimento Reduzido ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
