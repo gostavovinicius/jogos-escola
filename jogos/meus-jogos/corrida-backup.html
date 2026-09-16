@@ -2050,12 +2050,13 @@
         true,
       );
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    <script src="./corrida/js/bootstrap.js" data-legado></script>
 
     <script>
+      window.iniciarCorridaLegada = () => {
+        if (window.__corridaDoSaberErroExibido) return;
       (() => {
-        if (!window.THREE || !window.CANNON) {
+        if (!window.THREE || !window.RAPIER) {
           window.exibirErroDeInicializacaoJogo?.(
             "Nao foi possivel iniciar o jogo porque algumas bibliotecas nao carregaram corretamente.",
           );
@@ -2090,20 +2091,20 @@
           cena.background = new THREE.Color(0xa7c8e8);
           cena.fog = new THREE.Fog(0xb9d2e6, 92, 264);
           const raizEstilos = document.documentElement;
-          const eixoRotacaoY = new CANNON.Vec3(0, 1, 0);
-          const vetorCimaCapotagemTemp = new CANNON.Vec3();
-          const vetorCimaIApoliciaTemp = new CANNON.Vec3();
-          const vetorCimaEstabilizacaoTemp = new CANNON.Vec3();
-          const vetorCimaPresencaTemp = new CANNON.Vec3();
-          const vetorCimaAnimacaoTemp = new CANNON.Vec3();
-          const direcaoForcaTemp = new CANNON.Vec3();
-          const forcaAplicadaTemp = new CANNON.Vec3();
-          const direcaoFrontalTemp = new CANNON.Vec3();
-          const direcaoYawTemp = new CANNON.Vec3();
-          const direcaoTracaoTemp = new CANNON.Vec3();
-          const direcaoIAJogadorTemp = new CANNON.Vec3();
-          const direcaoRampaTemp = new CANNON.Vec3();
-          const lateralTracaoTemp = new CANNON.Vec3();
+          const eixoRotacaoY = new THREE.Vector3(0, 1, 0);
+          const vetorCimaCapotagemTemp = new THREE.Vector3();
+          const vetorCimaIApoliciaTemp = new THREE.Vector3();
+          const vetorCimaEstabilizacaoTemp = new THREE.Vector3();
+          const vetorCimaPresencaTemp = new THREE.Vector3();
+          const vetorCimaAnimacaoTemp = new THREE.Vector3();
+          const direcaoForcaTemp = new THREE.Vector3();
+          const forcaAplicadaTemp = new THREE.Vector3();
+          const direcaoFrontalTemp = new THREE.Vector3();
+          const direcaoYawTemp = new THREE.Vector3();
+          const direcaoTracaoTemp = new THREE.Vector3();
+          const direcaoIAJogadorTemp = new THREE.Vector3();
+          const direcaoRampaTemp = new THREE.Vector3();
+          const lateralTracaoTemp = new THREE.Vector3();
           const cameraOffsetTemp = new THREE.Vector3();
           const destinoCameraTemp = new THREE.Vector3();
           const destinoAlvoTemp = new THREE.Vector3();
@@ -2133,21 +2134,17 @@
 
           function preencherVetorCima(corpo, destino) {
             destino.set(0, 1, 0);
-            corpo.quaternion.vmult(destino, destino);
+            destino.applyQuaternion(corpo.quaternion);
             return destino;
           }
 
           function configurarTexturaComoCor(textura) {
-            if (
-              textura &&
-              typeof THREE.sRGBEncoding !== "undefined" &&
-              "encoding" in textura
-            ) {
-              textura.encoding = THREE.sRGBEncoding;
-              textura.needsUpdate = true;
-            }
-            return textura;
-          }
+      if (textura) {
+        textura.colorSpace = THREE.SRGBColorSpace;
+        textura.needsUpdate = true;
+      }
+      return textura;
+    }
 
           function obterPixelRatioIdeal(largura) {
             if (PERFIL_EXECUCAO.firefoxEconomia) {
@@ -2232,6 +2229,8 @@
           cameraMiniMapa.up.set(0, 0, -1);
 
           const renderizador = new THREE.WebGLRenderer({
+      canvas: window.CorridaGraficos.canvas,
+      context: window.CorridaGraficos.context,
             antialias: false,
             powerPreference: "high-performance",
             stencil: false,
@@ -2245,7 +2244,10 @@
           renderizador.setSize(larguraViewport, alturaViewport, false);
           renderizador.shadowMap.enabled = !PERFIL_EXECUCAO.pcFraco;
           renderizador.shadowMap.type = THREE.PCFShadowMap;
-          renderizador.outputEncoding = THREE.sRGBEncoding;
+          renderizador.debug.onShaderError = () => {
+            throw new Error("Não foi possível preparar os efeitos gráficos neste dispositivo.");
+          };
+          renderizador.outputColorSpace = THREE.SRGBColorSpace;
           renderizador.toneMapping = THREE.ACESFilmicToneMapping;
           renderizador.toneMappingExposure = PERFIL_EXECUCAO.pcFraco
             ? 0.64
@@ -2461,7 +2463,7 @@
             renderizador.setSize(largura, altura, false);
             camera.aspect = largura / altura;
             camera.updateProjectionMatrix();
-            const novoTamanhoSombra = obterTamanhoSombraIdeal(largura);
+            const novoTamanhoSombra = Math.min(obterTamanhoSombraIdeal(largura), window.graphicsCapabilities.maxTextureSize);
             if (luzDirecional && novoTamanhoSombra !== tamanhoSombraAtual) {
               tamanhoSombraAtual = novoTamanhoSombra;
               luzDirecional.shadow.mapSize.width = novoTamanhoSombra;
@@ -2488,7 +2490,7 @@
           );
           luzDirecional.position.set(82, 90, -36);
           luzDirecional.castShadow = renderizador.shadowMap.enabled;
-          tamanhoSombraAtual = obterTamanhoSombraIdeal(larguraViewport);
+          tamanhoSombraAtual = Math.min(obterTamanhoSombraIdeal(larguraViewport), window.graphicsCapabilities.maxTextureSize);
           luzDirecional.shadow.mapSize.width = tamanhoSombraAtual;
           luzDirecional.shadow.mapSize.height = tamanhoSombraAtual;
           luzDirecional.shadow.camera.left = -180;
@@ -2521,34 +2523,11 @@
           cena.add(luzPreenchimento);
           cena.add(luzRecorte);
 
-          const mundoFisica = new CANNON.World();
-          mundoFisica.gravity.set(0, -20, 0);
-          mundoFisica.broadphase =
-            typeof CANNON.SAPBroadphase === "function"
-              ? new CANNON.SAPBroadphase(mundoFisica)
-              : new CANNON.NaiveBroadphase();
-          const materialDeslizante = new CANNON.Material();
-          const materialCarro = new CANNON.Material();
-          const corposDePiso = new WeakSet();
-          const corposRampas = new WeakSet();
-          mundoFisica.addContactMaterial(
-            new CANNON.ContactMaterial(materialDeslizante, materialDeslizante, {
-              friction: 0.0,
-              restitution: 0.1,
-            }),
-          );
-          mundoFisica.addContactMaterial(
-            new CANNON.ContactMaterial(materialCarro, materialDeslizante, {
-              friction: 0.0,
-              restitution: 0.02,
-            }),
-          );
-          mundoFisica.addContactMaterial(
-            new CANNON.ContactMaterial(materialCarro, materialCarro, {
-              friction: 0.08,
-              restitution: 0.04,
-            }),
-          );
+          const mundoFisica = window.criarFisicaCorrida();
+    const materialDeslizante = "piso";
+    const materialCarro = "carro";
+    const corposDePiso = new WeakSet();
+    const corposRampas = new WeakSet();
           const PALETA_CENARIO = {
             montanhas: [0x95a183, 0x879374, 0xa8b193, 0x788567, 0xb8c1a6],
             troncos: [0x8a5a30, 0x764928, 0x9a6a3c],
@@ -2691,17 +2670,17 @@
           anelMapa.position.y = 0.08;
           cena.add(anelMapa);
           congelarObjetoEstatico(anelMapa);
-          const chaoCorpo = new CANNON.Body({
+          const chaoCorpo = mundoFisica.criarCorpo({
             mass: 0,
-            shape: new CANNON.Plane(),
+            collider: new RAPIER.ColliderDesc(new RAPIER.HalfSpace({ x: 0, y: 0, z: 1 })),
             material: materialDeslizante,
           });
           chaoCorpo.quaternion.setFromAxisAngle(
-            new CANNON.Vec3(1, 0, 0),
+            new THREE.Vector3(1, 0, 0),
             -Math.PI / 2,
           );
           corposDePiso.add(chaoCorpo);
-          mundoFisica.addBody(chaoCorpo);
+          mundoFisica.adicionarCorpo(chaoCorpo);
 
           function descartarMaterial(material, descartarTexturas = true) {
             if (!material) return;
@@ -2760,7 +2739,7 @@
               }
             }
             if (item.luz) cena.remove(item.luz);
-            if (item.corpo) mundoFisica.removeBody(item.corpo);
+            if (item.corpo) mundoFisica.removerCorpo(item.corpo);
             if (typeof item.aoRemover === "function") item.aoRemover(item);
           }
 
@@ -2837,16 +2816,14 @@
           }
 
           function criarParedeInvisivel(x, z, largura, prof, altura = 72) {
-            const parede = new CANNON.Body({
+            const parede = mundoFisica.criarCorpo({
               mass: 0,
-              shape: new CANNON.Box(
-                new CANNON.Vec3(largura / 2, altura / 2, prof / 2),
-              ),
-              position: new CANNON.Vec3(x, altura / 2, z),
+              collider: RAPIER.ColliderDesc.cuboid(largura / 2, altura / 2, prof / 2),
+              position: new THREE.Vector3(x, altura / 2, z),
               material: materialDeslizante,
             });
             corposDePiso.add(parede);
-            mundoFisica.addBody(parede);
+            mundoFisica.adicionarCorpo(parede);
           }
           criarParedeInvisivel(0, -tamanhoMapa / 2 + 8, tamanhoMapa - 8, 10);
           criarParedeInvisivel(0, tamanhoMapa / 2 - 8, tamanhoMapa - 8, 10);
@@ -2874,36 +2851,33 @@
             montanhaVisual.castShadow = true;
             cena.add(montanhaVisual);
             congelarObjetoEstatico(montanhaVisual);
-            const montanhaCorpo = new CANNON.Body({
+            const montanhaCorpo = mundoFisica.criarCorpo({
               mass: 0,
               material: materialDeslizante,
-              position: new CANNON.Vec3(x, alturaBase, z),
+              position: new THREE.Vector3(x, alturaBase, z),
             });
             montanhaCorpo.quaternion.setFromAxisAngle(
-              new CANNON.Vec3(0, 1, 0),
+              new THREE.Vector3(0, 1, 0),
               anguloCentro,
             );
-            montanhaCorpo.addShape(new CANNON.Sphere(raio * 1.1));
-            montanhaCorpo.addShape(
-              new CANNON.Sphere(raio * 0.74),
-              new CANNON.Vec3(0, raio * 0.5 * escalaAltura, 0),
+            montanhaCorpo.adicionarCollider(RAPIER.ColliderDesc.ball(raio * 1.1));
+            montanhaCorpo.adicionarCollider(
+              RAPIER.ColliderDesc.ball(raio * 0.74),
+              new THREE.Vector3(0, raio * 0.5 * escalaAltura, 0),
             );
-            montanhaCorpo.addShape(
-              new CANNON.Box(
-                new CANNON.Vec3(
-                  Math.max(5.5, raio * 0.18),
+            montanhaCorpo.adicionarCollider(
+              RAPIER.ColliderDesc.cuboid(Math.max(5.5, raio * 0.18),
                   Math.max(14, raio * 0.38 * escalaAltura),
                   Math.max(18, raio * 0.84),
-                ),
               ),
-              new CANNON.Vec3(
+              new THREE.Vector3(
                 -raio * 0.46,
                 Math.max(11, raio * 0.6 * escalaAltura),
                 0,
               ),
             );
             corposDePiso.add(montanhaCorpo);
-            mundoFisica.addBody(montanhaCorpo);
+            mundoFisica.adicionarCorpo(montanhaCorpo);
           }
 
           const quantidadeMontanhasBorda = PERFIL_EXECUCAO.firefoxEconomia
@@ -2966,13 +2940,13 @@
             arvoreVisual.position.set(x, 0, z);
             cena.add(arvoreVisual);
             congelarObjetoEstatico(arvoreVisual);
-            const corpo = new CANNON.Body({
+            const corpo = mundoFisica.criarCorpo({
               mass: 0,
-              shape: new CANNON.Box(new CANNON.Vec3(1.35, 5, 1.35)),
-              position: new CANNON.Vec3(x, 5, z),
+              collider: RAPIER.ColliderDesc.cuboid(1.35, 5, 1.35),
+              position: new THREE.Vector3(x, 5, z),
               material: materialDeslizante,
             });
-            mundoFisica.addBody(corpo);
+            mundoFisica.adicionarCorpo(corpo);
             registrarAreaOcupada(x, z, 7);
             return registrarObjeto({ visual: arvoreVisual, corpo });
           }
@@ -2989,39 +2963,39 @@
             pedraVis.receiveShadow = true;
             cena.add(pedraVis);
             congelarObjetoEstatico(pedraVis);
-            const corpo = new CANNON.Body({
+            const corpo = mundoFisica.criarCorpo({
               mass: 0,
-              shape: new CANNON.Sphere(tamanho + 0.9),
-              position: new CANNON.Vec3(x, tamanho / 2, z),
+              collider: RAPIER.ColliderDesc.ball(tamanho + 0.9),
+              position: new THREE.Vector3(x, tamanho / 2, z),
               material: materialDeslizante,
             });
-            mundoFisica.addBody(corpo);
+            mundoFisica.adicionarCorpo(corpo);
             registrarAreaOcupada(x, z, tamanho + 4);
             return registrarObjeto({ visual: pedraVis, corpo });
           }
 
           function criarRampa(x, z, rotacaoY) {
             const corRampa = corDaPaleta(PALETA_CENARIO.rampas);
-            const rampaCorpo = new CANNON.Body({
+            const rampaCorpo = mundoFisica.criarCorpo({
               mass: 0,
               material: materialDeslizante,
             });
-            rampaCorpo.addShape(
-              new CANNON.Box(new CANNON.Vec3(7.2, 2.8, 10.2)),
+            rampaCorpo.adicionarCollider(
+              RAPIER.ColliderDesc.cuboid(7.2, 2.8, 10.2),
             );
-            rampaCorpo.addShape(
-              new CANNON.Box(new CANNON.Vec3(6.1, 1.5, 8.8)),
-              new CANNON.Vec3(0, -1.75, 0.2),
+            rampaCorpo.adicionarCollider(
+              RAPIER.ColliderDesc.cuboid(6.1, 1.5, 8.8),
+              new THREE.Vector3(0, -1.75, 0.2),
             );
             rampaCorpo.position.set(x, 1.15, z);
-            const inclina = new CANNON.Quaternion();
-            inclina.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 8);
-            const gira = new CANNON.Quaternion();
-            gira.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotacaoY);
-            rampaCorpo.quaternion = gira.mult(inclina);
+            const inclina = new THREE.Quaternion();
+            inclina.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 8);
+            const gira = new THREE.Quaternion();
+            gira.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotacaoY);
+            rampaCorpo.quaternion = gira.multiply(inclina);
             corposDePiso.add(rampaCorpo);
             corposRampas.add(rampaCorpo);
-            mundoFisica.addBody(rampaCorpo);
+            mundoFisica.adicionarCorpo(rampaCorpo);
             const rampaVisual = new THREE.Mesh(
               new THREE.BoxGeometry(13.2, 4.4, 18.4),
               criarMaterialCenarioVivo(corRampa, 0.2),
@@ -3053,13 +3027,13 @@
             arbusto.receiveShadow = true;
             cena.add(arbusto);
             congelarObjetoEstatico(arbusto);
-            const corpo = new CANNON.Body({
+            const corpo = mundoFisica.criarCorpo({
               mass: 0,
-              shape: new CANNON.Sphere(tamanho * 1.1),
-              position: new CANNON.Vec3(x, tamanho * 0.7, z),
+              collider: RAPIER.ColliderDesc.ball(tamanho * 1.1),
+              position: new THREE.Vector3(x, tamanho * 0.7, z),
               material: materialDeslizante,
             });
-            mundoFisica.addBody(corpo);
+            mundoFisica.adicionarCorpo(corpo);
             registrarAreaOcupada(x, z, tamanho + 3);
             return registrarObjeto({ visual: arbusto, corpo });
           }
@@ -3077,15 +3051,13 @@
             cone.castShadow = false;
             cena.add(cone);
             congelarObjetoEstatico(cone);
-            const corpo = new CANNON.Body({
+            const corpo = mundoFisica.criarCorpo({
               mass: 0,
-              shape: new CANNON.Box(
-                new CANNON.Vec3(tamanho * 0.8, tamanho * 1.5, tamanho * 0.8),
-              ),
-              position: new CANNON.Vec3(x, tamanho * 1.5, z),
+              collider: RAPIER.ColliderDesc.cuboid(tamanho * 0.8, tamanho * 1.5, tamanho * 0.8),
+              position: new THREE.Vector3(x, tamanho * 1.5, z),
               material: materialDeslizante,
             });
-            mundoFisica.addBody(corpo);
+            mundoFisica.adicionarCorpo(corpo);
             registrarAreaOcupada(x, z, tamanho + 2.4);
             return registrarObjeto({ visual: cone, corpo });
           }
@@ -3109,15 +3081,13 @@
             caixa.receiveShadow = true;
             cena.add(caixa);
             congelarObjetoEstatico(caixa);
-            const corpo = new CANNON.Body({
+            const corpo = mundoFisica.criarCorpo({
               mass: 0,
-              shape: new CANNON.Box(
-                new CANNON.Vec3(largura / 2, altura / 2, profundidade / 2),
-              ),
-              position: new CANNON.Vec3(x, altura / 2, z),
+              collider: RAPIER.ColliderDesc.cuboid(largura / 2, altura / 2, profundidade / 2),
+              position: new THREE.Vector3(x, altura / 2, z),
               material: materialDeslizante,
             });
-            mundoFisica.addBody(corpo);
+            mundoFisica.adicionarCorpo(corpo);
             registrarAreaOcupada(x, z, Math.max(largura, profundidade) + 2.8);
             return registrarObjeto({ visual: caixa, corpo });
           }
@@ -3523,9 +3493,9 @@
           }
 
           // Jogador
-          const carroCorpo = new CANNON.Body({
+          const carroCorpo = mundoFisica.criarCorpo({
             mass: 800,
-            shape: new CANNON.Box(new CANNON.Vec3(1.2, 0.6, 2.2)),
+            collider: RAPIER.ColliderDesc.cuboid(1.2, 0.6, 2.2),
             material: materialCarro,
           });
           carroCorpo.allowSleep = false;
@@ -3537,7 +3507,7 @@
           ) {
             carroCorpo.angularFactor.set(0, 1, 0);
           }
-          mundoFisica.addBody(carroCorpo);
+          mundoFisica.adicionarCorpo(carroCorpo);
           const carroVisual = new THREE.Group();
           cena.add(carroVisual);
 
@@ -4115,9 +4085,9 @@
             corSireneB,
             corRadar,
           }) {
-            const corpo = new CANNON.Body({
+            const corpo = mundoFisica.criarCorpo({
               mass: 900,
-              shape: new CANNON.Box(new CANNON.Vec3(1.2, 0.6, 2.2)),
+              collider: RAPIER.ColliderDesc.cuboid(1.2, 0.6, 2.2),
               material: materialCarro,
             });
             corpo.allowSleep = false;
@@ -4129,7 +4099,7 @@
             ) {
               corpo.angularFactor.set(0, 1, 0);
             }
-            mundoFisica.addBody(corpo);
+            mundoFisica.adicionarCorpo(corpo);
 
             const visual = new THREE.Group();
             const malhaPolicia = new THREE.Mesh(
@@ -4234,9 +4204,9 @@
             corSireneB,
             corCapacete,
           }) {
-            const corpo = new CANNON.Body({
+            const corpo = mundoFisica.criarCorpo({
               mass: 540,
-              shape: new CANNON.Box(new CANNON.Vec3(0.7, 0.8, 1.9)),
+              collider: RAPIER.ColliderDesc.cuboid(0.7, 0.8, 1.9),
               material: materialCarro,
             });
             corpo.allowSleep = false;
@@ -4248,7 +4218,7 @@
             ) {
               corpo.angularFactor.set(0, 1, 0);
             }
-            mundoFisica.addBody(corpo);
+            mundoFisica.adicionarCorpo(corpo);
 
             const visual = new THREE.Group();
             const matBase = new THREE.MeshLambertMaterial({ color: corBase });
@@ -5334,22 +5304,15 @@
           const marcadorObjetivo3D = criarMarcadorObjetivo3D();
           const helicopteroPolicia = criarHelicopteroPolicia();
 
-          if (typeof carroCorpo.addEventListener === "function") {
-            carroCorpo.addEventListener("collide", (evento) => {
-              if (!evento || !evento.contact) return;
-              const corpoAtingiu =
-                evento.contact.bi === carroCorpo
-                  ? evento.contact.bj
-                  : evento.contact.bi;
-              for (const policial of policiais) {
-                if (policial.corpo !== corpoAtingiu) continue;
-                lidarComColisaoEntreCarros(carroCorpo, policial.corpo);
-                break;
-              }
-            });
-          }
+          carroCorpo.aoIniciarContato = (corpoAtingiu) => {
+      for (const policial of policiais) {
+        if (policial.corpo !== corpoAtingiu) continue;
+        lidarComColisaoEntreCarros(carroCorpo, policial.corpo);
+        break;
+      }
+    };
 
-          const botoesSerie = [...document.querySelectorAll(".btn-serie")];
+    const botoesSerie = [...document.querySelectorAll(".btn-serie")];
           const botoesCarro = [...document.querySelectorAll(".btn-carro")];
           const botaoRespawnManual =
             document.getElementById("btn-respawn-manual");
@@ -5468,10 +5431,10 @@
 
           function resetarCorpo(corpo, x, y, z) {
             corpo.position.set(x, y, z);
-            corpo.velocity.setZero();
-            corpo.angularVelocity.setZero();
-            corpo.force.setZero();
-            corpo.torque.setZero();
+            corpo.velocity.set(0, 0, 0);
+            corpo.angularVelocity.set(0, 0, 0);
+            corpo.force.set(0, 0, 0);
+            corpo.torque.set(0, 0, 0);
             corpo.quaternion.setFromAxisAngle(eixoRotacaoY, 0);
           }
 
@@ -6310,13 +6273,13 @@
               );
 
               let contatoFisico = 0;
-              for (let i = 0; i < mundoFisica.contacts.length; i++) {
-                const contato = mundoFisica.contacts[i];
+              for (let i = 0; i < mundoFisica.contatos.length; i++) {
+                const contato = mundoFisica.contatos[i];
                 const envolveJogador =
-                  contato.bi === carroCorpo || contato.bj === carroCorpo;
+                  contato.a === carroCorpo || contato.b === carroCorpo;
                 const envolvePolicial =
-                  contato.bi === policial.corpo ||
-                  contato.bj === policial.corpo;
+                  contato.a === policial.corpo ||
+                  contato.b === policial.corpo;
                 if (!envolveJogador || !envolvePolicial) continue;
                 contatoFisico = 1;
                 break;
@@ -6658,13 +6621,13 @@
               const policial = policiais[indice];
               if (!policial?.visual.visible) continue;
               let contatoFisico = false;
-              for (let i = 0; i < mundoFisica.contacts.length; i++) {
-                const contato = mundoFisica.contacts[i];
+              for (let i = 0; i < mundoFisica.contatos.length; i++) {
+                const contato = mundoFisica.contatos[i];
                 const envolveJogador =
-                  contato.bi === carroCorpo || contato.bj === carroCorpo;
+                  contato.a === carroCorpo || contato.b === carroCorpo;
                 const envolvePolicial =
-                  contato.bi === policial.corpo ||
-                  contato.bj === policial.corpo;
+                  contato.a === policial.corpo ||
+                  contato.b === policial.corpo;
                 if (!envolveJogador || !envolvePolicial) continue;
                 contatoFisico = true;
                 break;
@@ -7505,7 +7468,7 @@
               malha.position.set(pos.x, 1.9, pos.z);
               malha.castShadow = true;
 
-              const luzSilaba = new THREE.PointLight(dados.cor, 2, 40);
+              const luzSilaba = new THREE.PointLight(dados.cor, 2, 40, 1);
               luzSilaba.position.set(pos.x, 1.9, pos.z);
 
               // Só a 1ª sílaba começa visível; as demais ficam escondidas (scale 0)
@@ -7617,22 +7580,28 @@
           bindTouch("btn-esq", "ArrowLeft");
           bindTouch("btn-dir", "ArrowRight");
 
-          const relogio = new THREE.Clock();
+          let ultimoFrame = performance.now();
+    const relogio = { getDelta() {
+      const agora = performance.now();
+      const delta = (agora - ultimoFrame) / 1000;
+      ultimoFrame = agora;
+      return delta;
+    } };
           let anguloMenu = 0;
 
           function estaNoChao(corpo) {
-            for (let i = 0; i < mundoFisica.contacts.length; i++) {
-              const contato = mundoFisica.contacts[i];
+            for (let i = 0; i < mundoFisica.contatos.length; i++) {
+              const contato = mundoFisica.contatos[i];
               let outroCorpo = null;
 
-              if (contato.bi === corpo) {
-                outroCorpo = contato.bj;
-              } else if (contato.bj === corpo) {
-                outroCorpo = contato.bi;
+              if (contato.a === corpo) {
+                outroCorpo = contato.b;
+              } else if (contato.b === corpo) {
+                outroCorpo = contato.a;
               }
 
               if (!outroCorpo || !corposDePiso.has(outroCorpo)) continue;
-              if (Math.abs(contato.ni.y) > 0.15) return true;
+              if (Math.abs(contato.normal.y) > 0.15) return true;
             }
             return false;
           }
@@ -7703,13 +7672,13 @@
           }
 
           function estaEmRampa(corpo) {
-            for (let i = 0; i < mundoFisica.contacts.length; i++) {
-              const contato = mundoFisica.contacts[i];
+            for (let i = 0; i < mundoFisica.contatos.length; i++) {
+              const contato = mundoFisica.contatos[i];
               const outroCorpo =
-                contato.bi === corpo
-                  ? contato.bj
-                  : contato.bj === corpo
-                    ? contato.bi
+                contato.a === corpo
+                  ? contato.b
+                  : contato.b === corpo
+                    ? contato.a
                     : null;
               if (outroCorpo && corposRampas.has(outroCorpo)) return true;
             }
@@ -7802,13 +7771,13 @@
               0,
               direcao.z * intensidade,
             );
-            corpo.applyForce(forcaAplicadaTemp, corpo.position);
+            corpo.aplicarForcaCentral(forcaAplicadaTemp);
           }
 
           function obterDirecaoFrente(corpo, destino) {
-            const direcao = destino || new CANNON.Vec3();
+            const direcao = destino || new THREE.Vector3();
             direcao.set(0, 0, -1);
-            corpo.quaternion.vmult(direcao, direcao);
+            direcao.applyQuaternion(corpo.quaternion);
             return direcao;
           }
 
@@ -8221,8 +8190,7 @@
             });
           }
 
-          function animar() {
-            requestAnimationFrame(animar);
+          function executarFrame() {
             const delta = Math.min(
               relogio.getDelta(),
               CONFIG_OTIMIZACAO.deltaMaximo,
@@ -8426,7 +8394,7 @@
               }
 
               const carroEmRampa = estaEmRampa(carroCorpo);
-              mundoFisica.step(
+              mundoFisica.avancar(
                 carroEmRampa
                   ? CONFIG_OTIMIZACAO.passoFisica * 0.75
                   : CONFIG_OTIMIZACAO.passoFisica,
@@ -8693,6 +8661,50 @@
             );
           }
 
+          let contextoPerdido = false;
+          let framePendente = 0;
+          const avisoContexto = document.createElement("div");
+          avisoContexto.setAttribute("role", "alert");
+          avisoContexto.textContent = "O suporte gráfico foi interrompido. Aguardando recuperação… Se não voltar, recarregue a página.";
+          avisoContexto.style.cssText = "position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:#163a6b;color:white;font:20px sans-serif";
+          renderizador.domElement.addEventListener("webglcontextlost", (evento) => {
+            evento.preventDefault();
+            contextoPerdido = true;
+            cancelAnimationFrame(framePendente);
+            zerarTeclas();
+            document.body.appendChild(avisoContexto);
+          });
+          renderizador.domElement.addEventListener("webglcontextrestored", () => {
+            contextoPerdido = false;
+            avisoContexto.remove();
+            ultimoFrame = performance.now();
+            animar();
+          });
+          function animar() {
+            if (contextoPerdido || window.__corridaDoSaberErroExibido) return;
+            try {
+              executarFrame();
+              framePendente = requestAnimationFrame(animar);
+            } catch (erro) {
+              console.error(erro);
+              window.exibirErroDeInicializacaoJogo("O jogo encontrou um erro. Recarregue a página.", erro.message);
+            }
+          }
+          window.addEventListener("pagehide", (evento) => {
+            if (!evento.persisted) {
+              cancelAnimationFrame(framePendente);
+              mundoFisica.dispose();
+            }
+          });
+          window.CorridaDiagnostico = {
+            get estado() { return estadoJogo; },
+            fisica: mundoFisica,
+            jogador: carroCorpo,
+            get policiais() { return policiais; },
+            get fase() { return faseAtual; },
+            get silabas() { return silabasAtivas; },
+            renderer: renderizador,
+          };
           animar();
         } catch (erro) {
           console.error(erro);
@@ -8702,6 +8714,7 @@
           );
         }
       })();
+      };
     </script>
   </body>
 </html>

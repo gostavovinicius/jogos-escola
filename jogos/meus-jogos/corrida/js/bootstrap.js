@@ -29,7 +29,7 @@ window.addEventListener(
   "error",
   (evento) => {
     const alvo = evento.target;
-    if (alvo && alvo.tagName === "SCRIPT") {
+    if (alvo && (alvo.tagName === "SCRIPT" || alvo.tagName === "LINK")) {
       window.exibirErroDeInicializacaoJogo(
         "Nao foi possivel carregar os arquivos do jogo. Verifique sua conexao e tente recarregar a pagina.",
       );
@@ -37,3 +37,30 @@ window.addEventListener(
   },
   true,
 );
+
+// Keep the initial loader classic so unsupported module/WASM browsers get a
+// readable error instead of an empty game. The module initializes all systems.
+(() => {
+  const legado = document.currentScript?.hasAttribute("data-legado") || false;
+  const endereco = new URL("./start.mjs", document.currentScript.src).href;
+  const aviso = document.createElement("div");
+  aviso.setAttribute("role", "status");
+  aviso.textContent = "Carregando o jogo…";
+  aviso.style.cssText = "position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#163a6b;color:white;font:20px sans-serif";
+  document.body.appendChild(aviso);
+  const timeout = setTimeout(() => {
+    window.exibirErroDeInicializacaoJogo("O carregamento está demorando. Verifique sua conexão e recarregue a página.");
+  }, 45000);
+  import(endereco)
+    .then((modulo) => modulo.iniciar(legado))
+    .catch((erro) => {
+      console.error(erro);
+      window.exibirErroDeInicializacaoJogo(
+        "Não foi possível carregar o jogo. " + erro.message,
+      );
+    })
+    .finally(() => {
+      clearTimeout(timeout);
+      aviso.remove();
+    });
+})();

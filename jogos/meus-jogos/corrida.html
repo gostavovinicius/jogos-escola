@@ -8,12 +8,21 @@
     <link rel="stylesheet" href="./corrida/css/cars.css" />
     <link rel="stylesheet" href="./corrida/css/hud.css" />
     <link rel="stylesheet" href="./corrida/css/main.css" />
+    <link rel="stylesheet" href="./corrida/css/menu-modern.css" />
   </head>
   <body>
     <div id="menu-inicial">
       <div class="menu-shell">
         <div class="menu-apresentacao">
-          <h1>Corrida do Saber</h1>
+          <div class="menu-hero-texto">
+            <span class="menu-selo">APRENDA. ACELERE. EXPLORE.</span>
+            <h1>Corrida<br /><span>do Saber</span></h1>
+            <p>Pegue os blocos, forme palavras<br />e deixe a polícia para trás.</p>
+          </div>
+          <img class="menu-hero-imagem" src="./corrida/assets/menu/hero.png" width="1200" height="445" alt="Os novos carros, a moto policial e o helicóptero no cenário do jogo" fetchpriority="high" />
+        </div>
+        <section class="menu-fases" aria-labelledby="titulo-fases">
+          <div class="menu-titulo-secao"><h2 id="titulo-fases">Escolha sua aventura</h2><span>Toque em uma fase para jogar</span></div>
           <div class="botoes-serie">
             <button class="btn-serie" data-fase="facil" type="button">
               <span class="fase-card-titulo">Fase Fácil</span>
@@ -37,11 +46,11 @@
               >
             </button>
           </div>
-        </div>
+        </section>
         <div id="painel-garagem">
           <div class="garagem-topo">
+            <div class="garagem-heading"><h2>Sua garagem</h2><div id="garagem-legenda">Cada veículo tem seu jeito de correr.</div></div>
             <div id="pontos-menu">Pontos: 0</div>
-            <div id="garagem-legenda">Quanto mais caro, mais rápido.</div>
           </div>
           <div class="opcoes-carro">
             <button
@@ -67,6 +76,7 @@
             ></button>
           </div>
         </div>
+        <div class="menu-controles"><span><kbd>↑</kbd> acelerar · <kbd>↓</kbd> frear/ré · <kbd>←</kbd><kbd>→</kbd> virar</span><span>Na tela touch, use os botões de direção.</span></div>
       </div>
     </div>
 
@@ -100,7 +110,7 @@
               id="barra-risco-preenchimento"
             ></div>
           </div>
-          <div class="valor-secundario" id="info-contato">Contato 0%</div>
+          <div class="valor-secundario" id="info-contato">Captura 0%</div>
         </div>
       </div>
 
@@ -213,10 +223,5 @@
       </div>
     </div>
     <script src="./corrida/js/bootstrap.js"></script>
-    <script src="./corrida/js/config.js"></script>
-    <script src="./corrida/js/syllables.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
-    <script src="./corrida/js/main.js"></script>
   </body>
 </html>

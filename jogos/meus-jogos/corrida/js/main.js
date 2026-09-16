@@ -1,6 +1,7 @@
 /* Corrida do Saber - Logica principal */
 
 (() => {
+  if (window.__corridaDoSaberErroExibido) return;
   const config = window.CorridaDoSaberConfig;
   const syllables = window.CorridaDoSaberSyllables;
   if (!config || !syllables) {
@@ -41,7 +42,7 @@
     CHAVE_CARRO,
     CHAVE_CARROS_DESBLOQUEADOS,
   } = STORAGE_KEYS;
-  if (!window.THREE || !window.CANNON) {
+  if (!window.THREE || !window.RAPIER) {
     window.exibirErroDeInicializacaoJogo?.(
       "Nao foi possivel iniciar o jogo porque algumas bibliotecas nao carregaram corretamente.",
     );
@@ -104,20 +105,20 @@
     cena.background = new THREE.Color(0xa7c8e8);
     cena.fog = new THREE.Fog(0xb9d2e6, 92, 264);
     const raizEstilos = document.documentElement;
-    const eixoRotacaoY = new CANNON.Vec3(0, 1, 0);
-    const vetorCimaCapotagemTemp = new CANNON.Vec3();
-    const vetorCimaIApoliciaTemp = new CANNON.Vec3();
-    const vetorCimaEstabilizacaoTemp = new CANNON.Vec3();
-    const vetorCimaPresencaTemp = new CANNON.Vec3();
-    const vetorCimaAnimacaoTemp = new CANNON.Vec3();
-    const direcaoForcaTemp = new CANNON.Vec3();
-    const forcaAplicadaTemp = new CANNON.Vec3();
-    const direcaoFrontalTemp = new CANNON.Vec3();
-    const direcaoYawTemp = new CANNON.Vec3();
-    const direcaoTracaoTemp = new CANNON.Vec3();
-    const direcaoIAJogadorTemp = new CANNON.Vec3();
-    const direcaoRampaTemp = new CANNON.Vec3();
-    const lateralTracaoTemp = new CANNON.Vec3();
+    const eixoRotacaoY = new THREE.Vector3(0, 1, 0);
+    const vetorCimaCapotagemTemp = new THREE.Vector3();
+    const vetorCimaIApoliciaTemp = new THREE.Vector3();
+    const vetorCimaEstabilizacaoTemp = new THREE.Vector3();
+    const vetorCimaPresencaTemp = new THREE.Vector3();
+    const vetorCimaAnimacaoTemp = new THREE.Vector3();
+    const direcaoForcaTemp = new THREE.Vector3();
+    const forcaAplicadaTemp = new THREE.Vector3();
+    const direcaoFrontalTemp = new THREE.Vector3();
+    const direcaoYawTemp = new THREE.Vector3();
+    const direcaoTracaoTemp = new THREE.Vector3();
+    const direcaoIAJogadorTemp = new THREE.Vector3();
+    const direcaoRampaTemp = new THREE.Vector3();
+    const lateralTracaoTemp = new THREE.Vector3();
     const cameraOffsetTemp = new THREE.Vector3();
     const destinoCameraTemp = new THREE.Vector3();
     const destinoAlvoTemp = new THREE.Vector3();
@@ -150,17 +151,13 @@
 
     function preencherVetorCima(corpo, destino) {
       destino.set(0, 1, 0);
-      corpo.quaternion.vmult(destino, destino);
+      destino.applyQuaternion(corpo.quaternion);
       return destino;
     }
 
     function configurarTexturaComoCor(textura) {
-      if (
-        textura &&
-        typeof THREE.sRGBEncoding !== "undefined" &&
-        "encoding" in textura
-      ) {
-        textura.encoding = THREE.sRGBEncoding;
+      if (textura) {
+        textura.colorSpace = THREE.SRGBColorSpace;
         textura.needsUpdate = true;
       }
       return textura;
@@ -252,10 +249,13 @@
     cameraMiniMapa.up.set(0, 0, -1);
 
     const renderizador = new THREE.WebGLRenderer({
-      antialias: false,
+      canvas: window.CorridaGraficos.canvas,
+      context: window.CorridaGraficos.context,
+      antialias: window.graphicsCapabilities.antialias,
       powerPreference: "high-performance",
       stencil: false,
     });
+    // Preserve the existing quality profiles on both graphics paths.
     const sombrasAtivas =
       !PERFIL_EXECUCAO.pcFraco &&
       !PERFIL_EXECUCAO.firefoxEconomia &&
@@ -269,7 +269,10 @@
     renderizador.setSize(larguraViewport, alturaViewport, false);
     renderizador.shadowMap.enabled = sombrasAtivas;
     renderizador.shadowMap.type = THREE.PCFShadowMap;
-    renderizador.outputEncoding = THREE.sRGBEncoding;
+    renderizador.debug.onShaderError = () => {
+      throw new Error("Não foi possível preparar os efeitos gráficos neste dispositivo.");
+    };
+    renderizador.outputColorSpace = THREE.SRGBColorSpace;
     renderizador.toneMapping = PERFIL_EXECUCAO.firefoxEconomia
       ? THREE.NoToneMapping
       : THREE.ACESFilmicToneMapping;
@@ -838,7 +841,7 @@
       renderizador.setSize(largura, altura, false);
       camera.aspect = largura / altura;
       camera.updateProjectionMatrix();
-      const novoTamanhoSombra = obterTamanhoSombraIdeal(largura);
+      const novoTamanhoSombra = Math.min(obterTamanhoSombraIdeal(largura), window.graphicsCapabilities.maxTextureSize);
       if (luzDirecional && novoTamanhoSombra !== tamanhoSombraAtual) {
         tamanhoSombraAtual = novoTamanhoSombra;
         luzDirecional.shadow.mapSize.width = novoTamanhoSombra;
@@ -865,7 +868,7 @@
     );
     luzDirecional.position.set(82, 90, -36);
     luzDirecional.castShadow = renderizador.shadowMap.enabled;
-    tamanhoSombraAtual = obterTamanhoSombraIdeal(larguraViewport);
+    tamanhoSombraAtual = Math.min(obterTamanhoSombraIdeal(larguraViewport), window.graphicsCapabilities.maxTextureSize);
     luzDirecional.shadow.mapSize.width = tamanhoSombraAtual;
     luzDirecional.shadow.mapSize.height = tamanhoSombraAtual;
     luzDirecional.shadow.camera.left = -180;
@@ -898,47 +901,34 @@
     cena.add(luzPreenchimento);
     cena.add(luzRecorte);
 
-    const mundoFisica = new CANNON.World();
-    mundoFisica.gravity.set(0, -20, 0);
-    mundoFisica.broadphase =
-      typeof CANNON.SAPBroadphase === "function"
-        ? new CANNON.SAPBroadphase(mundoFisica)
-        : new CANNON.NaiveBroadphase();
-    const materialDeslizante = new CANNON.Material();
-    const materialCarro = new CANNON.Material();
+    const arte = window.criarArteCorrida(renderizador, cena, PERFIL_EXECUCAO);
+    const mundoFisica = window.criarFisicaCorrida();
+    const materialDeslizante = "piso";
+    const materialCarro = "carro";
     const corposDePiso = new WeakSet();
     const corposRampas = new WeakSet();
-    mundoFisica.addContactMaterial(
-      new CANNON.ContactMaterial(materialDeslizante, materialDeslizante, {
-        friction: 0.0,
-        restitution: 0.1,
-      }),
-    );
-    mundoFisica.addContactMaterial(
-      new CANNON.ContactMaterial(materialCarro, materialDeslizante, {
-        friction: 0.0,
-        restitution: 0.02,
-      }),
-    );
-    mundoFisica.addContactMaterial(
-      new CANNON.ContactMaterial(materialCarro, materialCarro, {
-        friction: 0.08,
-        restitution: 0.04,
-      }),
-    );
+    const corposCobertura = new Set();
+    const { preverInterceptacao, pressaoDeCaptura, criarConsultasJogabilidade, criarControleRampas } = window.CorridaJogabilidade;
+    const consultasJogabilidade = criarConsultasJogabilidade(RAPIER, THREE, corposCobertura);
+    const controleRampas = criarControleRampas(THREE, corposRampas);
+    const posicaoJogadorInicioFrame = new THREE.Vector3();
+    const deslocamentoProjetilTemp = new THREE.Vector3();
+    const origemVisibilidadeTemp = new THREE.Vector3();
+    const alvoVisibilidadeTemp = new THREE.Vector3();
 
     function corDaPaleta(paleta) {
       return paleta[Math.floor(Math.random() * paleta.length)];
     }
 
     function criarMaterialCenarioVivo(cor, intensidadeEmissiva = 0.14) {
-      const corBase = new THREE.Color(cor);
+      const corBase = new THREE.Color(cor).convertSRGBToLinear();
       const corEmissiva = corBase.clone().multiplyScalar(0.1);
-      return new THREE.MeshLambertMaterial({
+      return new THREE.MeshPhongMaterial({
         color: corBase,
         emissive: corEmissiva,
         emissiveIntensity: intensidadeEmissiva * 0.34,
         flatShading: true,
+        shininess: 8,
         dithering: false,
       });
     }
@@ -946,99 +936,13 @@
     // ==========================================
     // 2. CENÁRIO, ÁRVORES, PEDRAS, MONTANHAS E RAMPAS
     // ==========================================
-    function criarTexturaGrama() {
-      const canvas = document.createElement("canvas");
-      const tamanhoTextura = PERFIL_EXECUCAO.firefoxEconomia
-        ? 256
-        : PERFIL_EXECUCAO.pcFraco
-          ? 384
-          : 512;
-      canvas.width = tamanhoTextura;
-      canvas.height = tamanhoTextura;
-      const ctx = canvas.getContext("2d");
-      const gradiente = ctx.createLinearGradient(
-        0,
-        0,
-        tamanhoTextura,
-        tamanhoTextura,
-      );
-      gradiente.addColorStop(0, "#5e9d48");
-      gradiente.addColorStop(0.5, "#71ae56");
-      gradiente.addColorStop(1, "#84bf66");
-      ctx.fillStyle = gradiente;
-      ctx.fillRect(0, 0, tamanhoTextura, tamanhoTextura);
-      ctx.fillStyle = "rgba(42, 74, 31, 0.1)";
-      for (let faixa = 0; faixa < 9; faixa++) {
-        const larguraFaixa = tamanhoTextura / 9;
-        if (faixa % 2 === 0) {
-          ctx.fillRect(
-            faixa * larguraFaixa,
-            0,
-            larguraFaixa * 0.9,
-            tamanhoTextura,
-          );
-        }
-      }
-      for (
-        let i = 0;
-        i <
-        (PERFIL_EXECUCAO.firefoxEconomia
-          ? 1400
-          : PERFIL_EXECUCAO.pcFraco
-            ? 2400
-            : 4000);
-        i++
-      ) {
-        ctx.fillStyle =
-          Math.random() > 0.58
-            ? "rgba(143, 189, 93, 0.42)"
-            : "rgba(46, 93, 44, 0.52)";
-        ctx.fillRect(
-          Math.random() * tamanhoTextura,
-          Math.random() * tamanhoTextura,
-          5,
-          5,
-        );
-      }
-      for (
-        let i = 0;
-        i <
-        (PERFIL_EXECUCAO.firefoxEconomia
-          ? 110
-          : PERFIL_EXECUCAO.pcFraco
-            ? 180
-            : 300);
-        i++
-      ) {
-        ctx.fillStyle = ["#95c96f", "#7db55f", "#6da551", "#a3d07b"][
-          Math.floor(Math.random() * 4)
-        ];
-        ctx.beginPath();
-        ctx.arc(
-          Math.random() * tamanhoTextura,
-          Math.random() * tamanhoTextura,
-          0.6 + Math.random() * 1.4,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-      }
-      const textura = configurarTexturaComoCor(
-        new THREE.CanvasTexture(canvas),
-      );
-      textura.wrapS = THREE.RepeatWrapping;
-      textura.wrapT = THREE.RepeatWrapping;
-      textura.repeat.set(30, 30);
-      return textura;
-    }
 
-    const chaoMat = new THREE.MeshLambertMaterial({
-      map: criarTexturaGrama(),
-      color: 0x79ad58,
-    });
     const tamanhoMapa = 400;
+    // Visual terrain continues beyond every mountain; playable bounds stay unchanged.
+    const tamanhoTerrenoVisual = 1600;
+    const chaoMat = arte.materialChao(tamanhoTerrenoVisual / tamanhoMapa);
     const chaoVisual = new THREE.Mesh(
-      new THREE.PlaneGeometry(tamanhoMapa, tamanhoMapa),
+      new THREE.PlaneGeometry(tamanhoTerrenoVisual, tamanhoTerrenoVisual),
       chaoMat,
     );
     chaoVisual.rotation.x = -Math.PI / 2;
@@ -1058,17 +962,18 @@
     anelMapa.position.y = 0.08;
     cena.add(anelMapa);
     congelarObjetoEstatico(anelMapa);
-    const chaoCorpo = new CANNON.Body({
+    const chaoCorpo = mundoFisica.criarCorpo({
       mass: 0,
-      shape: new CANNON.Plane(),
+      collider: new RAPIER.ColliderDesc(new RAPIER.HalfSpace({ x: 0, y: 0, z: 1 })),
       material: materialDeslizante,
     });
     chaoCorpo.quaternion.setFromAxisAngle(
-      new CANNON.Vec3(1, 0, 0),
+      new THREE.Vector3(1, 0, 0),
       -Math.PI / 2,
     );
     corposDePiso.add(chaoCorpo);
-    mundoFisica.addBody(chaoCorpo);
+    mundoFisica.adicionarCorpo(chaoCorpo);
+    corposCobertura.add(chaoCorpo);
 
     function descartarMaterial(material, descartarTexturas = true) {
       if (!material) return;
@@ -1127,7 +1032,10 @@
         }
       }
       if (item.luz) cena.remove(item.luz);
-      if (item.corpo) mundoFisica.removeBody(item.corpo);
+      if (item.corpo) {
+        corposCobertura.delete(item.corpo);
+        mundoFisica.removerCorpo(item.corpo);
+      }
       if (typeof item.aoRemover === "function") item.aoRemover(item);
     }
 
@@ -1144,6 +1052,7 @@
       descartarTexturas = true,
       aoRemover = null,
     }) {
+      if (corpo) corposCobertura.add(corpo);
       return {
         visual,
         corpo,
@@ -1203,31 +1112,12 @@
       return { x: 0, z: -60 };
     }
 
-    function criarParedeInvisivel(x, z, largura, prof, altura = 72) {
-      const parede = new CANNON.Body({
-        mass: 0,
-        shape: new CANNON.Box(
-          new CANNON.Vec3(largura / 2, altura / 2, prof / 2),
-        ),
-        position: new CANNON.Vec3(x, altura / 2, z),
-        material: materialDeslizante,
-      });
-      corposDePiso.add(parede);
-      mundoFisica.addBody(parede);
-    }
-    criarParedeInvisivel(0, -tamanhoMapa / 2 + 8, tamanhoMapa - 8, 10);
-    criarParedeInvisivel(0, tamanhoMapa / 2 - 8, tamanhoMapa - 8, 10);
-    criarParedeInvisivel(-tamanhoMapa / 2 + 8, 0, 10, tamanhoMapa - 8);
-    criarParedeInvisivel(tamanhoMapa / 2 - 8, 0, 10, tamanhoMapa - 8);
+    const limiteMapa = window.criarLimiteMapaCorrida(mundoFisica, tamanhoMapa);
+    // Walls are deliberately NOT floor/ramp contacts.
 
     function criarMontanha(x, z, raio, escalaAltura = 1.22) {
-      const geoMontanha = new THREE.SphereGeometry(
-        raio,
-        PERFIL_EXECUCAO.pcFraco ? 18 : 32,
-        PERFIL_EXECUCAO.pcFraco ? 10 : 16,
-      );
+      const geoMontanha = new THREE.ConeGeometry(raio * 1.35, raio * 2, 7, 2);
       const alturaBase = -raio * 0.58;
-      const anguloCentro = Math.atan2(z, x);
       const montanhaVisual = new THREE.Mesh(
         geoMontanha,
         criarMaterialCenarioVivo(
@@ -1241,36 +1131,7 @@
       montanhaVisual.castShadow = true;
       cena.add(montanhaVisual);
       congelarObjetoEstatico(montanhaVisual);
-      const montanhaCorpo = new CANNON.Body({
-        mass: 0,
-        material: materialDeslizante,
-        position: new CANNON.Vec3(x, alturaBase, z),
-      });
-      montanhaCorpo.quaternion.setFromAxisAngle(
-        new CANNON.Vec3(0, 1, 0),
-        anguloCentro,
-      );
-      montanhaCorpo.addShape(new CANNON.Sphere(raio * 1.1));
-      montanhaCorpo.addShape(
-        new CANNON.Sphere(raio * 0.74),
-        new CANNON.Vec3(0, raio * 0.5 * escalaAltura, 0),
-      );
-      montanhaCorpo.addShape(
-        new CANNON.Box(
-          new CANNON.Vec3(
-            Math.max(5.5, raio * 0.18),
-            Math.max(14, raio * 0.38 * escalaAltura),
-            Math.max(18, raio * 0.84),
-          ),
-        ),
-        new CANNON.Vec3(
-          -raio * 0.46,
-          Math.max(11, raio * 0.6 * escalaAltura),
-          0,
-        ),
-      );
-      corposDePiso.add(montanhaCorpo);
-      mundoFisica.addBody(montanhaCorpo);
+      // Background only: collision belongs to the continuous map boundary.
     }
 
     const quantidadeMontanhasBorda = PERFIL_EXECUCAO.firefoxEconomia
@@ -1291,55 +1152,28 @@
           ? 36 + Math.random() * 12
           : 38 + Math.random() * 14;
       const escalaAltura = 1.16 + Math.random() * 0.22;
+      const distanciaSegura = window.distanciaSeguraMontanha(
+        angulo, tamanhoMontanha * 1.35, limiteMapa.limite, distanciaBorda,
+      );
       criarMontanha(
-        Math.cos(angulo) * distanciaBorda,
-        Math.sin(angulo) * distanciaBorda,
+        Math.cos(angulo) * distanciaSegura,
+        Math.sin(angulo) * distanciaSegura,
         tamanhoMontanha,
         escalaAltura,
       );
     }
 
     function criarArvore(x, z) {
-      const arvoreVisual = new THREE.Group();
-      const tronco = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-          0.5,
-          0.8,
-          4,
-          PERFIL_EXECUCAO.firefox ? 6 : PERFIL_EXECUCAO.pcFraco ? 6 : 8,
-        ),
-        criarMaterialCenarioVivo(
-          corDaPaleta(PALETA_CENARIO.troncos),
-          0.08,
-        ),
-      );
-      tronco.position.y = 2;
-      tronco.castShadow = true;
-      arvoreVisual.add(tronco);
-      const folhas = new THREE.Mesh(
-        new THREE.ConeGeometry(
-          3,
-          6,
-          PERFIL_EXECUCAO.firefox ? 5 : PERFIL_EXECUCAO.pcFraco ? 5 : 7,
-        ),
-        criarMaterialCenarioVivo(
-          corDaPaleta(PALETA_CENARIO.arvores),
-          0.18,
-        ),
-      );
-      folhas.position.y = 6;
-      folhas.castShadow = true;
-      arvoreVisual.add(folhas);
-      arvoreVisual.position.set(x, 0, z);
+      const arvoreVisual = arte.arvore(x, z);
       cena.add(arvoreVisual);
       congelarObjetoEstatico(arvoreVisual);
-      const corpo = new CANNON.Body({
+      const corpo = mundoFisica.criarCorpo({
         mass: 0,
-        shape: new CANNON.Box(new CANNON.Vec3(1.35, 5, 1.35)),
-        position: new CANNON.Vec3(x, 5, z),
+        collider: RAPIER.ColliderDesc.cuboid(1.35, 5, 1.35),
+        position: new THREE.Vector3(x, 5, z),
         material: materialDeslizante,
       });
-      mundoFisica.addBody(corpo);
+      mundoFisica.adicionarCorpo(corpo);
       registrarAreaOcupada(x, z, 7);
       return registrarObjeto({ visual: arvoreVisual, corpo });
     }
@@ -1355,40 +1189,36 @@
       pedraVis.castShadow = false;
       pedraVis.receiveShadow = true;
       cena.add(pedraVis);
+      arte.decorar("pedra", pedraVis);
       congelarObjetoEstatico(pedraVis);
-      const corpo = new CANNON.Body({
+      const corpo = mundoFisica.criarCorpo({
         mass: 0,
-        shape: new CANNON.Sphere(tamanho + 0.9),
-        position: new CANNON.Vec3(x, tamanho / 2, z),
+        collider: RAPIER.ColliderDesc.ball(tamanho + 0.9),
+        position: new THREE.Vector3(x, tamanho / 2, z),
         material: materialDeslizante,
       });
-      mundoFisica.addBody(corpo);
+      mundoFisica.adicionarCorpo(corpo);
       registrarAreaOcupada(x, z, tamanho + 4);
       return registrarObjeto({ visual: pedraVis, corpo });
     }
 
     function criarRampa(x, z, rotacaoY) {
       const corRampa = corDaPaleta(PALETA_CENARIO.rampas);
-      const rampaCorpo = new CANNON.Body({
+      const rampaCorpo = mundoFisica.criarCorpo({
         mass: 0,
         material: materialDeslizante,
       });
-      rampaCorpo.addShape(
-        new CANNON.Box(new CANNON.Vec3(7.2, 2.8, 10.2)),
-      );
-      rampaCorpo.addShape(
-        new CANNON.Box(new CANNON.Vec3(6.1, 1.5, 8.8)),
-        new CANNON.Vec3(0, -1.75, 0.2),
-      );
+      // Match the visible deck exactly; its lower end is embedded in the ground.
+      rampaCorpo.adicionarCollider(RAPIER.ColliderDesc.cuboid(6.6, 2.2, 9.2));
       rampaCorpo.position.set(x, 1.15, z);
-      const inclina = new CANNON.Quaternion();
-      inclina.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 8);
-      const gira = new CANNON.Quaternion();
-      gira.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotacaoY);
-      rampaCorpo.quaternion = gira.mult(inclina);
+      const inclina = new THREE.Quaternion();
+      inclina.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 8);
+      const gira = new THREE.Quaternion();
+      gira.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotacaoY);
+      rampaCorpo.quaternion = gira.multiply(inclina);
       corposDePiso.add(rampaCorpo);
       corposRampas.add(rampaCorpo);
-      mundoFisica.addBody(rampaCorpo);
+      mundoFisica.adicionarCorpo(rampaCorpo);
       const rampaVisual = new THREE.Mesh(
         new THREE.BoxGeometry(13.2, 4.4, 18.4),
         criarMaterialCenarioVivo(corRampa, 0.2),
@@ -1398,6 +1228,7 @@
       rampaVisual.position.copy(rampaCorpo.position);
       rampaVisual.quaternion.copy(rampaCorpo.quaternion);
       cena.add(rampaVisual);
+      arte.decorar("rampa", rampaVisual);
       congelarObjetoEstatico(rampaVisual);
       registrarAreaOcupada(x, z, 14);
       return registrarObjeto({ visual: rampaVisual, corpo: rampaCorpo });
@@ -1419,14 +1250,15 @@
       arbusto.castShadow = false;
       arbusto.receiveShadow = true;
       cena.add(arbusto);
+      arte.decorar("arbusto", arbusto);
       congelarObjetoEstatico(arbusto);
-      const corpo = new CANNON.Body({
+      const corpo = mundoFisica.criarCorpo({
         mass: 0,
-        shape: new CANNON.Sphere(tamanho * 1.1),
-        position: new CANNON.Vec3(x, tamanho * 0.7, z),
+        collider: RAPIER.ColliderDesc.ball(tamanho * 1.1),
+        position: new THREE.Vector3(x, tamanho * 0.7, z),
         material: materialDeslizante,
       });
-      mundoFisica.addBody(corpo);
+      mundoFisica.adicionarCorpo(corpo);
       registrarAreaOcupada(x, z, tamanho + 3);
       return registrarObjeto({ visual: arbusto, corpo });
     }
@@ -1443,16 +1275,15 @@
       cone.position.set(x, tamanho * 1.5, z);
       cone.castShadow = false;
       cena.add(cone);
+      arte.decorar("cone", cone);
       congelarObjetoEstatico(cone);
-      const corpo = new CANNON.Body({
+      const corpo = mundoFisica.criarCorpo({
         mass: 0,
-        shape: new CANNON.Box(
-          new CANNON.Vec3(tamanho * 0.8, tamanho * 1.5, tamanho * 0.8),
-        ),
-        position: new CANNON.Vec3(x, tamanho * 1.5, z),
+        collider: RAPIER.ColliderDesc.cuboid(tamanho * 0.8, tamanho * 1.5, tamanho * 0.8),
+        position: new THREE.Vector3(x, tamanho * 1.5, z),
         material: materialDeslizante,
       });
-      mundoFisica.addBody(corpo);
+      mundoFisica.adicionarCorpo(corpo);
       registrarAreaOcupada(x, z, tamanho + 2.4);
       return registrarObjeto({ visual: cone, corpo });
     }
@@ -1475,16 +1306,15 @@
       caixa.castShadow = false;
       caixa.receiveShadow = true;
       cena.add(caixa);
+      arte.decorar("caixa", caixa);
       congelarObjetoEstatico(caixa);
-      const corpo = new CANNON.Body({
+      const corpo = mundoFisica.criarCorpo({
         mass: 0,
-        shape: new CANNON.Box(
-          new CANNON.Vec3(largura / 2, altura / 2, profundidade / 2),
-        ),
-        position: new CANNON.Vec3(x, altura / 2, z),
+        collider: RAPIER.ColliderDesc.cuboid(largura / 2, altura / 2, profundidade / 2),
+        position: new THREE.Vector3(x, altura / 2, z),
         material: materialDeslizante,
       });
-      mundoFisica.addBody(corpo);
+      mundoFisica.adicionarCorpo(corpo);
       registrarAreaOcupada(x, z, Math.max(largura, profundidade) + 2.8);
       return registrarObjeto({ visual: caixa, corpo });
     }
@@ -1496,9 +1326,12 @@
     let nosNavegacaoPolicia = [];
     let conexoesNavegacaoPolicia = [];
 
+    function obterLimiteNavegacao() {
+      return limiteMapa.limite - 3.2;
+    }
+
     function pontoNavegavelNoMapa(x, z, folga = 0) {
-      const limite =
-        tamanhoMapa / 2 - CONFIG_NAVEGACAO_POLICIA.margemMapa;
+      const limite = obterLimiteNavegacao();
       if (Math.abs(x) > limite || Math.abs(z) > limite) return false;
 
       return areasOcupadasMapa.every(
@@ -1543,8 +1376,7 @@
     function construirMalhaNavegacaoPolicia() {
       nosNavegacaoPolicia = [];
       conexoesNavegacaoPolicia = [];
-      const limite =
-        tamanhoMapa / 2 - CONFIG_NAVEGACAO_POLICIA.margemMapa;
+      const limite = obterLimiteNavegacao();
       const passo = CONFIG_NAVEGACAO_POLICIA.passo;
       const distanciaLigacaoQuadrada =
         CONFIG_NAVEGACAO_POLICIA.distanciaLigacao *
@@ -1780,107 +1612,113 @@
       estado.tempoRota = 0;
       estado.alvoRotaX = Number.NaN;
       estado.alvoRotaZ = Number.NaN;
+      estado.alvoRecuperacao = null;
+      estado.navegacaoBloqueada = false;
+      estado.tempoSemRota = 0;
+    }
+
+    function projetarAlvoNavegavel(alvo) {
+      const limite = obterLimiteNavegacao();
+      const ponto = { x: THREE.MathUtils.clamp(alvo.x, -limite, limite), z: THREE.MathUtils.clamp(alvo.z, -limite, limite) };
+      if (pontoNavegavelNoMapa(ponto.x, ponto.z, CONFIG_NAVEGACAO_POLICIA.folgaSegmento)) return ponto;
+      let melhor = null, distancia = Infinity;
+      for (const no of nosNavegacaoPolicia) {
+        const d = Math.hypot(no.x - ponto.x, no.z - ponto.z);
+        if (d < distancia) { distancia = d; melhor = no; }
+      }
+      return melhor;
+    }
+
+    function segmentoLivreParaRecuperacao(origem, destino) {
+      if (!pontoNavegavelNoMapa(destino.x, destino.z, 3)) return false;
+      return areasOcupadasMapa.every(area => {
+        const raio = area.raio + 3;
+        const dx = origem.x - area.x, dz = origem.z - area.z;
+        if (Math.hypot(dx, dz) <= raio) {
+          // Permit leaving a conservative clearance zone, never crossing its center.
+          return dx * (destino.x - origem.x) + dz * (destino.z - origem.z) >= 0
+            && Math.hypot(destino.x - area.x, destino.z - area.z) > raio;
+        }
+        return distanciaPontoParaSegmento(area.x, area.z, origem.x, origem.z, destino.x, destino.z) > raio;
+      });
+    }
+
+    function encontrarAlvoRecuperacao(origem, alvo) {
+      let melhor = null, custo = Infinity;
+      const avaliar = ponto => {
+        if (!segmentoLivreParaRecuperacao(origem, ponto)) return;
+        const valor = Math.hypot(ponto.x - origem.x, ponto.z - origem.z)
+          + Math.hypot(ponto.x - alvo.x, ponto.z - alvo.z) * 0.65;
+        if (valor < custo) { custo = valor; melhor = ponto; }
+      };
+      for (const no of nosNavegacaoPolicia) avaliar(no);
+      for (const raio of [8, 16, 26]) {
+        for (let i = 0; i < 12; i++) {
+          const angulo = i * Math.PI / 6;
+          avaliar({ x: origem.x + Math.cos(angulo) * raio, z: origem.z + Math.sin(angulo) * raio });
+        }
+      }
+      return melhor;
     }
 
     function obterAlvoNavegacaoPolicial(policial, alvo, delta) {
       const estado = policial.estado;
-      const origem = {
-        x: policial.corpo.position.x,
-        z: policial.corpo.position.z,
-      };
+      const origem = { x: policial.corpo.position.x, z: policial.corpo.position.z };
+      const limite = obterLimiteNavegacao();
+      alvo = { x: THREE.MathUtils.clamp(alvo.x, -limite, limite), z: THREE.MathUtils.clamp(alvo.z, -limite, limite) };
       estado.tempoRota = Math.max(0, estado.tempoRota - delta);
-
-      if (
-        segmentoLivreParaNavegacao(
-          origem.x,
-          origem.z,
-          alvo.x,
-          alvo.z,
-          CONFIG_NAVEGACAO_POLICIA.folgaSegmento,
-        )
-      ) {
+      estado.navegacaoBloqueada = false;
+      if (segmentoLivreParaNavegacao(origem.x, origem.z, alvo.x, alvo.z, CONFIG_NAVEGACAO_POLICIA.folgaSegmento)) {
         limparRotaPolicial(estado);
         return alvo;
       }
 
-      const alvoMudou =
-        !Number.isFinite(estado.alvoRotaX) ||
-        Math.hypot(alvo.x - estado.alvoRotaX, alvo.z - estado.alvoRotaZ) >
-          CONFIG_NAVEGACAO_POLICIA.desvioRecalculo;
-      const precisaRecalcular =
-        !estado.rota.length ||
-        estado.indiceRota >= estado.rota.length ||
-        estado.tempoRota <= 0 ||
-        alvoMudou;
-
-      if (precisaRecalcular) {
-        estado.rota = calcularRotaPolicialNoMapa(origem, alvo);
+      // Failed/empty searches obey the same interval as successful searches.
+      if (!Number.isFinite(estado.alvoRotaX) || estado.tempoRota <= 0) {
+        const destino = projetarAlvoNavegavel(alvo);
+        estado.rota = destino ? calcularRotaPolicialNoMapa(origem, destino) : [];
         estado.indiceRota = 0;
         estado.tempoRota = CONFIG_NAVEGACAO_POLICIA.intervaloRecalculo;
         estado.alvoRotaX = alvo.x;
         estado.alvoRotaZ = alvo.z;
+        estado.alvoRecuperacao = encontrarAlvoRecuperacao(origem, alvo);
       }
 
       while (estado.indiceRota < estado.rota.length) {
         const waypoint = estado.rota[estado.indiceRota];
-        const distanciaWaypoint = Math.hypot(
-          waypoint.x - origem.x,
-          waypoint.z - origem.z,
-        );
-
-        if (
-          distanciaWaypoint <= CONFIG_NAVEGACAO_POLICIA.distanciaChegada
-        ) {
-          estado.indiceRota++;
-          continue;
+        // A small arrival radius avoids skipping corners into an obstacle.
+        if (Math.hypot(waypoint.x - origem.x, waypoint.z - origem.z) < 3) {
+          estado.indiceRota++; continue;
         }
-
-        let waypointMaisAFrente = waypoint;
-        for (
-          let indice = estado.rota.length - 1;
-          indice > estado.indiceRota;
-          indice--
-        ) {
-          const candidato = estado.rota[indice];
-          if (
-            segmentoLivreParaNavegacao(
-              origem.x,
-              origem.z,
-              candidato.x,
-              candidato.z,
-              CONFIG_NAVEGACAO_POLICIA.folgaSegmento,
-            )
-          ) {
-            estado.indiceRota = indice;
-            waypointMaisAFrente = candidato;
-            break;
+        for (let i = estado.rota.length - 1; i >= estado.indiceRota; i--) {
+          const candidato = estado.rota[i];
+          if (segmentoLivreParaNavegacao(origem.x, origem.z, candidato.x, candidato.z, CONFIG_NAVEGACAO_POLICIA.folgaSegmento)) {
+            estado.indiceRota = i;
+            estado.tempoSemRota = 0;
+            return candidato;
           }
         }
-
-        return waypointMaisAFrente;
+        break;
       }
-
-      return alvo;
+      const recuperacao = estado.alvoRecuperacao;
+      if (recuperacao && Math.hypot(recuperacao.x - origem.x, recuperacao.z - origem.z) >= 2
+        && segmentoLivreParaRecuperacao(origem, recuperacao)) {
+        estado.tempoSemRota = 0;
+        return recuperacao;
+      }
+      estado.navegacaoBloqueada = true;
+      estado.tempoSemRota = (estado.tempoSemRota || 0) + delta;
+      return origem;
     }
 
     // ==========================================
     // 3. OS CARROS (JOGADOR E POLÍCIA)
     // ==========================================
-    function criarRoda(grupo, x, z) {
-      const roda = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.6, 0.6, 0.5, 16),
-        new THREE.MeshLambertMaterial({ color: 0x222222 }),
-      );
-      roda.rotation.z = Math.PI / 2;
-      roda.position.set(x, -0.6, z);
-      roda.castShadow = true;
-      grupo.add(roda);
-    }
 
     // Jogador
-    const carroCorpo = new CANNON.Body({
+    const carroCorpo = mundoFisica.criarCorpo({
       mass: 800,
-      shape: new CANNON.Box(new CANNON.Vec3(1.2, 0.6, 2.2)),
+      collider: RAPIER.ColliderDesc.cuboid(1.2, 0.6, 2.2),
       material: materialCarro,
     });
     carroCorpo.allowSleep = false;
@@ -1892,590 +1730,12 @@
     ) {
       carroCorpo.angularFactor.set(0, 1, 0);
     }
-    mundoFisica.addBody(carroCorpo);
+    mundoFisica.adicionarCorpo(carroCorpo);
     const carroVisual = new THREE.Group();
     cena.add(carroVisual);
 
     function reconstruirMalhasDoCarro(modelo) {
-      while (carroVisual.children.length > 0) {
-        const child = carroVisual.children[0];
-        if (child.geometry) child.geometry.dispose();
-        if (child.material && !Array.isArray(child.material))
-          child.material.dispose();
-        carroVisual.remove(child);
-      }
-
-      const matCorpo = new THREE.MeshLambertMaterial({
-        color: modelo.carroceria,
-      });
-      const matVidro = new THREE.MeshLambertMaterial({
-        color: modelo.vidro,
-      });
-      const matDetalhe = new THREE.MeshLambertMaterial({
-        color: modelo.detalhe,
-      });
-      const matAsa = new THREE.MeshBasicMaterial({ color: modelo.asa });
-
-      criarRoda(carroVisual, -1.3, 1.4);
-      criarRoda(carroVisual, 1.3, 1.4);
-      criarRoda(carroVisual, -1.3, -1.4);
-      criarRoda(carroVisual, 1.3, -1.4);
-
-      if (carroSelecionado === "moto-urbana") {
-        const geoBase = new THREE.CylinderGeometry(1.0, 1.35, 4.5, 6);
-        geoBase.rotateX(Math.PI / 2);
-        const base = new THREE.Mesh(geoBase, matCorpo);
-        base.scale.set(0.7, 0.14, 0.95);
-        base.position.set(0, 0.42, 0.15);
-        base.rotation.z = Math.PI / 2;
-
-        const capo = new THREE.Mesh(
-          new THREE.BoxGeometry(0.38, 0.22, 2.35),
-          matDetalhe,
-        );
-        capo.position.set(0, 0.72, -0.2);
-
-        const nariz = new THREE.Mesh(
-          new THREE.ConeGeometry(0.32, 1.3, 18),
-          matDetalhe,
-        );
-        nariz.rotation.x = -Math.PI / 2;
-        nariz.position.set(0, 0.7, -1.95);
-
-        const cockpit = new THREE.Mesh(
-          new THREE.BoxGeometry(0.5, 0.42, 0.78),
-          matVidro,
-        );
-        cockpit.position.set(0, 1.0, -0.32);
-        cockpit.rotation.x = -Math.PI / 14;
-
-        const fairingEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.14, 0.52, 1.15),
-          matCorpo,
-        );
-        fairingEsq.position.set(-0.42, 0.68, 0.5);
-        const fairingDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.14, 0.52, 1.15),
-          matCorpo,
-        );
-        fairingDir.position.set(0.42, 0.68, 0.5);
-
-        const rollBar = new THREE.Mesh(
-          new THREE.BoxGeometry(0.18, 0.95, 0.18),
-          matAsa,
-        );
-        rollBar.position.set(0, 1.22, 0.35);
-
-        const traseira = new THREE.Mesh(
-          new THREE.BoxGeometry(0.74, 0.16, 0.55),
-          matAsa,
-        );
-        traseira.position.set(0, 0.92, 1.7);
-
-        const pilotoCorpo = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.3, 0.38, 0.9, 12),
-          matAsa,
-        );
-        pilotoCorpo.position.set(0, 1.55, 0.2);
-        pilotoCorpo.rotation.x = -Math.PI / 7;
-
-        const pilotoCabeca = new THREE.Mesh(
-          new THREE.SphereGeometry(0.34, 16, 12),
-          matVidro,
-        );
-        pilotoCabeca.position.set(0, 2.18, -0.08);
-
-        carroVisual.add(base);
-        carroVisual.add(capo);
-        carroVisual.add(nariz);
-        carroVisual.add(cockpit);
-        carroVisual.add(fairingEsq);
-        carroVisual.add(fairingDir);
-        carroVisual.add(rollBar);
-        carroVisual.add(traseira);
-        carroVisual.add(pilotoCorpo);
-        carroVisual.add(pilotoCabeca);
-      } else if (carroSelecionado === "rally") {
-        const corpo = new THREE.Mesh(
-          new THREE.BoxGeometry(2.7, 1.1, 4.35),
-          matCorpo,
-        );
-        corpo.position.set(0, 0.24, 0);
-
-        const cabine = new THREE.Mesh(
-          new THREE.BoxGeometry(2.1, 0.92, 1.95),
-          matVidro,
-        );
-        cabine.position.set(0, 0.98, -0.32);
-
-        const paraChoque = new THREE.Mesh(
-          new THREE.BoxGeometry(3.05, 0.34, 0.72),
-          matDetalhe,
-        );
-        paraChoque.position.set(0, -0.02, -2.12);
-
-        const scoop = new THREE.Mesh(
-          new THREE.BoxGeometry(0.72, 0.18, 0.64),
-          matAsa,
-        );
-        scoop.position.set(0, 1.48, -0.08);
-
-        const spoiler = new THREE.Mesh(
-          new THREE.BoxGeometry(1.9, 0.12, 0.42),
-          matAsa,
-        );
-        spoiler.position.set(0, 1.2, 1.96);
-
-        const flareFrenteEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.24, 0.28, 0.95),
-          matDetalhe,
-        );
-        flareFrenteEsq.position.set(-1.36, 0.08, -1.34);
-        const flareFrenteDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.24, 0.28, 0.95),
-          matDetalhe,
-        );
-        flareFrenteDir.position.set(1.36, 0.08, -1.34);
-        const flareTrasEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.24, 0.28, 0.95),
-          matDetalhe,
-        );
-        flareTrasEsq.position.set(-1.36, 0.08, 1.34);
-        const flareTrasDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.24, 0.28, 0.95),
-          matDetalhe,
-        );
-        flareTrasDir.position.set(1.36, 0.08, 1.34);
-
-        carroVisual.add(corpo);
-        carroVisual.add(cabine);
-        carroVisual.add(paraChoque);
-        carroVisual.add(scoop);
-        carroVisual.add(spoiler);
-        carroVisual.add(flareFrenteEsq);
-        carroVisual.add(flareFrenteDir);
-        carroVisual.add(flareTrasEsq);
-        carroVisual.add(flareTrasDir);
-      } else if (carroSelecionado === "turbovan") {
-        const corpo = new THREE.Mesh(
-          new THREE.BoxGeometry(2.6, 1.55, 4.4),
-          matCorpo,
-        );
-        corpo.position.set(0, 0.55, 0.1);
-
-        const cabine = new THREE.Mesh(
-          new THREE.BoxGeometry(2.1, 1.15, 2.1),
-          matVidro,
-        );
-        cabine.position.set(0, 1.4, -0.45);
-
-        const faixa = new THREE.Mesh(
-          new THREE.BoxGeometry(2.65, 0.14, 3.2),
-          matDetalhe,
-        );
-        faixa.position.set(0, 0.25, 0.2);
-
-        const spoiler = new THREE.Mesh(
-          new THREE.BoxGeometry(1.5, 0.14, 0.4),
-          matAsa,
-        );
-        spoiler.position.set(0, 1.55, 2.05);
-
-        const defletor = new THREE.Mesh(
-          new THREE.BoxGeometry(2.58, 0.22, 0.56),
-          matDetalhe,
-        );
-        defletor.position.set(0, 0.18, -2.12);
-
-        const tetoExtra = new THREE.Mesh(
-          new THREE.BoxGeometry(1.55, 0.14, 1.0),
-          matAsa,
-        );
-        tetoExtra.position.set(0, 2.02, 0.45);
-
-        carroVisual.add(corpo);
-        carroVisual.add(cabine);
-        carroVisual.add(faixa);
-        carroVisual.add(spoiler);
-        carroVisual.add(defletor);
-        carroVisual.add(tetoExtra);
-      } else if (carroSelecionado === "moto-trilha") {
-        const geoCorpo = new THREE.CylinderGeometry(0.52, 0.62, 4.6, 20);
-        geoCorpo.rotateX(Math.PI / 2);
-        const corpo = new THREE.Mesh(geoCorpo, matCorpo);
-        corpo.scale.set(0.76, 0.18, 0.96);
-        corpo.position.y = 0.48;
-        corpo.rotation.z = Math.PI / 2;
-
-        const bico = new THREE.Mesh(
-          new THREE.ConeGeometry(0.34, 1.45, 20),
-          matDetalhe,
-        );
-        bico.rotation.x = -Math.PI / 2;
-        bico.position.set(0, 0.82, -1.95);
-
-        const cabine = new THREE.Mesh(
-          new THREE.SphereGeometry(0.55, 20, 16),
-          matVidro,
-        );
-        cabine.scale.set(0.7, 0.62, 1.02);
-        cabine.position.set(0, 1.02, -0.18);
-
-        const asaFrente = new THREE.Mesh(
-          new THREE.BoxGeometry(1.5, 0.16, 0.26),
-          matAsa,
-        );
-        asaFrente.position.set(0, 1.32, -0.98);
-
-        const asaTras = new THREE.Mesh(
-          new THREE.BoxGeometry(0.28, 1.15, 0.28),
-          matAsa,
-        );
-        asaTras.position.set(0, 1.25, 1.35);
-
-        const paralamaEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.16, 0.68, 1.0),
-          matDetalhe,
-        );
-        paralamaEsq.position.set(-0.48, 0.86, 0.55);
-        const paralamaDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.16, 0.68, 1.0),
-          matDetalhe,
-        );
-        paralamaDir.position.set(0.48, 0.86, 0.55);
-
-        carroVisual.add(corpo);
-        carroVisual.add(bico);
-        carroVisual.add(cabine);
-        carroVisual.add(asaFrente);
-        carroVisual.add(asaTras);
-        carroVisual.add(paralamaEsq);
-        carroVisual.add(paralamaDir);
-      } else if (carroSelecionado === "phantom") {
-        const geoCorpo = new THREE.CylinderGeometry(1.25, 1.6, 4.9, 4);
-        geoCorpo.rotateX(Math.PI / 2);
-        geoCorpo.rotateZ(Math.PI);
-        const corpo = new THREE.Mesh(geoCorpo, matCorpo);
-        corpo.scale.set(1, 0.22, 1);
-        corpo.position.set(0, 0.02, 0);
-
-        const canopy = new THREE.Mesh(
-          new THREE.SphereGeometry(0.95, 26, 16),
-          matVidro,
-        );
-        canopy.scale.set(0.7, 0.25, 1.4);
-        canopy.position.set(0, 0.5, 0.15);
-
-        const laminaEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.08, 0.12, 2.6),
-          matAsa,
-        );
-        laminaEsq.position.set(-1.18, 0.18, 0.15);
-        const laminaDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.08, 0.12, 2.6),
-          matAsa,
-        );
-        laminaDir.position.set(1.18, 0.18, 0.15);
-
-        const bico = new THREE.Mesh(
-          new THREE.ConeGeometry(0.36, 1.9, 16),
-          matAsa,
-        );
-        bico.rotation.x = -Math.PI / 2;
-        bico.position.set(0, 0.02, -2.75);
-
-        carroVisual.add(corpo);
-        carroVisual.add(canopy);
-        carroVisual.add(laminaEsq);
-        carroVisual.add(laminaDir);
-        carroVisual.add(bico);
-      } else if (modelo.visual === "classico") {
-        const corpo = new THREE.Mesh(
-          new THREE.BoxGeometry(2.45, 0.95, 4.55),
-          matCorpo,
-        );
-        corpo.position.set(0, 0.18, 0.05);
-
-        const teto = new THREE.Mesh(
-          new THREE.BoxGeometry(1.65, 0.62, 1.75),
-          matCorpo,
-        );
-        teto.position.set(0, 0.9, -0.36);
-
-        const paraBrisa = new THREE.Mesh(
-          new THREE.BoxGeometry(1.55, 0.42, 0.74),
-          matVidro,
-        );
-        paraBrisa.position.set(0, 0.72, -1.02);
-        paraBrisa.rotation.x = -Math.PI / 7;
-
-        const vidroTras = new THREE.Mesh(
-          new THREE.BoxGeometry(1.4, 0.36, 0.5),
-          matVidro,
-        );
-        vidroTras.position.set(0, 0.72, 0.2);
-        vidroTras.rotation.x = Math.PI / 12;
-
-        const paraChoqueFrente = new THREE.Mesh(
-          new THREE.BoxGeometry(2.48, 0.2, 0.34),
-          matDetalhe,
-        );
-        paraChoqueFrente.position.set(0, -0.04, -2.42);
-
-        const paraChoqueTras = new THREE.Mesh(
-          new THREE.BoxGeometry(2.48, 0.2, 0.34),
-          matDetalhe,
-        );
-        paraChoqueTras.position.set(0, -0.04, 2.42);
-
-        const faixaEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.08, 0.14, 2.25),
-          matDetalhe,
-        );
-        faixaEsq.position.set(-1.23, 0.08, 0.1);
-        const faixaDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.08, 0.14, 2.25),
-          matDetalhe,
-        );
-        faixaDir.position.set(1.23, 0.08, 0.1);
-
-        carroVisual.add(corpo);
-        carroVisual.add(teto);
-        carroVisual.add(paraBrisa);
-        carroVisual.add(vidroTras);
-        carroVisual.add(paraChoqueFrente);
-        carroVisual.add(paraChoqueTras);
-        carroVisual.add(faixaEsq);
-        carroVisual.add(faixaDir);
-      } else if (modelo.visual === "esportivo") {
-        const geoCorpo = new THREE.CylinderGeometry(0.8, 1.35, 4.6, 5);
-        geoCorpo.rotateX(Math.PI / 2);
-        const corpo = new THREE.Mesh(geoCorpo, matCorpo);
-        corpo.scale.set(1.05, 0.22, 1);
-        corpo.position.set(0, 0.14, 0.1);
-
-        const nariz = new THREE.Mesh(
-          new THREE.ConeGeometry(0.48, 1.7, 18),
-          matDetalhe,
-        );
-        nariz.rotation.x = -Math.PI / 2;
-        nariz.position.set(0, 0.05, -2.72);
-
-        const vidro = new THREE.Mesh(
-          new THREE.BoxGeometry(1.45, 0.42, 1.18),
-          matVidro,
-        );
-        vidro.position.set(0, 0.62, -0.12);
-        vidro.rotation.x = -Math.PI / 14;
-
-        const asa = new THREE.Mesh(
-          new THREE.BoxGeometry(2.7, 0.12, 0.55),
-          matAsa,
-        );
-        asa.position.set(0, 0.84, 2.0);
-        const suporteEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.1, 0.52, 0.1),
-          matDetalhe,
-        );
-        suporteEsq.position.set(-0.72, 0.56, 1.9);
-        const suporteDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.1, 0.52, 0.1),
-          matDetalhe,
-        );
-        suporteDir.position.set(0.72, 0.56, 1.9);
-
-        carroVisual.add(corpo);
-        carroVisual.add(nariz);
-        carroVisual.add(vidro);
-        carroVisual.add(asa);
-        carroVisual.add(suporteEsq);
-        carroVisual.add(suporteDir);
-      } else if (modelo.visual === "pickup") {
-        const corpo = new THREE.Mesh(
-          new THREE.BoxGeometry(2.6, 1.05, 2.8),
-          matCorpo,
-        );
-        corpo.position.set(0, 0.28, -0.4);
-        const cabine = new THREE.Mesh(
-          new THREE.BoxGeometry(2.15, 0.95, 1.75),
-          matVidro,
-        );
-        cabine.position.set(0, 0.98, -1.0);
-        const caixambaBase = new THREE.Mesh(
-          new THREE.BoxGeometry(2.55, 0.52, 1.55),
-          matCorpo,
-        );
-        caixambaBase.position.set(0, 0.02, 1.5);
-        const lateralCaixambaEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.14, 0.48, 1.5),
-          matDetalhe,
-        );
-        lateralCaixambaEsq.position.set(-1.22, 0.36, 1.5);
-        const lateralCaixambaDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.14, 0.48, 1.5),
-          matDetalhe,
-        );
-        lateralCaixambaDir.position.set(1.22, 0.36, 1.5);
-        const paraChoque = new THREE.Mesh(
-          new THREE.BoxGeometry(2.85, 0.34, 0.72),
-          matDetalhe,
-        );
-        paraChoque.position.set(0, 0.08, -2.08);
-        const arcoFrenteEsq = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.72, 0.72, 0.18, 16),
-          matDetalhe,
-        );
-        arcoFrenteEsq.rotation.z = Math.PI / 2;
-        arcoFrenteEsq.scale.set(1.2, 0.5, 0.85);
-        arcoFrenteEsq.position.set(-1.28, 0.16, -1.38);
-        const arcoFrenteDir = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.72, 0.72, 0.18, 16),
-          matDetalhe,
-        );
-        arcoFrenteDir.rotation.z = Math.PI / 2;
-        arcoFrenteDir.scale.set(1.2, 0.5, 0.85);
-        arcoFrenteDir.position.set(1.28, 0.16, -1.38);
-        const arcoTrasEsq = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.72, 0.72, 0.18, 16),
-          matDetalhe,
-        );
-        arcoTrasEsq.rotation.z = Math.PI / 2;
-        arcoTrasEsq.scale.set(1.2, 0.5, 0.85);
-        arcoTrasEsq.position.set(-1.28, 0.16, 1.38);
-        const arcoTrasDir = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.72, 0.72, 0.18, 16),
-          matDetalhe,
-        );
-        arcoTrasDir.rotation.z = Math.PI / 2;
-        arcoTrasDir.scale.set(1.2, 0.5, 0.85);
-        arcoTrasDir.position.set(1.28, 0.16, 1.38);
-
-        carroVisual.add(corpo);
-        carroVisual.add(cabine);
-        carroVisual.add(caixambaBase);
-        carroVisual.add(lateralCaixambaEsq);
-        carroVisual.add(lateralCaixambaDir);
-        carroVisual.add(paraChoque);
-        carroVisual.add(arcoFrenteEsq);
-        carroVisual.add(arcoFrenteDir);
-        carroVisual.add(arcoTrasEsq);
-        carroVisual.add(arcoTrasDir);
-      } else if (modelo.visual === "f1") {
-        const geoCorpo = new THREE.CylinderGeometry(0.5, 0.5, 4.0, 16);
-        geoCorpo.rotateX(Math.PI / 2);
-        const corpo = new THREE.Mesh(geoCorpo, matCorpo);
-
-        const geoBico = new THREE.ConeGeometry(0.5, 1.5, 16);
-        geoBico.rotateX(-Math.PI / 2);
-        const bico = new THREE.Mesh(geoBico, matDetalhe);
-        bico.position.set(0, 0, -2.75);
-
-        const asaFrente = new THREE.Mesh(
-          new THREE.BoxGeometry(2.6, 0.1, 0.6),
-          matDetalhe,
-        );
-        asaFrente.position.set(0, -0.2, -3.2);
-
-        const asaTras = new THREE.Mesh(
-          new THREE.BoxGeometry(2.4, 0.1, 0.8),
-          matCorpo,
-        );
-        asaTras.position.set(0, 1.2, 1.8);
-        const suporteAsa = new THREE.Mesh(
-          new THREE.BoxGeometry(0.2, 1.0, 0.4),
-          matCorpo,
-        );
-        suporteAsa.position.set(0, 0.6, 1.8);
-
-        const cabine = new THREE.Mesh(
-          new THREE.SphereGeometry(0.4, 16, 16),
-          matVidro,
-        );
-        cabine.position.set(0, 0.5, 0);
-
-        const tiranteEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.08, 0.08, 1.45),
-          matDetalhe,
-        );
-        tiranteEsq.position.set(-0.95, -0.08, 1.0);
-        tiranteEsq.rotation.y = 0.14;
-        const tiranteDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.08, 0.08, 1.45),
-          matDetalhe,
-        );
-        tiranteDir.position.set(0.95, -0.08, 1.0);
-        tiranteDir.rotation.y = -0.14;
-
-        carroVisual.add(corpo);
-        carroVisual.add(bico);
-        carroVisual.add(asaFrente);
-        carroVisual.add(asaTras);
-        carroVisual.add(suporteAsa);
-        carroVisual.add(cabine);
-        carroVisual.add(tiranteEsq);
-        carroVisual.add(tiranteDir);
-      } else if (modelo.visual === "hiper") {
-        const geoCorpo = new THREE.CylinderGeometry(1.4, 1.6, 4.4, 3);
-        geoCorpo.rotateX(Math.PI / 2);
-        geoCorpo.rotateZ(Math.PI);
-        const corpo = new THREE.Mesh(geoCorpo, matCorpo);
-        corpo.scale.set(1, 0.3, 1);
-        corpo.position.set(0, 0.1, 0);
-
-        const geoVidro = new THREE.SphereGeometry(1.0, 32, 16);
-        const vidro = new THREE.Mesh(geoVidro, matVidro);
-        vidro.scale.set(0.8, 0.3, 1.2);
-        vidro.position.set(0, 0.6, 0.2);
-
-        const bico = new THREE.Mesh(
-          new THREE.ConeGeometry(0.44, 1.65, 18),
-          matDetalhe,
-        );
-        bico.rotation.x = -Math.PI / 2;
-        bico.position.set(0, 0.05, -2.72);
-
-        const difusor = new THREE.Mesh(
-          new THREE.BoxGeometry(2.15, 0.12, 0.9),
-          matDetalhe,
-        );
-        difusor.position.set(0, -0.12, 2.22);
-
-        const luzDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.1, 0.1, 2.0),
-          matAsa,
-        );
-        luzDir.position.set(1.2, 0.2, 0);
-        const luzEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.1, 0.1, 2.0),
-          matAsa,
-        );
-        luzEsq.position.set(-1.2, 0.2, 0);
-        const barraTraseiraEsq = new THREE.Mesh(
-          new THREE.BoxGeometry(0.9, 0.08, 0.12),
-          new THREE.MeshBasicMaterial({ color: modelo.asa }),
-        );
-        barraTraseiraEsq.position.set(-0.58, 0.1, 2.18);
-        const barraTraseiraDir = new THREE.Mesh(
-          new THREE.BoxGeometry(0.9, 0.08, 0.12),
-          new THREE.MeshBasicMaterial({ color: modelo.asa }),
-        );
-        barraTraseiraDir.position.set(0.58, 0.1, 2.18);
-
-        carroVisual.add(corpo);
-        carroVisual.add(vidro);
-        carroVisual.add(bico);
-        carroVisual.add(difusor);
-        carroVisual.add(luzDir);
-        carroVisual.add(luzEsq);
-        carroVisual.add(barraTraseiraEsq);
-        carroVisual.add(barraTraseiraDir);
-      }
-
-      carroVisual.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-        }
-      });
+      arte.montarCarro(carroVisual, modelo);
     }
 
     function criarCarroPolicia({
@@ -2485,9 +1745,9 @@
       corSireneB,
       corRadar,
     }) {
-      const corpo = new CANNON.Body({
+      const corpo = mundoFisica.criarCorpo({
         mass: 900,
-        shape: new CANNON.Box(new CANNON.Vec3(1.2, 0.6, 2.2)),
+        collider: RAPIER.ColliderDesc.cuboid(1.2, 0.6, 2.2),
         material: materialCarro,
       });
       corpo.allowSleep = false;
@@ -2499,90 +1759,10 @@
       ) {
         corpo.angularFactor.set(0, 1, 0);
       }
-      mundoFisica.addBody(corpo);
+      mundoFisica.adicionarCorpo(corpo);
 
-      const visual = new THREE.Group();
-      const malhaPolicia = new THREE.Mesh(
-        new THREE.BoxGeometry(2.4, 1.2, 4.4),
-        new THREE.MeshLambertMaterial({ color: corBase }),
-      );
-      malhaPolicia.castShadow = true;
-      visual.add(malhaPolicia);
-
-      const capo = new THREE.Mesh(
-        new THREE.BoxGeometry(2.41, 1.21, 2.0),
-        new THREE.MeshLambertMaterial({ color: corCapo }),
-      );
-      capo.position.set(0, 0, 1.2);
-      visual.add(capo);
-
-      const sireneA = new THREE.Mesh(
-        new THREE.BoxGeometry(0.6, 0.4, 0.4),
-        new THREE.MeshBasicMaterial({
-          color: corSireneA,
-          transparent: true,
-          opacity: 1,
-        }),
-      );
-      sireneA.position.set(-0.5, 0.8, -0.5);
-      visual.add(sireneA);
-
-      const sireneB = new THREE.Mesh(
-        new THREE.BoxGeometry(0.6, 0.4, 0.4),
-        new THREE.MeshBasicMaterial({
-          color: corSireneB,
-          transparent: true,
-          opacity: 1,
-        }),
-      );
-      sireneB.position.set(0.5, 0.8, -0.5);
-      visual.add(sireneB);
-
-      const luzSireneA =
-        PERFIL_EXECUCAO.pcFraco || PERFIL_EXECUCAO.firefox
-          ? null
-          : new THREE.PointLight(corSireneA, 0, 14, 2);
-      if (luzSireneA) {
-        luzSireneA.position.set(-0.5, 1.05, -0.5);
-        visual.add(luzSireneA);
-      }
-
-      const luzSireneB =
-        PERFIL_EXECUCAO.pcFraco || PERFIL_EXECUCAO.firefox
-          ? null
-          : new THREE.PointLight(corSireneB, 0, 14, 2);
-      if (luzSireneB) {
-        luzSireneB.position.set(0.5, 1.05, -0.5);
-        visual.add(luzSireneB);
-      }
-
-      const tetoRadar = new THREE.Mesh(
-        new THREE.BoxGeometry(1.6, 0.16, 1.6),
-        new THREE.MeshBasicMaterial({ color: corRadar }),
-      );
-      tetoRadar.position.set(0, 1.18, 0.1);
-      visual.add(tetoRadar);
-
-      const faixaEsq = new THREE.Mesh(
-        new THREE.BoxGeometry(0.14, 0.28, 2.8),
-        new THREE.MeshLambertMaterial({ color: corRadar }),
-      );
-      faixaEsq.position.set(-1.22, 0.16, 0.12);
-      const faixaDir = faixaEsq.clone();
-      faixaDir.position.x = 1.22;
-      const barraFrontal = new THREE.Mesh(
-        new THREE.BoxGeometry(2.45, 0.12, 0.26),
-        new THREE.MeshLambertMaterial({ color: corRadar }),
-      );
-      barraFrontal.position.set(0, 0.5, -1.92);
-      visual.add(faixaEsq);
-      visual.add(faixaDir);
-      visual.add(barraFrontal);
-
-      criarRoda(visual, -1.3, 1.4);
-      criarRoda(visual, 1.3, 1.4);
-      criarRoda(visual, -1.3, -1.4);
-      criarRoda(visual, 1.3, -1.4);
+      const { visual, sireneA, sireneB, luzSireneA, luzSireneB } =
+        arte.policia({ corBase, corCapo, corSireneA, corSireneB, corRadar }, false);
 
       corpo.position.set(0, -50, 0);
       cena.add(visual);
@@ -2604,9 +1784,9 @@
       corSireneB,
       corCapacete,
     }) {
-      const corpo = new CANNON.Body({
+      const corpo = mundoFisica.criarCorpo({
         mass: 540,
-        shape: new CANNON.Box(new CANNON.Vec3(0.7, 0.8, 1.9)),
+        collider: RAPIER.ColliderDesc.cuboid(0.7, 0.8, 1.9),
         material: materialCarro,
       });
       corpo.allowSleep = false;
@@ -2618,145 +1798,10 @@
       ) {
         corpo.angularFactor.set(0, 1, 0);
       }
-      mundoFisica.addBody(corpo);
+      mundoFisica.adicionarCorpo(corpo);
 
-      const visual = new THREE.Group();
-      const matBase = new THREE.MeshLambertMaterial({ color: corBase });
-      const matDetalhe = new THREE.MeshLambertMaterial({
-        color: corDetalhe,
-      });
-      const matCapacete = new THREE.MeshLambertMaterial({
-        color: corCapacete,
-      });
-      const matRoda = new THREE.MeshLambertMaterial({ color: 0x202020 });
-
-      const rodaFrente = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.85, 0.85, 0.34, 18),
-        matRoda,
-      );
-      rodaFrente.rotation.z = Math.PI / 2;
-      rodaFrente.position.set(0, -0.55, -1.72);
-      const rodaTras = rodaFrente.clone();
-      rodaTras.position.z = 1.62;
-
-      const chassi = new THREE.Mesh(
-        new THREE.BoxGeometry(0.34, 0.24, 2.8),
-        matBase,
-      );
-      chassi.position.set(0, 0.02, -0.06);
-
-      const tanque = new THREE.Mesh(
-        new THREE.BoxGeometry(0.76, 0.52, 0.96),
-        matBase,
-      );
-      tanque.position.set(0, 0.38, -0.18);
-
-      const banco = new THREE.Mesh(
-        new THREE.BoxGeometry(0.52, 0.18, 0.88),
-        matDetalhe,
-      );
-      banco.position.set(0, 0.56, 0.58);
-
-      const garfoFrente = new THREE.Mesh(
-        new THREE.BoxGeometry(0.16, 1.16, 0.16),
-        matDetalhe,
-      );
-      garfoFrente.position.set(0, 0.06, -1.42);
-      garfoFrente.rotation.x = -0.28;
-
-      const guidom = new THREE.Mesh(
-        new THREE.BoxGeometry(1.12, 0.1, 0.1),
-        matDetalhe,
-      );
-      guidom.position.set(0, 0.88, -1.0);
-
-      const pilotoCorpo = new THREE.Mesh(
-        new THREE.BoxGeometry(0.48, 0.88, 0.4),
-        matDetalhe,
-      );
-      pilotoCorpo.position.set(0, 1.08, 0.1);
-
-      const pilotoCapacete = new THREE.Mesh(
-        new THREE.SphereGeometry(0.32, 16, 12),
-        matCapacete,
-      );
-      pilotoCapacete.position.set(0, 1.68, -0.06);
-
-      const paraLamaFrente = new THREE.Mesh(
-        new THREE.BoxGeometry(0.46, 0.12, 0.82),
-        matBase,
-      );
-      paraLamaFrente.position.set(0, -0.02, -1.58);
-      paraLamaFrente.rotation.x = -0.3;
-
-      const escapamento = new THREE.Mesh(
-        new THREE.BoxGeometry(0.18, 0.18, 1.2),
-        matDetalhe,
-      );
-      escapamento.position.set(0.34, -0.08, 0.76);
-
-      const malaEsq = new THREE.Mesh(
-        new THREE.BoxGeometry(0.22, 0.46, 0.68),
-        matBase,
-      );
-      malaEsq.position.set(-0.46, 0.42, 0.82);
-      const malaDir = malaEsq.clone();
-      malaDir.position.x = 0.46;
-
-      const sireneA = new THREE.Mesh(
-        new THREE.BoxGeometry(0.18, 0.16, 0.18),
-        new THREE.MeshBasicMaterial({
-          color: corSireneA,
-          transparent: true,
-          opacity: 1,
-        }),
-      );
-      sireneA.position.set(-0.22, 1.04, -0.96);
-      const sireneB = new THREE.Mesh(
-        new THREE.BoxGeometry(0.18, 0.16, 0.18),
-        new THREE.MeshBasicMaterial({
-          color: corSireneB,
-          transparent: true,
-          opacity: 1,
-        }),
-      );
-      sireneB.position.set(0.22, 1.04, -0.96);
-
-      const luzSireneA =
-        PERFIL_EXECUCAO.pcFraco || PERFIL_EXECUCAO.firefox
-          ? null
-          : new THREE.PointLight(corSireneA, 0, 11, 2);
-      if (luzSireneA) {
-        luzSireneA.position.set(-0.24, 1.2, -0.9);
-      }
-      const luzSireneB =
-        PERFIL_EXECUCAO.pcFraco || PERFIL_EXECUCAO.firefox
-          ? null
-          : new THREE.PointLight(corSireneB, 0, 11, 2);
-      if (luzSireneB) {
-        luzSireneB.position.set(0.24, 1.2, -0.9);
-      }
-
-      visual.add(rodaFrente);
-      visual.add(rodaTras);
-      visual.add(chassi);
-      visual.add(tanque);
-      visual.add(banco);
-      visual.add(garfoFrente);
-      visual.add(guidom);
-      visual.add(pilotoCorpo);
-      visual.add(pilotoCapacete);
-      visual.add(paraLamaFrente);
-      visual.add(escapamento);
-      visual.add(malaEsq);
-      visual.add(malaDir);
-      visual.add(sireneA);
-      visual.add(sireneB);
-      if (luzSireneA) visual.add(luzSireneA);
-      if (luzSireneB) visual.add(luzSireneB);
-      visual.traverse((filho) => {
-        if (filho.isMesh) filho.castShadow = true;
-      });
+      const { visual, sireneA, sireneB, luzSireneA, luzSireneB } =
+        arte.policia({ corBase, corDetalhe, corSireneA, corSireneB, corCapacete }, true);
 
       corpo.position.set(0, -50, 0);
       cena.add(visual);
@@ -2861,7 +1906,6 @@
     let efeitosFogos = [];
     let pontosJogador = 0;
     let carroSelecionado = ESTADO_INICIAL.carroSelecionado;
-    let cooldownRampa = 0;
     let cooldownRespawnJogador = 0;
     let atrasoPoliciaRestante = 0;
     let tempoReforcoPolicia = 0;
@@ -2895,6 +1939,7 @@
         alvoRotaX: Number.NaN,
         alvoRotaZ: Number.NaN,
         planoAtual: null,
+        tempoCerco: 0,
         tempoSobreposicaoJogador: 0,
         tempoDesgrudeJogador: 0,
       };
@@ -3031,109 +2076,7 @@
 
     // Helicóptero visual da polícia: patrulha o cenário ao longe sem perseguir.
     function criarHelicopteroPolicia() {
-      const grupo = new THREE.Group();
-      const matCasco = new THREE.MeshLambertMaterial({ color: 0x263238 });
-      const matCabine = new THREE.MeshLambertMaterial({
-        color: 0x90caf9,
-      });
-      const matRotor = new THREE.MeshLambertMaterial({ color: 0x111111 });
-
-      const corpo = new THREE.Mesh(
-        new THREE.CylinderGeometry(1.1, 1.3, 6.8, 12),
-        matCasco,
-      );
-      corpo.rotation.z = Math.PI / 2;
-
-      const cabine = new THREE.Mesh(
-        new THREE.SphereGeometry(1.4, 18, 14),
-        matCabine,
-      );
-      cabine.scale.set(1.1, 0.82, 1.3);
-      cabine.position.set(1.25, 0.05, 0);
-
-      const cauda = new THREE.Mesh(
-        new THREE.BoxGeometry(5.8, 0.3, 0.32),
-        matCasco,
-      );
-      cauda.position.set(-5.2, 0.08, 0);
-
-      const leme = new THREE.Mesh(
-        new THREE.BoxGeometry(0.28, 1.55, 1.2),
-        matCasco,
-      );
-      leme.position.set(-7.9, 0.95, 0);
-
-      const skiEsq = new THREE.Mesh(
-        new THREE.BoxGeometry(4.4, 0.12, 0.12),
-        matRotor,
-      );
-      skiEsq.position.set(0.2, -1.4, -1.0);
-      const skiDir = skiEsq.clone();
-      skiDir.position.z = 1.0;
-      const suporteEsqA = new THREE.Mesh(
-        new THREE.BoxGeometry(0.12, 1.0, 0.12),
-        matRotor,
-      );
-      suporteEsqA.position.set(-1.0, -0.92, -1.0);
-      const suporteEsqB = suporteEsqA.clone();
-      suporteEsqB.position.set(1.2, -0.92, -1.0);
-      const suporteDirA = suporteEsqA.clone();
-      suporteDirA.position.z = 1.0;
-      const suporteDirB = suporteEsqB.clone();
-      suporteDirB.position.z = 1.0;
-
-      const rotorPrincipal = new THREE.Group();
-      const paA = new THREE.Mesh(
-        new THREE.BoxGeometry(8.8, 0.08, 0.24),
-        matRotor,
-      );
-      const paB = new THREE.Mesh(
-        new THREE.BoxGeometry(8.8, 0.08, 0.24),
-        matRotor,
-      );
-      paB.rotation.y = Math.PI / 2;
-      rotorPrincipal.add(paA);
-      rotorPrincipal.add(paB);
-      rotorPrincipal.position.set(0, 1.6, 0);
-
-      const rotorCauda = new THREE.Group();
-      const paCaudaA = new THREE.Mesh(
-        new THREE.BoxGeometry(0.12, 1.6, 0.18),
-        matRotor,
-      );
-      const paCaudaB = new THREE.Mesh(
-        new THREE.BoxGeometry(0.12, 1.6, 0.18),
-        matRotor,
-      );
-      paCaudaB.rotation.x = Math.PI / 2;
-      rotorCauda.add(paCaudaA);
-      rotorCauda.add(paCaudaB);
-      rotorCauda.position.set(-8.2, 0.62, 0);
-
-      const faixaLateral = new THREE.Mesh(
-        new THREE.BoxGeometry(2.8, 0.12, 0.22),
-        new THREE.MeshLambertMaterial({ color: 0xd8dee9 }),
-      );
-      faixaLateral.position.set(0.15, 0.22, 0);
-
-      grupo.add(corpo);
-      grupo.add(cabine);
-      grupo.add(cauda);
-      grupo.add(leme);
-      grupo.add(skiEsq);
-      grupo.add(skiDir);
-      grupo.add(suporteEsqA);
-      grupo.add(suporteEsqB);
-      grupo.add(suporteDirA);
-      grupo.add(suporteDirB);
-      grupo.add(rotorPrincipal);
-      grupo.add(rotorCauda);
-      grupo.add(faixaLateral);
-      grupo.userData = { rotorPrincipal, rotorCauda };
-      grupo.visible = false;
-      grupo.traverse((filho) => {
-        if (filho.isMesh) filho.castShadow = false;
-      });
+      const grupo = arte.helicoptero();
       cena.add(grupo);
       return grupo;
     }
@@ -3141,20 +2084,13 @@
     const marcadorObjetivo3D = criarMarcadorObjetivo3D();
     const helicopteroPolicia = criarHelicopteroPolicia();
 
-    if (typeof carroCorpo.addEventListener === "function") {
-      carroCorpo.addEventListener("collide", (evento) => {
-        if (!evento || !evento.contact) return;
-        const corpoAtingiu =
-          evento.contact.bi === carroCorpo
-            ? evento.contact.bj
-            : evento.contact.bi;
-        for (const policial of policiais) {
-          if (policial.corpo !== corpoAtingiu) continue;
-          lidarComColisaoEntreCarros(carroCorpo, policial.corpo);
-          break;
-        }
-      });
-    }
+    carroCorpo.aoIniciarContato = (corpoAtingiu) => {
+      for (const policial of policiais) {
+        if (policial.corpo !== corpoAtingiu) continue;
+        lidarComColisaoEntreCarros(carroCorpo, policial.corpo);
+        break;
+      }
+    };
 
     const botoesSerie = [...document.querySelectorAll(".btn-serie")];
     const botoesCarro = [...document.querySelectorAll(".btn-carro")];
@@ -3280,11 +2216,13 @@
 
     function resetarCorpo(corpo, x, y, z) {
       corpo.position.set(x, y, z);
-      corpo.velocity.setZero();
-      corpo.angularVelocity.setZero();
-      corpo.force.setZero();
-      corpo.torque.setZero();
+      corpo.velocity.set(0, 0, 0);
+      corpo.angularVelocity.set(0, 0, 0);
+      corpo.force.set(0, 0, 0);
+      corpo.torque.set(0, 0, 0);
       corpo.quaternion.setFromAxisAngle(eixoRotacaoY, 0);
+      controleRampas.resetar(corpo);
+      if (corpo === carroCorpo) posicaoJogadorInicioFrame.copy(corpo.position);
     }
 
     function encontrarSpawnPolicial(indice = 0) {
@@ -3478,6 +2416,7 @@
     }
 
     function resetarEstadoPolicia(estado) {
+      estado.tempoCerco = 0;
       estado.tempoTravado = 0;
       estado.tempoRe = 0;
       estado.direcaoRe = 1;
@@ -3676,406 +2615,29 @@
     // 4. Corrigir a rota com formação e bloqueio do mapa.
     // 5. Gerar multiplicadores de agressividade e curva.
     function criarPlanoIApolicial(policial) {
-      const perfilPorEstrategia = {
-        perseguidora: {
-          previsao: 1.08,
-          lateral: 0,
-          objetivo: 0.12,
-          agressividade: 0.42,
-          curva: 1.16,
-          bonusVelocidade: 0.05,
-        },
-        moto: {
-          previsao: 1.2,
-          lateral: 2,
-          objetivo: 0.1,
-          agressividade: 0.46,
-          curva: 1.32,
-          bonusVelocidade: 0.08,
-        },
-        interceptadora: {
-          previsao: 1.42,
-          lateral: 8,
-          objetivo: 0.22,
-          agressividade: 0.44,
-          curva: 1.22,
-          bonusVelocidade: 0.07,
-        },
-        flanqueadora: {
-          previsao: 1.14,
-          lateral: 14,
-          objetivo: 0.16,
-          agressividade: 0.4,
-          curva: 1.24,
-          bonusVelocidade: 0.06,
-        },
-        pressiona: {
-          previsao: 0.84,
-          lateral: 5,
-          objetivo: 0.12,
-          agressividade: 0.48,
-          curva: 1.14,
-          bonusVelocidade: 0.05,
-        },
-        "corta-rota": {
-          previsao: 1.56,
-          lateral: 4,
-          objetivo: 0.52,
-          agressividade: 0.5,
-          curva: 1.18,
-          bonusVelocidade: 0.09,
-        },
-        cercadora: {
-          previsao: 1.3,
-          lateral: 16,
-          objetivo: 0.28,
-          agressividade: 0.46,
-          curva: 1.2,
-          bonusVelocidade: 0.1,
-        },
-        varredora: {
-          previsao: 1.68,
-          lateral: 10,
-          objetivo: 0.56,
-          agressividade: 0.55,
-          curva: 1.28,
-          bonusVelocidade: 0.11,
-        },
-      };
-      const perfil =
-        perfilPorEstrategia[policial.estrategia] ||
-        perfilPorEstrategia.perseguidora;
-      const alvoJogador = {
-        x: carroCorpo.position.x,
-        z: carroCorpo.position.z,
-      };
-      const velocidadeJogador = {
-        x: carroCorpo.velocity.x,
-        z: carroCorpo.velocity.z,
-      };
-      const silabaAtual = obterSilabaAtual();
-      const alvoSilaba =
-        silabaAtual && !silabaAtual.coletada
-          ? {
-              x: silabaAtual.mesh.position.x,
-              z: silabaAtual.mesh.position.z,
-            }
-          : null;
-      const frenteJogador = obterDirecaoFrente(
-        carroCorpo,
-        direcaoIAJogadorTemp,
-      );
-      const velocidadeJogadorModulo = Math.hypot(
-        velocidadeJogador.x,
-        velocidadeJogador.z,
-      );
-      const direcaoMovimentoJogador =
-        velocidadeJogadorModulo > 0.8
-          ? {
-              x: velocidadeJogador.x / velocidadeJogadorModulo,
-              z: velocidadeJogador.z / velocidadeJogadorModulo,
-            }
-          : {
-              x: frenteJogador.x,
-              z: frenteJogador.z,
-            };
-      const jogadorParado = velocidadeJogadorModulo < 1.2;
-      const jogadorLento = velocidadeJogadorModulo < 6.5;
-      const jogadorMuitoRapido = velocidadeJogadorModulo > 42;
-      const lateralMovimentoX = -direcaoMovimentoJogador.z;
-      const lateralMovimentoZ = direcaoMovimentoJogador.x;
-      const distPolicialJogador = Math.hypot(
-        policial.corpo.position.x - alvoJogador.x,
-        policial.corpo.position.z - alvoJogador.z,
-      );
-      const modoCapturaDireta =
-        distPolicialJogador < 22 ||
-        (distPolicialJogador < 30 && jogadorLento);
-      const distJogadorSilaba = alvoSilaba
-        ? Math.hypot(
-            alvoJogador.x - alvoSilaba.x,
-            alvoJogador.z - alvoSilaba.z,
-          )
-        : Infinity;
-
-      // Passo 1: leitura do cenário.
-      const pressaoLocal = THREE.MathUtils.clamp(
-        1 - distPolicialJogador / 85,
-        0,
-        1,
-      );
-      const oportunidadeObjetivo = alvoSilaba
-        ? THREE.MathUtils.clamp(1 - distJogadorSilaba / 90, 0, 1)
-        : 0;
-
-      // Passo 2: previsão do próximo movimento do jogador.
-      const horizontePrevisao =
-        THREE.MathUtils.clamp(
-          distPolicialJogador / 18 + velocidadeJogadorModulo / 90,
-          0.55,
-          2.8,
-        ) * perfil.previsao;
-      const alvoPrevisto = {
-        x:
-          alvoJogador.x +
-          direcaoMovimentoJogador.x *
-            velocidadeJogadorModulo *
-            horizontePrevisao,
-        z:
-          alvoJogador.z +
-          direcaoMovimentoJogador.z *
-            velocidadeJogadorModulo *
-            horizontePrevisao,
-      };
-
-      // Passo 3: escolha tática específica da unidade.
-      let alvoTatico = { ...alvoPrevisto };
-      switch (policial.estrategia) {
-        case "perseguidora":
-          alvoTatico = {
-            x: alvoPrevisto.x + direcaoMovimentoJogador.x * 2,
-            z: alvoPrevisto.z + direcaoMovimentoJogador.z * 2,
-          };
-          break;
-        case "moto": {
-          const zigueZague =
-            Math.sin(performance.now() * 0.0044 + policial.indice * 0.8) *
-            THREE.MathUtils.clamp(distPolicialJogador * 0.2, 3, 8.5);
-          alvoTatico = {
-            x: alvoPrevisto.x + lateralMovimentoX * zigueZague,
-            z: alvoPrevisto.z + lateralMovimentoZ * zigueZague,
-          };
-          break;
-        }
-        case "interceptadora":
-          alvoTatico = {
-            x:
-              alvoPrevisto.x +
-              lateralMovimentoX *
-                (policial.indice % 2 === 0
-                  ? -perfil.lateral
-                  : perfil.lateral),
-            z:
-              alvoPrevisto.z +
-              lateralMovimentoZ *
-                (policial.indice % 2 === 0
-                  ? -perfil.lateral
-                  : perfil.lateral),
-          };
-          break;
-        case "flanqueadora":
-          alvoTatico = {
-            x:
-              alvoJogador.x +
-              lateralMovimentoX *
-                (policial.indice % 2 === 0
-                  ? -perfil.lateral
-                  : perfil.lateral) +
-              direcaoMovimentoJogador.x * 7,
-            z:
-              alvoJogador.z +
-              lateralMovimentoZ *
-                (policial.indice % 2 === 0
-                  ? -perfil.lateral
-                  : perfil.lateral) +
-              direcaoMovimentoJogador.z * 7,
-          };
-          break;
-        case "pressiona":
-          alvoTatico = {
-            x:
-              alvoJogador.x -
-              direcaoMovimentoJogador.x * 9 +
-              lateralMovimentoX * (policial.indice % 2 === 0 ? 4 : -4),
-            z:
-              alvoJogador.z -
-              direcaoMovimentoJogador.z * 9 +
-              lateralMovimentoZ * (policial.indice % 2 === 0 ? 4 : -4),
-          };
-          break;
-        case "corta-rota":
-          if (alvoSilaba) {
-            const pesoSilaba = THREE.MathUtils.lerp(
-              0.48,
-              0.72,
-              oportunidadeObjetivo,
-            );
-            alvoTatico = {
-              x:
-                alvoPrevisto.x * (1 - pesoSilaba) +
-                alvoSilaba.x * pesoSilaba,
-              z:
-                alvoPrevisto.z * (1 - pesoSilaba) +
-                alvoSilaba.z * pesoSilaba,
-            };
-          }
-          break;
-        case "cercadora":
-          alvoTatico = {
-            x:
-              alvoJogador.x +
-              lateralMovimentoX *
-                (policial.indice % 2 === 0
-                  ? -perfil.lateral
-                  : perfil.lateral) -
-              direcaoMovimentoJogador.x * 4,
-            z:
-              alvoJogador.z +
-              lateralMovimentoZ *
-                (policial.indice % 2 === 0
-                  ? -perfil.lateral
-                  : perfil.lateral) -
-              direcaoMovimentoJogador.z * 4,
-          };
-          break;
-        case "varredora":
-          if (alvoSilaba) {
-            const pesoSilaba = THREE.MathUtils.lerp(
-              0.58,
-              0.72,
-              oportunidadeObjetivo,
-            );
-            alvoTatico = {
-              x:
-                alvoJogador.x * (1 - pesoSilaba) +
-                alvoSilaba.x * pesoSilaba +
-                direcaoMovimentoJogador.x * 9,
-              z:
-                alvoJogador.z * (1 - pesoSilaba) +
-                alvoSilaba.z * pesoSilaba +
-                direcaoMovimentoJogador.z * 9,
-            };
-          } else {
-            alvoTatico = {
-              x:
-                alvoPrevisto.x +
-                lateralMovimentoX * (policial.indice % 2 === 0 ? -8 : 8),
-              z:
-                alvoPrevisto.z +
-                lateralMovimentoZ * (policial.indice % 2 === 0 ? -8 : 8),
-            };
-          }
-          break;
+      const plano = window.CorridaJogabilidade.planejarPerseguicao({
+        estrategia: policial.estrategia,
+        jogador: carroCorpo.position,
+        velocidade: carroCorpo.velocity,
+        frente: obterDirecaoFrente(carroCorpo, direcaoIAJogadorTemp),
+        policial: policial.corpo.position,
+      });
+      // Only the interceptor diverts toward an objective, and never during close capture.
+      if (!plano.modoCapturaDireta && !plano.modoCerco
+        && policial.estrategia === "interceptadora"
+        && contextoTaticoPolicia.ativa
+        && contextoTaticoPolicia.policialIndice === policial.indice) {
+        plano.alvo.x = plano.alvo.x * 0.75 + contextoTaticoPolicia.alvoX * 0.25;
+        plano.alvo.z = plano.alvo.z * 0.75 + contextoTaticoPolicia.alvoZ * 0.25;
       }
-
-      if (modoCapturaDireta) {
-        const lado = policial.indice % 2 === 0 ? -1 : 1;
-        if (
-          policial.estrategia === "perseguidora" ||
-          policial.estrategia === "pressiona" ||
-          policial.estrategia === "varredora"
-        ) {
-          alvoTatico = {
-            x: alvoJogador.x + direcaoMovimentoJogador.x * 0.9,
-            z: alvoJogador.z + direcaoMovimentoJogador.z * 0.9,
-          };
-        } else if (policial.estrategia === "moto") {
-          alvoTatico = {
-            x:
-              alvoJogador.x +
-              direcaoMovimentoJogador.x * 1.05 +
-              lateralMovimentoX * lado * 1.05,
-            z:
-              alvoJogador.z +
-              direcaoMovimentoJogador.z * 1.05 +
-              lateralMovimentoZ * lado * 1.05,
-          };
-        } else if (
-          policial.estrategia === "interceptadora" ||
-          policial.estrategia === "corta-rota"
-        ) {
-          alvoTatico = {
-            x:
-              alvoJogador.x -
-              direcaoMovimentoJogador.x * 0.15 +
-              lateralMovimentoX * lado * 1.15,
-            z:
-              alvoJogador.z -
-              direcaoMovimentoJogador.z * 0.15 +
-              lateralMovimentoZ * lado * 1.15,
-          };
-        } else {
-          alvoTatico = {
-            x: alvoJogador.x + lateralMovimentoX * lado * 1.3,
-            z: alvoJogador.z + lateralMovimentoZ * lado * 1.3,
-          };
-        }
+      if (!plano.modoCapturaDireta) {
+        const formacao = ajustarAlvoComFormacao(policial, plano.alvo);
+        plano.alvo.x = plano.alvo.x * 0.7 + formacao.x * 0.3;
+        plano.alvo.z = plano.alvo.z * 0.7 + formacao.z * 0.3;
       }
-
-      // Passo 4: correção fina de rota, objetivo e formação.
-      const pesoObjetivo = modoCapturaDireta
-        ? Math.min(perfil.objetivo, 0.02)
-        : perfil.objetivo;
-      if (alvoSilaba && pesoObjetivo > 0) {
-        alvoTatico = {
-          x:
-            alvoTatico.x * (1 - pesoObjetivo) +
-            alvoSilaba.x * pesoObjetivo,
-          z:
-            alvoTatico.z * (1 - pesoObjetivo) +
-            alvoSilaba.z * pesoObjetivo,
-        };
-      }
-      if (
-        contextoTaticoPolicia.ativa &&
-        contextoTaticoPolicia.policialIndice === policial.indice
-      ) {
-        alvoTatico = {
-          x: alvoTatico.x * 0.2 + contextoTaticoPolicia.alvoX * 0.8,
-          z: alvoTatico.z * 0.2 + contextoTaticoPolicia.alvoZ * 0.8,
-        };
-      }
-      const alvoBaseCorrigido = limitarPontoAoMapa(
-        alvoTatico.x,
-        alvoTatico.z,
-        20,
-      );
-      const alvoComFormacao = ajustarAlvoComFormacao(
-        policial,
-        alvoBaseCorrigido,
-      );
-      const pesoFormacao = modoCapturaDireta
-        ? 0.03
-        : jogadorParado
-          ? 0.28
-          : 1;
-      const alvoCorrigido = limitarPontoAoMapa(
-        alvoBaseCorrigido.x * (1 - pesoFormacao) +
-          alvoComFormacao.x * pesoFormacao,
-        alvoBaseCorrigido.z * (1 - pesoFormacao) +
-          alvoComFormacao.z * pesoFormacao,
-        20,
-      );
-
-      // Passo 5: pacote final de agressividade e resposta do veículo.
-      const agressividadeFinal = THREE.MathUtils.clamp(
-        perfil.agressividade +
-          pressaoLocal * 0.12 +
-          oportunidadeObjetivo * 0.08 +
-          (modoCapturaDireta ? 0.08 : 0) +
-          (jogadorMuitoRapido ? 0.03 : 0),
-        0.22,
-        0.64,
-      );
-      const respostaCurvaSuave =
-        perfil.curva * 0.9 +
-        pressaoLocal * 0.06 +
-        (modoCapturaDireta ? 0.08 : 0) +
-        (jogadorMuitoRapido ? 0.04 : 0);
-      const bonusVelocidadeSuave =
-        perfil.bonusVelocidade * 0.42 +
-        oportunidadeObjetivo * 0.02 +
-        (modoCapturaDireta ? 0.03 : 0) +
-        Math.min(0.04, velocidadeJogadorModulo / 260);
-      return {
-        alvo: alvoCorrigido,
-        agressividade: agressividadeFinal,
-        respostaCurva: respostaCurvaSuave,
-        bonusVelocidade: bonusVelocidadeSuave,
-        amortecimento: 0.989 + agressividadeFinal * 0.003,
-        modoCerco: jogadorParado || distPolicialJogador < 8,
-        modoCapturaDireta,
-      };
+      plano.alvo = limitarPontoAoMapa(plano.alvo.x, plano.alvo.z,
+        tamanhoMapa / 2 - obterLimiteNavegacao());
+      return plano;
     }
 
     function calcularAlvoPolicial(policial) {
@@ -4084,98 +2646,37 @@
       return plano.alvo;
     }
 
-    function obterPressaoPolicial() {
-      let pressaoTotal = 0;
-      let contatoVisualMaximo = 0;
-
-      for (let idx = 0; idx < totalPoliciasAtivas; idx++) {
-        const policial = policiais[idx];
-        if (!policial?.visual.visible) continue;
-
-        const distHorizontal = Math.hypot(
-          carroCorpo.position.x - policial.corpo.position.x,
-          carroCorpo.position.z - policial.corpo.position.z,
-        );
-        const distVertical = Math.abs(
-          carroCorpo.position.y - policial.corpo.position.y,
-        );
-        const velocidadeRelativa = Math.hypot(
-          carroCorpo.velocity.x - policial.corpo.velocity.x,
-          carroCorpo.velocity.z - policial.corpo.velocity.z,
-        );
-        if (distHorizontal > 10.5 || distVertical > 3.2) continue;
-
-        const proximidadeHorizontal = THREE.MathUtils.clamp(
-          1 - distHorizontal / 8.8,
-          0,
-          1,
-        );
-        const proximidadeVertical = THREE.MathUtils.clamp(
-          1 - distVertical / 2.8,
-          0,
-          1,
-        );
-        const sincroniaVelocidade = THREE.MathUtils.clamp(
-          1 - velocidadeRelativa / 12,
-          0,
-          1,
-        );
-
-        let contatoFisico = 0;
-        for (let i = 0; i < mundoFisica.contacts.length; i++) {
-          const contato = mundoFisica.contacts[i];
-          const envolveJogador =
-            contato.bi === carroCorpo || contato.bj === carroCorpo;
-          const envolvePolicial =
-            contato.bi === policial.corpo ||
-            contato.bj === policial.corpo;
-          if (!envolveJogador || !envolvePolicial) continue;
-          contatoFisico = 1;
-          break;
+    function obterPressaoPolicial(delta) {
+      let pressao = 0;
+      const jogadorNoChao = estaNoChao(carroCorpo);
+      for (let idx = 0; idx < policiais.length; idx++) {
+        const policial = policiais[idx], estado = policial.estado;
+        if (idx >= totalPoliciasAtivas || !policial.visual.visible || estado.tempoSpawn > 0) {
+          estado.tempoCerco = 0; continue;
         }
-        const contatoTravado =
-          distHorizontal < 4.8 &&
-          distVertical < 1.9 &&
-          proximidadeHorizontal > 0.28 &&
-          proximidadeVertical > 0.18;
-        const quaseEncostando =
-          distHorizontal < 6.8 &&
-          distVertical < 2.2 &&
-          proximidadeHorizontal > 0.12;
-        const fatorDesgrude = THREE.MathUtils.clamp(
-          1 -
-            ((policial.estado?.tempoDesgrudeJogador || 0) / 0.72) * 0.55,
-          contatoFisico ? 0.7 : 0.42,
-          1,
-        );
-        const pressaoIndividual =
-          (proximidadeHorizontal * 0.8 +
-            proximidadeVertical * 0.28 +
-            sincroniaVelocidade * 0.22 +
-            (quaseEncostando ? 0.18 : 0) +
-            (contatoFisico ? 0.52 : 0) +
-            (contatoTravado ? 0.38 : 0)) *
-          fatorDesgrude;
-        if (pressaoIndividual <= 0.02) continue;
-        pressaoTotal += pressaoIndividual;
-        contatoVisualMaximo = Math.max(
-          contatoVisualMaximo,
-          THREE.MathUtils.clamp(
-            proximidadeHorizontal * 0.74 +
-              proximidadeVertical * 0.18 +
-              (quaseEncostando ? 0.14 : 0) +
-              (contatoFisico ? 0.24 : 0) +
-              (contatoTravado ? 0.16 : 0),
-            0,
-            1,
-          ),
-        );
+        const corpo = policial.corpo;
+        const distHorizontal = Math.hypot(carroCorpo.position.x - corpo.position.x, carroCorpo.position.z - corpo.position.z);
+        const desnivel = Math.abs(carroCorpo.position.y - corpo.position.y);
+        if (distHorizontal > 7 || desnivel > 1.25 || !jogadorNoChao || !estaNoChao(corpo)) {
+          estado.tempoCerco = 0; continue;
+        }
+        const distancia = consultasJogabilidade.distanciaCarrocerias(carroCorpo, corpo);
+        origemVisibilidadeTemp.copy(corpo.position);
+        alvoVisibilidadeTemp.copy(carroCorpo.position);
+        // Cast at chassis height so a crate/ramp between the cars blocks capture.
+        const livre = consultasJogabilidade.caminhoLivre(origemVisibilidadeTemp, alvoVisibilidadeTemp);
+        const contato = mundoFisica.contatos.some(c =>
+          (c.a === carroCorpo && c.b === corpo) || (c.b === carroCorpo && c.a === corpo));
+        const individual = pressaoDeCaptura({
+          distancia, desnivel, contato, livre, noChao: true,
+          velocidadeRelativa: Math.hypot(carroCorpo.velocity.x - corpo.velocity.x, carroCorpo.velocity.z - corpo.velocity.z),
+        });
+        estado.tempoCerco = individual > 0 ? (estado.tempoCerco || 0) + delta : 0;
+        if (estado.tempoCerco < 0.35) continue;
+        const fatorDesgrude = THREE.MathUtils.clamp(1 - (estado.tempoDesgrudeJogador || 0) / 0.72 * 0.55, 0.42, 1);
+        pressao += individual * fatorDesgrude;
       }
-
-      return {
-        pressao: THREE.MathUtils.clamp(pressaoTotal, 0, 2.4),
-        contatoVisual: contatoVisualMaximo,
-      };
+      return THREE.MathUtils.clamp(pressao, 0, 2.4);
     }
 
     function exibirVitoria(subtitulo, texto) {
@@ -4338,7 +2839,7 @@
         0,
         1,
       );
-      const progresso = Math.max(progressoCaptura, contatoVisualPolicia);
+      const progresso = progressoCaptura;
       if (infoRisco) {
         infoRisco.textContent =
           progresso >= 0.75
@@ -4350,7 +2851,7 @@
                 : "Livre";
       }
       if (infoContato) {
-        infoContato.textContent = `Contato ${Math.round(progresso * 100)}%`;
+        infoContato.textContent = `Captura ${Math.round(progresso * 100)}%`;
       }
       if (barraRiscoPreenchimento) {
         barraRiscoPreenchimento.style.width = `${Math.round(progresso * 100)}%`;
@@ -4379,156 +2880,14 @@
 
     function lidarComColisaoEntreCarros(corpoJogador, corpoPolicial) {
       if (cooldownImpactoColisao > 0 || rodadaEncerrada) return;
-
-      const velocidadeJogadorAntes = Math.hypot(
-        corpoJogador.velocity.x,
-        corpoJogador.velocity.z,
-      );
-      let dx = corpoJogador.position.x - corpoPolicial.position.x;
-      let dz = corpoJogador.position.z - corpoPolicial.position.z;
-      let distancia = Math.hypot(dx, dz);
-      if (distancia < 0.001) {
-        const frentePolicial = obterDirecaoFrente(
-          corpoPolicial,
-          direcaoForcaTemp,
-        );
-        dx = -frentePolicial.z;
-        dz = frentePolicial.x;
-        distancia = Math.hypot(dx, dz) || 1;
-      }
-      const direcaoX = dx / distancia;
-      const direcaoZ = dz / distancia;
-      const frentePolicial = obterDirecaoFrente(
-        corpoPolicial,
-        direcaoForcaTemp,
-      );
-      const lateralX = -frentePolicial.z;
-      const lateralZ = frentePolicial.x;
-      const sentidoLateral =
-        direcaoX * lateralX + direcaoZ * lateralZ >= 0 ? 1 : -1;
-      const velocidadeRelativa = Math.hypot(
-        corpoPolicial.velocity.x - corpoJogador.velocity.x,
-        corpoPolicial.velocity.z - corpoJogador.velocity.z,
-      );
-      const impulso =
-        THREE.MathUtils.clamp(2.8 + velocidadeRelativa * 0.18, 2.8, 8.4) *
-        CONFIG_CONFORTO_MOVIMENTO.fatorEmpurraoColisao;
-      const impulsoLateral = THREE.MathUtils.clamp(
-        1.6 + velocidadeRelativa * 0.06,
-        1.6,
-        3.6,
-      );
-      const frenteJogador = obterDirecaoFrente(
-        corpoJogador,
-        direcaoFrontalTemp,
-      );
-      const impulsoFugaFrontal = THREE.MathUtils.clamp(
-        1.8 + Math.max(0, 8 - velocidadeJogadorAntes) * 0.24,
-        1.8,
-        3.8,
-      );
-      const policial = policiais.find(
-        (candidato) => candidato.corpo === corpoPolicial,
-      );
-
-      corpoJogador.velocity.x +=
-        direcaoX * impulso +
-        lateralX * impulsoLateral * sentidoLateral +
-        frenteJogador.x * impulsoFugaFrontal;
-      corpoJogador.velocity.z +=
-        direcaoZ * impulso +
-        lateralZ * impulsoLateral * sentidoLateral +
-        frenteJogador.z * impulsoFugaFrontal;
-      corpoJogador.velocity.y = Math.max(corpoJogador.velocity.y, 2.4);
-      corpoPolicial.velocity.x -=
-        direcaoX * impulso * 0.7 + lateralX * impulsoLateral * 0.38;
-      corpoPolicial.velocity.z -=
-        direcaoZ * impulso * 0.7 + lateralZ * impulsoLateral * 0.38;
-      const separacao = Math.max(1.6, 5.8 - distancia);
-      corpoJogador.position.x +=
-        direcaoX * separacao * 0.72 + lateralX * 0.48 * sentidoLateral;
-      corpoJogador.position.z +=
-        direcaoZ * separacao * 0.72 + lateralZ * 0.48 * sentidoLateral;
-      corpoPolicial.position.x -=
-        direcaoX * separacao * 0.58 + lateralX * 0.18 * sentidoLateral;
-      corpoPolicial.position.z -=
-        direcaoZ * separacao * 0.58 + lateralZ * 0.18 * sentidoLateral;
-      corpoJogador.velocity.x *= 0.96;
-      corpoJogador.velocity.z *= 0.96;
-      limitarVelocidadeHorizontal(
-        corpoJogador,
-        Math.max(9, velocidadeJogadorAntes * 0.96),
-      );
-      if (policial?.estado) {
-        policial.estado.tempoSobreposicaoJogador = 0;
-        policial.estado.tempoDesgrudeJogador = Math.max(
-          policial.estado.tempoDesgrudeJogador || 0,
-          0.72,
-        );
-      }
+      // Rapier resolves the impact. Artificial separation/lift used to break every capture.
+      const relativa = Math.hypot(corpoPolicial.velocity.x - corpoJogador.velocity.x,
+        corpoPolicial.velocity.z - corpoJogador.velocity.z);
+      if (relativa < 3) return;
       cooldownImpactoColisao = 0.18;
-      pausaCapturaAposColisao = 0.7;
-      aplicarImpactoVisual(THREE.MathUtils.clamp(impulso / 8, 0.22, 0.6));
+      aplicarImpactoVisual(THREE.MathUtils.clamp(relativa / 35, 0.12, 0.6));
     }
 
-    // Evita que o jogador fique "colado" na polícia ao resolver sobreposição
-    // física prolongada logo após o step do mundo.
-    function aliviarContatoComPolicia(delta) {
-      for (let indice = 0; indice < totalPoliciasAtivas; indice++) {
-        const policial = policiais[indice];
-        if (!policial?.visual.visible) continue;
-        let contatoFisico = false;
-        for (let i = 0; i < mundoFisica.contacts.length; i++) {
-          const contato = mundoFisica.contacts[i];
-          const envolveJogador =
-            contato.bi === carroCorpo || contato.bj === carroCorpo;
-          const envolvePolicial =
-            contato.bi === policial.corpo ||
-            contato.bj === policial.corpo;
-          if (!envolveJogador || !envolvePolicial) continue;
-          contatoFisico = true;
-          break;
-        }
-        const dx = carroCorpo.position.x - policial.corpo.position.x;
-        const dz = carroCorpo.position.z - policial.corpo.position.z;
-        const distHorizontal = Math.hypot(dx, dz);
-        const distVertical = Math.abs(
-          carroCorpo.position.y - policial.corpo.position.y,
-        );
-        if (contatoFisico) {
-          policial.estado.tempoSobreposicaoJogador += delta;
-          policial.estado.tempoDesgrudeJogador = Math.max(
-            policial.estado.tempoDesgrudeJogador || 0,
-            0.38,
-          );
-        } else {
-          policial.estado.tempoSobreposicaoJogador = Math.max(
-            0,
-            policial.estado.tempoSobreposicaoJogador - delta * 2,
-          );
-        }
-        if (distHorizontal >= 4.6 || distVertical >= 1.9) continue;
-        if (
-          contatoFisico &&
-          policial.estado.tempoSobreposicaoJogador < 0.22
-        ) {
-          continue;
-        }
-
-        const nx = dx / Math.max(distHorizontal, 0.001);
-        const nz = dz / Math.max(distHorizontal, 0.001);
-        const escape =
-          (4.8 - distHorizontal) * Math.max(0.18, delta * 4.1);
-        carroCorpo.position.x += nx * escape * 1.26;
-        carroCorpo.position.z += nz * escape * 1.26;
-        policial.corpo.position.x -= nx * escape * 0.38;
-        policial.corpo.position.z -= nz * escape * 0.38;
-        carroCorpo.velocity.x += nx * (1.15 + escape * 2.3);
-        carroCorpo.velocity.z += nz * (1.15 + escape * 2.3);
-        policial.corpo.velocity.x -= nx * (0.42 + escape * 1.2);
-        policial.corpo.velocity.z -= nz * (0.42 + escape * 1.2);
-      }
-    }
 
     function marcarRadarComoSujo() {
       radarTempoAcumulado = CONFIG_OTIMIZACAO.intervaloRadar;
@@ -4688,55 +3047,12 @@
     // jogador. Assim ele passa por diferentes áreas do cenário e fica mais
     // natural visualmente.
     function calcularAlvoPrevistoHelicoptero(destino) {
-      const alvo = destino || alvoPrevistoHelicopteroTemp;
-      const velocidadeProjetil = 96;
-      const frenteJogador = obterDirecaoFrente(
-        carroCorpo,
-        direcaoIAJogadorTemp,
-      );
-      const velocidadeHorizontal = Math.hypot(
-        carroCorpo.velocity.x,
-        carroCorpo.velocity.z,
-      );
-      const movimentoX =
-        velocidadeHorizontal > 3
-          ? carroCorpo.velocity.x
-          : frenteJogador.x * 8;
-      const movimentoZ =
-        velocidadeHorizontal > 3
-          ? carroCorpo.velocity.z
-          : frenteJogador.z * 8;
-      const distanciaInicial = Math.hypot(
-        helicopteroPolicia.position.x - carroCorpo.position.x,
-        helicopteroPolicia.position.y - (carroCorpo.position.y + 1),
-        helicopteroPolicia.position.z - carroCorpo.position.z,
-      );
-      let tempoInterceptacao = THREE.MathUtils.clamp(
-        distanciaInicial / velocidadeProjetil,
-        0.28,
-        2.2,
-      );
-      alvo.set(
-        carroCorpo.position.x + movimentoX * tempoInterceptacao,
-        carroCorpo.position.y + 1 + carroCorpo.velocity.y * tempoInterceptacao * 0.12,
-        carroCorpo.position.z + movimentoZ * tempoInterceptacao,
-      );
-      const distanciaRefinada = Math.hypot(
-        helicopteroPolicia.position.x - alvo.x,
-        helicopteroPolicia.position.y - alvo.y,
-        helicopteroPolicia.position.z - alvo.z,
-      );
-      tempoInterceptacao = THREE.MathUtils.clamp(
-        distanciaRefinada / velocidadeProjetil,
-        0.28,
-        2.4,
-      );
-      alvo.set(
-        carroCorpo.position.x + movimentoX * tempoInterceptacao,
-        carroCorpo.position.y + 1 + carroCorpo.velocity.y * tempoInterceptacao * 0.12,
-        carroCorpo.position.z + movimentoZ * tempoInterceptacao,
-      );
-      return alvo;
+      origemTiroHelicopteroTemp.copy(helicopteroPolicia.position);
+      origemTiroHelicopteroTemp.y -= 1.2;
+      alvoVisibilidadeTemp.copy(carroCorpo.position);
+      alvoVisibilidadeTemp.y += 1;
+      return preverInterceptacao(origemTiroHelicopteroTemp, alvoVisibilidadeTemp,
+        carroCorpo.velocity, 96, destino || alvoPrevistoHelicopteroTemp);
     }
 
     function removerProjetilHelicoptero(projetil) {
@@ -4779,54 +3095,43 @@
         mesh,
         velocidade: direcaoTiroHelicopteroTemp.clone().multiplyScalar(96),
         vida: 5.4,
+        novo: true,
       });
     }
 
     function atualizarProjeteisHelicoptero(delta) {
-      if (!projeteisHelicoptero.length) return;
-
       for (let i = projeteisHelicoptero.length - 1; i >= 0; i--) {
         const projetil = projeteisHelicoptero[i];
+        const passo = Math.min(delta, Math.max(0, projetil.vida));
+        deslocamentoProjetilTemp.copy(projetil.velocidade).multiplyScalar(passo);
+        const impacto = consultasJogabilidade.primeiroImpacto(
+          projetil.mesh.position, deslocamentoProjetilTemp, carroCorpo,
+          projetil.novo ? carroCorpo.position : posicaoJogadorInicioFrame,
+        );
+        projetil.novo = false;
         projetil.vida -= delta;
-        projetil.mesh.position.addScaledVector(projetil.velocidade, delta);
+        projetil.mesh.position.addScaledVector(deslocamentoProjetilTemp, impacto?.tempo ?? 1);
 
-        const dx = projetil.mesh.position.x - carroCorpo.position.x;
-        const dy = projetil.mesh.position.y - (carroCorpo.position.y + 1);
-        const dz = projetil.mesh.position.z - carroCorpo.position.z;
-        if (dx * dx + dy * dy + dz * dz <= 20) {
-          const moduloVelocidade =
-            Math.hypot(
-              projetil.velocidade.x,
-              projetil.velocidade.y,
-              projetil.velocidade.z,
-            ) || 1;
-          const impactoX = projetil.velocidade.x / moduloVelocidade;
-          const impactoY = projetil.velocidade.y / moduloVelocidade;
-          const impactoZ = projetil.velocidade.z / moduloVelocidade;
-          carroCorpo.velocity.x += impactoX * 28;
-          carroCorpo.velocity.z += impactoZ * 28;
-          carroCorpo.velocity.y = Math.max(
-            carroCorpo.velocity.y,
-            4.2 + Math.abs(impactoY) * 1.6,
-          );
-          criarFogosSilaba(projetil.mesh.position, "#ff7043", 5);
-          aplicarImpactoVisual(0.56);
-          mostrarMensagemHud(
-            "Tiro do helicóptero! Pegue o bloco!",
-            "alerta",
-          );
-          anunciarStatus(
-            "Tiro do helicóptero acertou o jogador. Colete o proximo bloco para parar a punicao.",
-          );
+        if (impacto) {
+          if (impacto.tipo === "jogador") {
+            const modulo = projetil.velocidade.length() || 1;
+            carroCorpo.velocity.x += projetil.velocidade.x / modulo * 28;
+            carroCorpo.velocity.z += projetil.velocidade.z / modulo * 28;
+            carroCorpo.velocity.y = Math.max(carroCorpo.velocity.y, 4.2 + Math.abs(projetil.velocidade.y / modulo) * 1.6);
+            criarFogosSilaba(projetil.mesh.position, "#ff7043", 5);
+            aplicarImpactoVisual(0.56);
+            mostrarMensagemHud("Tiro do helicóptero! Pegue o bloco!", "alerta");
+            anunciarStatus("Tiro do helicóptero acertou o jogador. Colete o próximo bloco para parar a punição.");
+          } else {
+            criarFogosSilaba(projetil.mesh.position, "#ffcf75", 3);
+          }
           removerProjetilHelicoptero(projetil);
           projeteisHelicoptero.splice(i, 1);
           continue;
         }
 
-        const foraDoMapa =
-          Math.abs(projetil.mesh.position.x) > tamanhoMapa ||
-          Math.abs(projetil.mesh.position.z) > tamanhoMapa ||
-          projetil.mesh.position.y < -2;
+        const foraDoMapa = Math.abs(projetil.mesh.position.x) > tamanhoMapa
+          || Math.abs(projetil.mesh.position.z) > tamanhoMapa || projetil.mesh.position.y < -2;
         if (projetil.vida <= 0 || foraDoMapa) {
           removerProjetilHelicoptero(projetil);
           projeteisHelicoptero.splice(i, 1);
@@ -4956,61 +3261,23 @@
     }
 
     function atualizarCapturaPorContato(delta) {
-      pausaCapturaAposColisao = Math.max(
-        0,
-        pausaCapturaAposColisao - delta,
-      );
+      pausaCapturaAposColisao = Math.max(0, pausaCapturaAposColisao - delta);
       if (rodadaEncerrada || atrasoPoliciaRestante > 0) {
-        tempoContatoPolicia = Math.max(
-          0,
-          tempoContatoPolicia - delta * 2.2,
-        );
-        contatoVisualPolicia = Math.max(
-          0,
-          contatoVisualPolicia - delta * 1.8,
-        );
-        atualizarIndicadorContato();
-        return;
-      }
-
-      const { pressao: pressaoPolicial, contatoVisual } =
-        obterPressaoPolicial();
-      const contatoVisualAlvo = Math.max(
-        contatoVisual,
-        THREE.MathUtils.clamp(
-          tempoContatoPolicia / tempoCapturaPolicia,
-          0,
-          1,
-        ),
-      );
-      contatoVisualPolicia +=
-        (contatoVisualAlvo - contatoVisualPolicia) *
-        THREE.MathUtils.clamp(
-          delta * (contatoVisualAlvo > contatoVisualPolicia ? 8.5 : 4.2),
-          0,
-          1,
-        );
-      if (pressaoPolicial > 0.01) {
-        tempoContatoPolicia = Math.min(
-          tempoCapturaPolicia,
-          tempoContatoPolicia +
-            delta *
-              (bancoDeFases[grupoFaseAtual]?.pressaoPolicia || 0.5) *
-              (0.48 + pressaoPolicial * 0.32) *
-              (pausaCapturaAposColisao > 0 ? 0.18 : 1),
-        );
+        tempoContatoPolicia = Math.max(0, tempoContatoPolicia - delta * 2.2);
+        for (const policial of policiais) policial.estado.tempoCerco = 0;
       } else {
-        tempoContatoPolicia = Math.max(
-          0,
-          tempoContatoPolicia -
-            delta * (pausaCapturaAposColisao > 0 ? 0.96 : 1.48),
-        );
+        const pressao = obterPressaoPolicial(delta);
+        if (pressao > 0) {
+          tempoContatoPolicia = Math.min(tempoCapturaPolicia, tempoContatoPolicia
+            + delta * (bancoDeFases[grupoFaseAtual]?.pressaoPolicia || 0.5) * pressao * 0.75
+            * (pausaCapturaAposColisao > 0 ? 0.18 : 1));
+        } else {
+          tempoContatoPolicia = Math.max(0, tempoContatoPolicia - delta * 1.48);
+        }
       }
-
+      contatoVisualPolicia = tempoContatoPolicia / tempoCapturaPolicia;
       atualizarIndicadorContato();
-      if (tempoContatoPolicia >= tempoCapturaPolicia) {
-        iniciarDerrota();
-      }
+      if (tempoContatoPolicia >= tempoCapturaPolicia && !rodadaEncerrada) iniciarDerrota();
     }
 
     function salvarProgressoLocal() {
@@ -5062,7 +3329,7 @@
       return `#${valor.toString(16).padStart(6, "0")}`;
     }
 
-    function montarCardCarro(modelo, desbloqueado, equipado) {
+    function montarCardCarro(modelo, desbloqueado, equipado, id) {
       const meta = desbloqueado
         ? equipado
           ? "Equipado"
@@ -5070,20 +3337,7 @@
         : `Desbloquear por ${modelo.custo} pts`;
 
       return `
-    <span class="carro-preview" aria-hidden="true">
-      <span class="carro-preview__aura"></span>
-      <span class="carro-preview__body"></span>
-      <span class="carro-preview__cabine"></span>
-      <span class="carro-preview__faixa"></span>
-      <span class="carro-preview__nariz"></span>
-      <span class="carro-preview__rodas"></span>
-      <span class="carro-preview__spoiler"></span>
-      <span class="carro-preview__asa"></span>
-      <span class="carro-preview__entrada-esq"></span>
-      <span class="carro-preview__entrada-dir"></span>
-      <span class="carro-preview__piloto-corpo"></span>
-      <span class="carro-preview__piloto-cabeca"></span>
-    </span>
+    <img class="carro-miniatura" src="./corrida/assets/menu/${id}.png" width="960" height="576" alt="" />
     <span class="btn-carro-titulo">${modelo.nome}</span>
     <span class="btn-carro-descricao">${modelo.descricao}</span>
     <span class="btn-carro-meta">${modelo.titulo} • ${meta}</span>
@@ -5151,12 +3405,15 @@
           );
           botao.setAttribute(
             "aria-label",
-            `${modelo.nome}, velocidade ${modelo.nivelVelocidade} de 5 e aceleração ${modelo.nivelAceleracao} de 5`,
+            `${modelo.nome}, velocidade ${modelo.nivelVelocidade} de 5, aceleração ${modelo.nivelAceleracao} de 5, controle ${modelo.nivelControle} de 5. ${desbloqueado ? "Disponível" : `Desbloquear por ${modelo.custo} pontos`}.`,
           );
+          botao.setAttribute("aria-pressed", String(carroSelecionado === id));
+          botao.title = modelo.descricao;
           botao.innerHTML = montarCardCarro(
             modelo,
             desbloqueado,
             carroSelecionado === id,
+            id,
           );
         });
       }
@@ -5575,7 +3832,7 @@
         malha.position.set(pos.x, 1.9, pos.z);
         malha.castShadow = true;
 
-        const luzSilaba = new THREE.PointLight(dados.cor, 2, 40);
+        const luzSilaba = new THREE.PointLight(dados.cor, 2, 40, 1);
         luzSilaba.position.set(pos.x, 1.9, pos.z);
 
         // Só a 1ª sílaba começa visível; as demais ficam escondidas (scale 0)
@@ -5687,44 +3944,34 @@
     bindTouch("btn-esq", "ArrowLeft");
     bindTouch("btn-dir", "ArrowRight");
 
-    const relogio = new THREE.Clock();
+    let ultimoFrame = performance.now();
+    const relogio = { getDelta() {
+      const agora = performance.now();
+      const delta = (agora - ultimoFrame) / 1000;
+      ultimoFrame = agora;
+      return delta;
+    } };
     let anguloMenu = 0;
 
     function estaNoChao(corpo) {
-      for (let i = 0; i < mundoFisica.contacts.length; i++) {
-        const contato = mundoFisica.contacts[i];
+      for (let i = 0; i < mundoFisica.contatos.length; i++) {
+        const contato = mundoFisica.contatos[i];
         let outroCorpo = null;
 
-        if (contato.bi === corpo) {
-          outroCorpo = contato.bj;
-        } else if (contato.bj === corpo) {
-          outroCorpo = contato.bi;
+        if (contato.a === corpo) {
+          outroCorpo = contato.b;
+        } else if (contato.b === corpo) {
+          outroCorpo = contato.a;
         }
 
         if (!outroCorpo || !corposDePiso.has(outroCorpo)) continue;
-        if (Math.abs(contato.ni.y) > 0.15) return true;
+        if (Math.abs(contato.normal.y) > 0.15) return true;
       }
       return false;
     }
 
     function manterDentroDoMapa(corpo) {
-      const limite = tamanhoMapa / 2 - 12;
-      if (Math.abs(corpo.position.x) > limite) {
-        corpo.position.x = THREE.MathUtils.clamp(
-          corpo.position.x,
-          -limite,
-          limite,
-        );
-        corpo.velocity.x *= 0.15;
-      }
-      if (Math.abs(corpo.position.z) > limite) {
-        corpo.position.z = THREE.MathUtils.clamp(
-          corpo.position.z,
-          -limite,
-          limite,
-        );
-        corpo.velocity.z *= 0.15;
-      }
+      limiteMapa.conter(corpo);
     }
 
     function criarFogosSilaba(posicao, corHex, quantidade = 16) {
@@ -5781,13 +4028,13 @@
     }
 
     function estaEmRampa(corpo) {
-      for (let i = 0; i < mundoFisica.contacts.length; i++) {
-        const contato = mundoFisica.contacts[i];
+      for (let i = 0; i < mundoFisica.contatos.length; i++) {
+        const contato = mundoFisica.contatos[i];
         const outroCorpo =
-          contato.bi === corpo
-            ? contato.bj
-            : contato.bj === corpo
-              ? contato.bi
+          contato.a === corpo
+            ? contato.b
+            : contato.b === corpo
+              ? contato.a
               : null;
         if (outroCorpo && corposRampas.has(outroCorpo)) return true;
       }
@@ -5880,13 +4127,13 @@
         0,
         direcao.z * intensidade,
       );
-      corpo.applyForce(forcaAplicadaTemp, corpo.position);
+      corpo.aplicarForcaCentral(forcaAplicadaTemp);
     }
 
     function obterDirecaoFrente(corpo, destino) {
-      const direcao = destino || new CANNON.Vec3();
+      const direcao = destino || new THREE.Vector3();
       direcao.set(0, 0, -1);
-      corpo.quaternion.vmult(direcao, direcao);
+      direcao.applyQuaternion(corpo.quaternion);
       return direcao;
     }
 
@@ -5977,6 +4224,13 @@
         alvo,
         delta,
       );
+      if (estado.navegacaoBloqueada) {
+        corpo.velocity.x *= Math.pow(0.08, delta);
+        corpo.velocity.z *= Math.pow(0.08, delta);
+        corpo.angularVelocity.y = 0;
+        // Reuse the established safe respawn when no exit exists for a while.
+        return (estado.tempoSemRota || 0) < 3;
+      }
       const policialTatico =
         contextoTaticoPolicia.ativa &&
         contextoTaticoPolicia.policialIndice === policial.indice;
@@ -6014,6 +4268,23 @@
         carroCorpo.position.x - corpo.position.x,
         carroCorpo.position.z - corpo.position.z,
       );
+      // Brake into the capture zone instead of repeatedly ramming a stopped player.
+      const rapidezJogador = Math.hypot(carroCorpo.velocity.x, carroCorpo.velocity.z);
+      if (noChao && estaNoChao(carroCorpo) && distJogador < 12 && rapidezJogador < 8
+        && consultasJogabilidade.caminhoLivre(corpo.position, carroCorpo.position)) {
+        const folga = consultasJogabilidade.distanciaCarrocerias(carroCorpo, corpo, 12);
+        const velocidadeAproximacao = rapidezJogador + Math.sqrt(36 * Math.max(0, folga - 0.4));
+        limitarVelocidadeHorizontal(corpo, Math.min(velMaximaEfetiva, velocidadeAproximacao));
+        if (folga < 0.85) {
+          const suavizacao = 1 - Math.exp(-12 * delta);
+          corpo.velocity.x += (carroCorpo.velocity.x - corpo.velocity.x) * suavizacao;
+          corpo.velocity.z += (carroCorpo.velocity.z - corpo.velocity.z) * suavizacao;
+          corpo.angularVelocity.set(0, 0, 0);
+          estado.tempoTravado = 0; estado.tempoRe = 0;
+          visual.quaternion.copy(corpo.quaternion);
+          return true;
+        }
+      }
       const silabaAtual = obterSilabaAtual();
       const distSilaba =
         silabaAtual && !silabaAtual.coletada
@@ -6300,8 +4571,7 @@
       });
     }
 
-    function animar() {
-      requestAnimationFrame(animar);
+    function executarFrame() {
       const delta = Math.min(
         relogio.getDelta(),
         CONFIG_OTIMIZACAO.deltaMaximo,
@@ -6372,7 +4642,6 @@
             obterVelocidadeMaximaPolicial(policiais[indice], carroAtual),
           );
         }
-        cooldownRampa = Math.max(0, cooldownRampa - delta);
         cooldownRespawnJogador = Math.max(
           0,
           cooldownRespawnJogador - delta,
@@ -6441,30 +4710,7 @@
           carroCorpo,
           carroAtual.velocidadeMaxima,
         );
-        if (
-          cooldownRampa <= 0 &&
-          estaEmRampa(carroCorpo) &&
-          vetorCima.y > 0.68
-        ) {
-          const frenteRampa = obterDirecaoFrente(
-            carroCorpo,
-            direcaoRampaTemp,
-          );
-          carroCorpo.velocity.x +=
-            frenteRampa.x *
-            carroAtual.impulsoRampa *
-            CONFIG_CONFORTO_MOVIMENTO.fatorSaltoRampa;
-          carroCorpo.velocity.z +=
-            frenteRampa.z *
-            carroAtual.impulsoRampa *
-            CONFIG_CONFORTO_MOVIMENTO.fatorSaltoRampa;
-          carroCorpo.velocity.y = Math.max(
-            carroCorpo.velocity.y,
-            carroAtual.saltoRampa *
-              CONFIG_CONFORTO_MOVIMENTO.fatorSaltoRampa,
-          );
-          cooldownRampa = 1.1;
-        }
+
 
         if (
           acumuladorAnalisePolicial >=
@@ -6506,16 +4752,19 @@
         }
 
         const carroEmRampa = estaEmRampa(carroCorpo);
-        mundoFisica.step(
+        posicaoJogadorInicioFrame.copy(carroCorpo.position);
+        manterDentroDoMapa(carroCorpo);
+        for (const policial of policiais) manterDentroDoMapa(policial.corpo);
+        mundoFisica.avancar(
           carroEmRampa
             ? CONFIG_OTIMIZACAO.passoFisica * 0.75
             : CONFIG_OTIMIZACAO.passoFisica,
           Math.min(delta, CONFIG_OTIMIZACAO.deltaMaximo),
           CONFIG_OTIMIZACAO.maxSubstepsFisica + (carroEmRampa ? 3 : 0),
         );
+        controleRampas.atualizar(carroCorpo, mundoFisica.contatos, delta, carroAtual, CONFIG_CONFORTO_MOVIMENTO.fatorSaltoRampa);
         atualizarFogos(delta);
         garantirPresencaPolicias(delta);
-        aliviarContatoComPolicia(delta);
         atualizarCapturaPorContato(delta);
         manterDentroDoMapa(carroCorpo);
         policiais.forEach((policial) => {
@@ -6524,9 +4773,11 @@
         });
         carroVisual.position.copy(carroCorpo.position);
         carroVisual.quaternion.copy(carroCorpo.quaternion);
+        arte.atualizarVeiculo(carroVisual, carroCorpo, delta, Boolean(teclas["ArrowDown"]));
         policiais.forEach((policial) => {
           policial.visual.position.copy(policial.corpo.position);
           policial.visual.quaternion.copy(policial.corpo.quaternion);
+          arte.atualizarVeiculo(policial.visual, policial.corpo, delta);
         });
         atualizarMarcadorObjetivo3D(tempoAgora);
         atualizarHelicopteroPolicial(delta, tempoAgora);
@@ -6776,6 +5027,57 @@
       );
     }
 
+    let contextoPerdido = false;
+    let framePendente = 0;
+    const avisoContexto = document.createElement("div");
+    avisoContexto.setAttribute("role", "alert");
+    avisoContexto.textContent = "O suporte gráfico foi interrompido. Aguardando recuperação… Se não voltar, recarregue a página.";
+    avisoContexto.style.cssText = "position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:#163a6b;color:white;font:20px sans-serif";
+    renderizador.domElement.addEventListener("webglcontextlost", (evento) => {
+      evento.preventDefault();
+      contextoPerdido = true;
+      cancelAnimationFrame(framePendente);
+      zerarTeclas();
+      document.body.appendChild(avisoContexto);
+    });
+    renderizador.domElement.addEventListener("webglcontextrestored", () => {
+      contextoPerdido = false;
+      avisoContexto.remove();
+      ultimoFrame = performance.now();
+      animar();
+    });
+    function animar() {
+      if (contextoPerdido || window.__corridaDoSaberErroExibido) return;
+      try {
+        executarFrame();
+        framePendente = requestAnimationFrame(animar);
+      } catch (erro) {
+        console.error(erro);
+        window.exibirErroDeInicializacaoJogo("O jogo encontrou um erro. Recarregue a página.", erro.message);
+      }
+    }
+    window.addEventListener("pagehide", (evento) => {
+      if (!evento.persisted) {
+        cancelAnimationFrame(framePendente);
+        mundoFisica.dispose();
+        arte.dispose();
+      }
+    });
+    window.CorridaDiagnostico = {
+      get estado() { return estadoJogo; },
+      fisica: mundoFisica,
+      jogador: carroCorpo,
+      get policiais() { return policiais; },
+      get fase() { return faseAtual; },
+      get silabas() { return silabasAtivas; },
+      renderer: renderizador,
+      arte,
+      cena,
+      camera,
+      jogadorVisual: carroVisual,
+      helicoptero: helicopteroPolicia,
+      limiteMapa,
+    };
     animar();
   } catch (erro) {
     console.error(erro);

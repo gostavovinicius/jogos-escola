@@ -1,0 +1,100 @@
+/* Menu artwork is rendered from the same procedural models used in the game. */
+#menu-inicial {
+  color: #173b35;
+  background: linear-gradient(135deg, #e9efdf, #d7e5dc 60%, #bed4cf);
+  backdrop-filter: none;
+  padding: 16px;
+}
+#menu-inicial .menu-shell {
+  width: min(1140px, 100%);
+  max-height: calc(100dvh - 32px);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  padding: 2px 8px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #87aaa0 transparent;
+}
+#menu-inicial .menu-apresentacao {
+  position: relative;
+  min-height: 232px;
+  display: grid;
+  grid-template-columns: 0.85fr 1.25fr;
+  gap: 0;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #f5f5e9;
+  border: 1px solid #ffffffb3;
+  text-align: left;
+}
+.menu-hero-texto { position: relative; z-index: 1; padding: 24px 28px; align-self: center; }
+.menu-selo { font-size: 0.64rem; font-weight: 800; letter-spacing: 0.16em; color: #37695a; }
+#menu-inicial h1 { margin: 10px 0; font-size: clamp(2.1rem, 4.4vw, 3.55rem); line-height: 0.95; letter-spacing: -0.045em; text-shadow: none; color: #183f37; }
+#menu-inicial h1 span { color: #427d60; }
+#menu-inicial .menu-hero-texto p { margin: 12px 0 0; font-size: 0.86rem; line-height: 1.6; color: #4c665a; text-shadow: none; }
+.menu-hero-imagem { width: 100%; height: 232px; object-fit: cover; display: block; }
+.menu-titulo-secao, #menu-inicial .garagem-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#menu-inicial h2 { margin: 0; font-size: 1.08rem; letter-spacing: -0.02em; }
+.menu-titulo-secao { margin-bottom: 10px; }
+.menu-titulo-secao > span, #menu-inicial #garagem-legenda { font-size: 0.75rem; color: #516e60; }
+#menu-inicial .botoes-serie { width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+#menu-inicial .btn-serie {
+  --fase-acento: #2d7755;
+  position: relative;
+  width: 100%; min-width: 0;
+  padding: 14px 18px;
+  border: 1px solid #bacdbb;
+  border-left: 4px solid var(--fase-acento);
+  border-radius: 12px;
+  background: #f7f8ef;
+  color: #1a3b33;
+  box-shadow: 0 3px 0 #1e463509;
+  transition: transform 150ms, border-color 150ms;
+}
+#menu-inicial .btn-serie[data-fase="media"] { --fase-acento: #bb8527; }
+#menu-inicial .btn-serie[data-fase="dificil"] { --fase-acento: #ad5941; }
+#menu-inicial .btn-serie::after { content: "↗"; position: absolute; right: 16px; top: 12px; font-size: 1.2rem; color: var(--fase-acento); }
+#menu-inicial .btn-serie:hover { transform: translateY(-2px); border-color: var(--fase-acento); filter: none; }
+#menu-inicial .fase-card-titulo { font-size: 1rem; margin-bottom: 5px; letter-spacing: 0; }
+#menu-inicial .fase-card-subtitulo { color: var(--fase-acento); font-size: 0.67rem; letter-spacing: 0.08em; margin-bottom: 6px; }
+#menu-inicial .fase-card-exemplos { font-size: 0.76rem; font-weight: normal; color: #516454; }
+#menu-inicial #painel-garagem { padding: 16px; border-radius: 18px; background: #ffffff61; border: 1px solid #ffffffb3; box-shadow: none; }
+#menu-inicial .garagem-topo { margin-bottom: 12px; }
+.garagem-heading { display: grid; gap: 4px; }
+#menu-inicial #pontos-menu { padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; letter-spacing: 0; color: #6d531b; background: #f6e9b8; white-space: nowrap; }
+#menu-inicial .opcoes-carro { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; max-height: none; overflow: visible; padding: 0; }
+#menu-inicial .btn-carro { position: relative; min-height: 0; padding: 8px 10px 10px; gap: 5px; border: 1px solid #ccd8c9; border-radius: 12px; background: #edf2eb; color: #254035; box-shadow: none; }
+#menu-inicial .btn-carro:hover { transform: translateY(-2px); border-color: #658c71; background: #edf2eb; }
+#menu-inicial .btn-carro.ativo { border-color: #32724b; box-shadow: 0 0 0 2px #32724b; }
+#menu-inicial .btn-carro.ativo::after { content: "✓"; position: absolute; right: 8px; top: 8px; background: #32724b; color: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 12px; }
+#menu-inicial .btn-carro.pode-comprar { border-color: #8b9d3c; }
+#menu-inicial .btn-carro.travado { opacity: 1; filter: none; }
+.carro-miniatura { display: block; width: 100%; height: 86px; object-fit: contain; }
+#menu-inicial .btn-carro-titulo { font-size: 0.84rem; letter-spacing: 0; }
+#menu-inicial .btn-carro-descricao { font-size: 0.67rem; color: #4e6654; line-height: 1.4; min-height: 2.8em; }
+#menu-inicial .btn-carro-meta { color: #49654d; font-size: 0.66rem; line-height: 1.4; min-height: 2.8em; }
+#menu-inicial .btn-carro-stats { gap: 4px; color: #375440; font-size: 0.6rem; }
+#menu-inicial .btn-carro-stats span { padding: 3px 4px; border-radius: 4px; background: #dce7d8; }
+.menu-controles { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; color: #4c6859; font-size: 0.7rem; padding: 0 4px; }
+.menu-controles kbd { display: inline-block; min-width: 18px; margin-right: 2px; text-align: center; background: #f6f8ed; border: 1px solid #a6bca6; border-radius: 4px; font: inherit; }
+#menu-inicial button:focus-visible { outline: 3px solid #156e98; outline-offset: 4px; }
+@media (max-width: 720px) {
+  #menu-inicial { padding: 10px; }
+  #menu-inicial .menu-shell { max-height: calc(100dvh - 20px); gap: 16px; padding-inline: 3px; }
+  #menu-inicial .menu-apresentacao { grid-template-columns: 1fr; }
+  .menu-hero-texto { padding: 20px; }
+  #menu-inicial h1 { font-size: 2.8rem; }
+  .menu-hero-imagem { min-height: 0; height: auto; aspect-ratio: 1200 / 445; }
+  #menu-inicial .botoes-serie { grid-template-columns: 1fr; gap: 8px; }
+  #menu-inicial .btn-serie { padding: 12px 16px; }
+  #menu-inicial .fase-card-titulo { margin-bottom: 4px; }
+  #menu-inicial .fase-card-subtitulo { margin-bottom: 4px; }
+  .menu-titulo-secao { align-items: flex-start; flex-direction: column; gap: 4px; }
+  #menu-inicial .opcoes-carro { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #menu-inicial #painel-garagem { padding: 12px; }
+  #menu-inicial .garagem-topo { align-items: flex-start; }
+  .menu-controles { line-height: 1.7; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #menu-inicial .btn-carro, #menu-inicial .btn-serie { transition: none; }
+  #menu-inicial button:hover { transform: none; }
+}
