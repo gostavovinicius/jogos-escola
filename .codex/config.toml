@@ -1,0 +1,7 @@
+# Projeto jogos-escola: mantém o mesmo limite econômico caso a configuração
+# global seja substituída em outra máquina.
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
+default_subagent_model = "gpt-5.6-terra"
+default_subagent_reasoning_effort = "low"

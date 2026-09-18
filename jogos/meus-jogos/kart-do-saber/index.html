@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#087b86">
+  <meta name="description" content="Uma corrida educativa em 3D. Escolha a resposta na pista, aprenda e acelere com seus amigos!">
+  <title>Kart do Saber · Ilha das Descobertas</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ctext y='65' font-size='66'%3E🏎️%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="js/app.mjs"></script>
+</head>
+<body>
+  <div id="world" aria-label="Pista tridimensional dos circuitos do Kart do Saber"></div>
+  <div class="vignette"></div>
+  <section id="profile-screen" class="profile-screen" aria-labelledby="profile-title">
+    <form id="profile-form" class="profile-card">
+      <span class="eyebrow">KART DO SABER · SUA AVENTURA COMEÇA AQUI</span>
+      <h1 id="profile-title">Quem vai<br><span>para a pista?</span></h1>
+      <p>Escolha seu personagem e diga como quer ser chamado na corrida.</p>
+      <div class="avatar-choices" role="group" aria-label="Escolha seu personagem">
+        <button type="button" class="avatar-choice selected" data-avatar="boy" aria-pressed="true" aria-label="Personagem masculino">
+          <svg viewBox="0 0 180 160" aria-hidden="true"><ellipse cx="90" cy="143" rx="64" ry="8" fill="#c4ddcc"/><path d="M43 143v-23q0-32 47-32t47 32v23" fill="#247f79"/><path d="M68 96l22 23 22-23" fill="#f8e4be"/><rect x="79" y="87" width="22" height="20" rx="9" fill="#c68960"/><circle cx="90" cy="61" r="38" fill="#4e3d34"/><ellipse cx="90" cy="68" rx="31" ry="36" fill="#e3ac7d"/><circle cx="58" cy="72" r="7" fill="#e3ac7d"/><circle cx="122" cy="72" r="7" fill="#e3ac7d"/><path d="M58 55q1-32 32-31t34 29l-20-11-14 13-13-8z" fill="#4e3d34"/><ellipse cx="79" cy="68" rx="3.5" ry="4.5" fill="#253e45"/><ellipse cx="102" cy="68" rx="3.5" ry="4.5" fill="#253e45"/><path d="M81 85q10 8 19 0" fill="none" stroke="#8b5138" stroke-width="3" stroke-linecap="round"/><path d="M78 129h24" stroke="#ffd565" stroke-width="5" stroke-linecap="round"/></svg>
+          <strong>Menino</strong><span>Pronto para acelerar!</span>
+        </button>
+        <button type="button" class="avatar-choice" data-avatar="girl" aria-pressed="false" aria-label="Personagem feminino">
+          <svg viewBox="0 0 180 160" aria-hidden="true"><ellipse cx="90" cy="143" rx="64" ry="8" fill="#c4ddcc"/><path d="M47 143v-23q0-32 43-32t43 32v23" fill="#247f79"/><path d="M67 37q-23 15-12 66l26-14 31 9q30-44 3-70z" fill="#4e3d34"/><circle cx="126" cy="44" r="17" fill="#4e3d34"/><rect x="79" y="87" width="22" height="20" rx="9" fill="#c68960"/><path d="M68 99l22 20 22-20" fill="#f8e4be"/><ellipse cx="90" cy="68" rx="31" ry="36" fill="#e3ac7d"/><circle cx="59" cy="72" r="7" fill="#e3ac7d"/><circle cx="121" cy="72" r="7" fill="#e3ac7d"/><path d="M58 58q-4-35 30-35t35 36q-24-4-35-20-7 18-30 19" fill="#4e3d34"/><ellipse cx="79" cy="68" rx="3.5" ry="4.5" fill="#253e45"/><ellipse cx="102" cy="68" rx="3.5" ry="4.5" fill="#253e45"/><path d="M81 85q10 8 19 0" fill="none" stroke="#8b5138" stroke-width="3" stroke-linecap="round"/><path d="M119 33l12 12m-12 0 12-12" stroke="#ffd565" stroke-width="6" stroke-linecap="round"/><path d="M78 129h24" stroke="#ffd565" stroke-width="5" stroke-linecap="round"/></svg>
+          <strong>Menina</strong><span>Pronta para acelerar!</span>
+        </button>
+      </div>
+      <label class="profile-name-label" for="profile-name">Seu nome ou apelido</label>
+      <input id="profile-name" name="pilot" maxlength="16" required autocomplete="off" placeholder="Como a turma conhece você?" aria-describedby="profile-name-help">
+      <small id="profile-name-help">Esse nome aparece acima do seu kart e para os colegas da partida.</small>
+      <button id="profile-continue" class="primary" type="submit" disabled>ENTRAR NA CORRIDA <span>➜</span></button>
+      <p class="profile-footnote">Depois, vamos encontrar os outros pilotos da turma.</p>
+    </form>
+  </section>
+  <main id="menu" class="menu" hidden>
+    <div class="brand"><span class="brand-icon">⚑</span> PEQUENAS DESCOBERTAS. GRANDES CORRIDAS.</div>
+    <div class="menu-content">
+      <div class="eyebrow"><span></span> APRENDER É UMA AVENTURA</div>
+      <h1>KART<br><span>DO SABER</span><i>✦</i></h1>
+      <p class="intro">Escolha o caminho certo.<br>Solte o turbo da imaginação!</p>
+      <section class="setup" aria-label="Prepare sua corrida">
+        <div class="pilot-summary"><span id="profile-avatar">👦</span><strong id="profile-display-name">Piloto</strong><button id="edit-pilot" class="text-button">Trocar piloto</button></div>
+        <div class="setup-heading"><span class="step">02</span><h2>Escolha a cor do kart</h2></div>
+        <div id="characters" class="characters" role="group" aria-label="Escolha a cor do kart">
+          <button data-character="0" class="character selected" aria-pressed="true"><span>●</span><b>Verde</b></button>
+          <button data-character="1" class="character" aria-pressed="false"><span>●</span><b>Rosa</b></button>
+          <button data-character="2" class="character" aria-pressed="false"><span>●</span><b>Azul</b></button>
+          <button data-character="3" class="character" aria-pressed="false"><span>●</span><b>Laranja</b></button>
+        </div>
+        <div class="fields"><label>Seu apelido<input id="nickname" maxlength="16" placeholder="Piloto" autocomplete="off"></label><label>Turma e aventura<select id="subject" aria-label="Turma detectada pelo horário" disabled></select></label></div><p id="lesson-status" class="button-caption" role="status"></p>
+        <button id="online" class="primary"><span id="online-label">CONECTANDO À TURMA…</span><span>➜</span></button>
+        <p id="queue-status" class="button-caption" role="status">Encontrando outros pilotos automaticamente</p>
+        <button id="practice" class="secondary"><span>⚑</span> Treinar com bots <small>JOGAR SOZINHO</small></button>
+      </section>
+      <div class="menu-bottom"><button id="how-to">ⓘ Como jogar</button><label class="quality-label">Gráficos <select id="quality"><option value="auto">Automático</option><option value="light">Leve · WebGL 1</option><option value="full">Bonito · WebGL 2</option></select></label></div>
+      <p id="graphics-status" class="graphics-status" role="status">Preparando a ilha…</p>
+    </div>
+    <div id="island-info" class="island-label"><span>☀ 2 CIRCUITOS</span><strong>Ilha &amp;<br>Cânion</strong><p>O cenário troca a cada nova corrida.</p><div><b>8</b> desafios <em>•</em> <b>4</b> pilotos <em>•</em> <b>2</b> aventuras</div></div>
+    <aside id="queue-panel" class="queue-panel" hidden aria-label="Aguardando jogadores"><span class="eyebrow">VOCÊ JÁ ESTÁ NA PARTIDA</span><h2>Aguardando<br>mais jogadores…</h2><div class="queue-meter"><strong id="queue-count">1 / 4</strong><span>pilotos conectados</span><b><span id="queue-seconds">20</span>s</b></div><div id="lobby-players" class="lobby-players"></div><p id="lobby-time" role="status" aria-live="polite"></p><small>A corrida começa com 4 jogadores ou quando o tempo acabar. Bots completam as vagas vazias.</small></aside>
+    <div class="tip-tag">✦ Acerte na pista. Ganhe um turbo!</div>
+  </main>
+  <section id="hud" hidden aria-label="Informações da corrida">
+    <div class="race-top"><div class="place"><strong id="position">1º</strong><span>POSIÇÃO / 4</span></div><div class="race-label"><b id="race-map-name">ILHA DAS DESCOBERTAS</b><span>VOLTA 1 / 1 <i>•</i> <span id="timer">00:00</span></span></div><button id="pause-button" class="icon-button" aria-label="Pausar ou sair">Ⅱ</button></div>
+    <ol id="race-roster" class="race-roster" aria-label="Pilotos e posições da corrida"></ol>
+    <div id="question" class="question" hidden><div class="question-icon" id="question-emoji">🐝</div><div class="question-text"><small id="question-count">DESAFIO 1 / 8</small><p id="question-prompt">Qual é a primeira letra?</p><strong id="question-word">_BELHA</strong></div><button id="read-question" class="read-button" aria-label="Ouvir pergunta">♫</button><div class="question-instruction">Passe pelo portal com a resposta certa <span>↓</span></div></div>
+    <div id="feedback" class="feedback" role="status" hidden></div>
+    <div id="countdown" class="countdown" hidden>3</div>
+    <div class="race-bottom"><div class="speed"><strong id="speed">0</strong><span id="gear">km/h</span><div id="boost-label">SEGURE ↑ PARA ACELERAR</div></div><div class="control-help"><kbd>↑</kbd> acelerar <span>·</span> <kbd>←</kbd> <kbd>→</kbd> virar <span>·</span> <kbd>↓</kbd> frear / ré</div><div class="minimap-box"><canvas id="minimap" width="180" height="160" aria-label="Mapa da pista"></canvas><span id="score">★ 0 / 8</span></div></div>
+    <div class="race-progress"><div id="progress-fill"></div></div>
+    <div class="touch-controls"><button data-control="left" aria-label="Virar à esquerda">◀</button><button data-control="right" aria-label="Virar à direita">▶</button><button data-control="brake" aria-label="Frear e dar ré">FREIO / RÉ</button><button data-control="throttle" aria-label="Acelerar">↑</button></div>
+  </section>
+  <dialog id="help-dialog"><button class="close" data-close aria-label="Fechar">×</button><span class="dialog-emoji">🏁</span><h2>O saber dá um turbo!</h2><p>Segure <b>↑ ou W</b> para acelerar. Use <b>← →</b> ou <b>A e D</b> para fazer as curvas e <b>↓ ou S</b> para frear. <b>Continue segurando ↓/S depois de parar para dar ré.</b> Soltar o acelerador reduz a velocidade aos poucos.</p><div class="help-lanes"><span>A</span><span>E</span><span>O</span></div><p><b>Passe por dentro do portal</b> da resposta. Um acerto dá um turbo curto; um erro reduz a velocidade por um instante. <b>Vence quem cruza a chegada primeiro</b>, independentemente dos acertos.</p><p>Os karts podem <b>bater e se empurrar</b>. Cuidado com a borda: uma queda faz seu kart voltar perto do ponto onde saiu. Os nomes sobre os karts mostram quem está correndo com você. O botão ♫ pode ler a pergunta em voz alta.</p><button class="primary" data-close>Entendi, vamos lá! ➜</button></dialog>
+  <dialog id="pause-dialog"><span class="dialog-emoji">☀️</span><h2 id="pause-title">Pausa para respirar</h2><p id="pause-text">A ilha espera por você.</p><button id="resume" class="primary">Continuar corrida ➜</button><button id="exit-race" class="secondary">Voltar ao início</button></dialog>
+  <dialog id="results-dialog"><span class="dialog-emoji">🏆</span><p class="eyebrow">CADA DESCOBERTA É UMA VITÓRIA</p><h2 id="result-title">Boa corrida!</h2><p id="result-summary"></p><div id="result-ranking" class="result-ranking"></div><p id="result-learning"></p><button id="again" class="primary">Correr de novo ➜</button><button id="result-menu" class="secondary">Voltar à ilha</button></dialog>
+  <div id="fatal" class="fatal" role="alert" hidden><h2>A ilha não conseguiu abrir</h2><p id="fatal-message"></p><button id="retry-light" class="primary">Tentar modo leve</button></div>
+  <noscript>Ative o JavaScript no navegador para jogar Kart do Saber.</noscript>
+</body>
+</html>
