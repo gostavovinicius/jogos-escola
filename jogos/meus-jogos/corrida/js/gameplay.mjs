@@ -1,32 +1,79 @@
 // Shared gameplay rules; no DOM or renderer dependency.
 const PERFIS_POLICIA = {
-  perseguidora: { antecipacao: 0.3, lateral: 0, frente: -1, curva: 1.12, agressividade: 0.42 },
-  moto: { antecipacao: 0.65, lateral: 3.2, frente: 1.4, curva: 1.48, agressividade: 0.4 },
-  interceptadora: { antecipacao: 1.65, lateral: 0, frente: 5, curva: 1.18, agressividade: 0.46 },
-  flanqueadora: { antecipacao: 0.8, lateral: -12, frente: 2.5, curva: 1.28, agressividade: 0.44 },
+  perseguidora: {
+    antecipacao: 0.3, lateral: 0, frente: -1, curva: 1.12,
+    agressividade: 0.42, tatica: "pressao", inteligencia: "basica",
+    leitura: 0.72, reacao: 0.28,
+  },
+  moto: {
+    antecipacao: 0.65, lateral: 3.2, frente: 1.4, curva: 1.48,
+    agressividade: 0.4, tatica: "aproximacao-lateral", inteligencia: "media",
+    leitura: 0.94, reacao: 0.16,
+  },
+  interceptadora: {
+    antecipacao: 1.65, lateral: 0, frente: 5, curva: 1.18,
+    agressividade: 0.46, tatica: "interceptacao", inteligencia: "inteligente",
+    leitura: 1.14, reacao: 0.08,
+  },
+  flanqueadora: {
+    antecipacao: 0.8, lateral: -12, frente: 2.5, curva: 1.28,
+    agressividade: 0.44, tatica: "flanco", inteligencia: "inteligente",
+    leitura: 1.08, reacao: 0.1,
+  },
 };
 
-export function planejarPerseguicao({ estrategia, jogador, velocidade, frente, policial }) {
+const PERFIS_INTELIGENCIA = {
+  facil: {
+    nome: "facil", previsao: 0.42, abertura: 0.5, curva: 0.86,
+    agressividade: -0.12, bonusVelocidade: -0.08, captura: 9.5,
+    cerco: false, influenciaObjetivo: 0, formacao: 0.08, reacao: 1.28,
+  },
+  media: {
+    nome: "media", previsao: 0.78, abertura: 0.82, curva: 0.98,
+    agressividade: 0, bonusVelocidade: 0, captura: 11,
+    cerco: true, influenciaObjetivo: 0.24, formacao: 0.24, reacao: 1,
+  },
+  dificil: {
+    nome: "dificil", previsao: 1.12, abertura: 1, curva: 1.1,
+    agressividade: 0.1, bonusVelocidade: 0.08, captura: 12.5,
+    cerco: true, influenciaObjetivo: 0.42, formacao: 0.38, reacao: 0.72,
+  },
+};
+
+export function obterPerfilInteligencia(dificuldade = "media") {
+  return PERFIS_INTELIGENCIA[dificuldade] || PERFIS_INTELIGENCIA.media;
+}
+
+export function planejarPerseguicao({ estrategia, dificuldade = "media", jogador, velocidade, frente, policial }) {
   const perfil = PERFIS_POLICIA[estrategia] || PERFIS_POLICIA.perseguidora;
+  const inteligencia = obterPerfilInteligencia(dificuldade);
   const distancia = Math.hypot(jogador.x - policial.x, jogador.z - policial.z);
   const rapidez = Math.hypot(velocidade.x, velocidade.z);
   const direcao = rapidez > 1.2 ? { x: velocidade.x / rapidez, z: velocidade.z / rapidez } : frente;
-  const captura = distancia < 12;
+  const captura = distancia < inteligencia.captura;
   // Fade the wide approach into a close position. Stopped targets must not be orbited forever.
   const abertura = Math.max(0, Math.min(1, (distancia - 8) / 22));
-  const lateral = perfil.lateral * (0.12 + 0.88 * abertura);
+  const lateral = perfil.lateral * inteligencia.abertura * (0.12 + 0.88 * abertura);
   const adiante = perfil.frente * (0.25 + 0.75 * abertura);
-  const horizonte = perfil.antecipacao * Math.min(1, distancia / 30);
+  const adaptacaoVelocidade = 0.72 + Math.min(0.38, rapidez / 80);
+  const horizonte = perfil.antecipacao * perfil.leitura * inteligencia.previsao
+    * adaptacaoVelocidade * Math.min(1, distancia / 30);
   return {
     alvo: {
       x: jogador.x + velocidade.x * horizonte + direcao.x * adiante - direcao.z * lateral,
       z: jogador.z + velocidade.z * horizonte + direcao.z * adiante + direcao.x * lateral,
     },
-    agressividade: perfil.agressividade,
-    respostaCurva: perfil.curva,
-    bonusVelocidade: 0,
+    inteligencia: perfil.inteligencia,
+    nivelDificuldade: inteligencia.nome,
+    tatica: perfil.tatica,
+    agressividade: Math.max(0.12, perfil.agressividade + inteligencia.agressividade),
+    respostaCurva: perfil.curva * inteligencia.curva,
+    bonusVelocidade: inteligencia.bonusVelocidade,
     amortecimento: 0.992,
-    modoCerco: rapidez < 6.5 && distancia < 16,
+    influenciaObjetivo: inteligencia.influenciaObjetivo,
+    formacao: inteligencia.formacao,
+    intervaloReacao: perfil.reacao * inteligencia.reacao * (captura ? 0.55 : 1),
+    modoCerco: inteligencia.cerco && rapidez < 6.5 && distancia < 16,
     modoCapturaDireta: captura,
   };
 }
@@ -119,15 +166,45 @@ export function criarControleRampas(THREE, rampas) {
 
   function atualizar(corpo, contatos, delta, modelo, fator = 0.78) {
     let estado = estados.get(corpo);
-    if (!estado) { estado = { rampa: null, armado: false, disparou: false, ausencia: 0, cooldown: 0 }; estados.set(corpo, estado); }
+    if (!estado) {
+      estado = {
+        rampa: null, armado: false, disparou: false, ausencia: 0, cooldown: 0,
+        vooRestante: 0, velocidadeLancamento: 0,
+      };
+      estados.set(corpo, estado);
+    }
     estado.cooldown = Math.max(0, estado.cooldown - delta);
     let topo = null;
+    let apoioForaDaRampa = false;
     for (const contato of contatos) {
       const outro = contato.a === corpo ? contato.b : contato.b === corpo ? contato.a : null;
-      if (!outro || !rampas.has(outro)) continue;
-      normalTopo.set(0, 1, 0).applyQuaternion(outro.quaternion);
+      if (!outro) continue;
       normalContato.copy(contato.normal).multiplyScalar(contato.a === corpo ? -1 : 1);
-      if (normalContato.dot(normalTopo) > 0.85) { topo = outro; break; }
+      if (!rampas.has(outro)) {
+        if (normalContato.y > 0.58) apoioForaDaRampa = true;
+        continue;
+      }
+      normalTopo.set(0, 1, 0).applyQuaternion(outro.quaternion);
+      if (normalContato.dot(normalTopo) > 0.85) topo = outro;
+    }
+    if (apoioForaDaRampa) estado.vooRestante = 0;
+    if (estado.vooRestante > 0 && !topo && !apoioForaDaRampa) {
+      estado.vooRestante = Math.max(0, estado.vooRestante - delta);
+      const horizontal = Math.hypot(corpo.velocity.x, corpo.velocity.z);
+      // Queda brusca significa impacto lateral, não arrasto: adota a nova
+      // referência para nunca reimpulsionar o carro contra um obstáculo.
+      if (horizontal < estado.velocidadeLancamento * 0.94) {
+        estado.velocidadeLancamento = horizontal;
+      }
+      // A correção por quadro é limitada ao arrasto esperado.
+      if (horizontal > 0.01 && horizontal < estado.velocidadeLancamento) {
+        const escala = Math.min(
+          estado.velocidadeLancamento / horizontal,
+          1 + Math.min(0.012, delta * 0.72),
+        );
+        corpo.velocity.x *= escala;
+        corpo.velocity.z *= escala;
+      }
     }
     if (topo) {
       if (estado.rampa !== topo) Object.assign(estado, { rampa: topo, armado: false, disparou: false });
@@ -152,8 +229,14 @@ export function criarControleRampas(THREE, rampas) {
     corpo.velocity.x += subida.x * modelo.impulsoRampa * fator;
     corpo.velocity.z += subida.z * modelo.impulsoRampa * fator;
     corpo.velocity.y = Math.max(corpo.velocity.y, modelo.saltoRampa * fator);
+    estado.velocidadeLancamento = Math.hypot(corpo.velocity.x, corpo.velocity.z);
+    estado.vooRestante = 3.2;
     estado.disparou = true; estado.cooldown = 1.1;
     return true;
   }
-  return { atualizar, resetar: corpo => estados.delete(corpo) };
+  return {
+    atualizar,
+    estaEmVoo: corpo => (estados.get(corpo)?.vooRestante || 0) > 0,
+    resetar: corpo => estados.delete(corpo),
+  };
 }

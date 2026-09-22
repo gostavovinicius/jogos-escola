@@ -3,7 +3,14 @@ import assert from "node:assert/strict";
 import * as THREE from "three";
 import RAPIER from "@dimforge/rapier3d-compat";
 import { criarFisica } from "../jogos/meus-jogos/corrida/js/physics.mjs";
-import { preverInterceptacao, criarConsultasJogabilidade, pressaoDeCaptura, criarControleRampas, planejarPerseguicao } from "../jogos/meus-jogos/corrida/js/gameplay.mjs";
+import {
+  preverInterceptacao,
+  criarConsultasJogabilidade,
+  pressaoDeCaptura,
+  criarControleRampas,
+  obterPerfilInteligencia,
+  planejarPerseguicao,
+} from "../jogos/meus-jogos/corrida/js/gameplay.mjs";
 await RAPIER.init();
 
 test("táticas: viatura segue, moto aproxima pela lateral, interceptor antecipa e flanqueador cerca", () => {
@@ -22,6 +29,73 @@ test("táticas: viatura segue, moto aproxima pela lateral, interceptor antecipa 
     const reverso = planejarPerseguicao({ ...dados, estrategia, velocidade: { x: 0, z: 20 } });
     assert.ok(reverso.alvo.z > 0, "adapta a abordagem quando o jogador muda de direção");
   }
+});
+
+test("IA: fácil, média e difícil usam inteligência e adaptação progressivas", () => {
+  assert.equal(obterPerfilInteligencia("facil").nome, "facil");
+  assert.equal(obterPerfilInteligencia("media").nome, "media");
+  assert.equal(obterPerfilInteligencia("dificil").nome, "dificil");
+
+  const dados = {
+    estrategia: "interceptadora",
+    jogador: { x: 0, z: 0 },
+    velocidade: { x: 0, z: -28 },
+    frente: { x: 0, z: -1 },
+    policial: { x: 0, z: 42 },
+  };
+  const facil = planejarPerseguicao({ ...dados, dificuldade: "facil" });
+  const media = planejarPerseguicao({ ...dados, dificuldade: "media" });
+  const dificil = planejarPerseguicao({ ...dados, dificuldade: "dificil" });
+  assert.equal(facil.inteligencia, "inteligente");
+  assert.equal(media.inteligencia, "inteligente");
+  assert.equal(dificil.inteligencia, "inteligente");
+  assert.equal(facil.nivelDificuldade, "facil");
+  assert.equal(media.nivelDificuldade, "media");
+  assert.equal(dificil.nivelDificuldade, "dificil");
+  assert.ok(facil.alvo.z > media.alvo.z && media.alvo.z > dificil.alvo.z,
+    "níveis maiores devem antecipar progressivamente a rota");
+  assert.ok(facil.respostaCurva < media.respostaCurva);
+  assert.ok(media.respostaCurva < dificil.respostaCurva);
+  assert.equal(facil.influenciaObjetivo, 0);
+  assert.ok(dificil.influenciaObjetivo > media.influenciaObjetivo);
+  assert.ok(facil.intervaloReacao > media.intervaloReacao);
+  assert.ok(media.intervaloReacao > dificil.intervaloReacao);
+
+  const alvoParado = { ...dados, velocidade: { x: 0, z: 0 }, policial: { x: 0, z: 13 } };
+  assert.equal(planejarPerseguicao({ ...alvoParado, dificuldade: "facil" }).modoCerco, false);
+  assert.equal(planejarPerseguicao({ ...alvoParado, dificuldade: "dificil" }).modoCerco, true);
+});
+
+test("IA individual: cada unidade conserva uma tática distinta em uma mesma dificuldade", () => {
+  const dados = {
+    dificuldade: "dificil",
+    jogador: { x: 0, z: 0 },
+    velocidade: { x: 14, z: -22 },
+    frente: { x: 0, z: -1 },
+    policial: { x: 0, z: 40 },
+  };
+  const planos = ["perseguidora", "moto", "interceptadora", "flanqueadora"]
+    .map(estrategia => planejarPerseguicao({ ...dados, estrategia }));
+  assert.deepEqual(
+    planos.map(plano => plano.tatica),
+    ["pressao", "aproximacao-lateral", "interceptacao", "flanco"],
+  );
+  assert.deepEqual(
+    planos.map(plano => plano.inteligencia),
+    ["basica", "media", "inteligente", "inteligente"],
+  );
+  assert.ok(planos[0].intervaloReacao > planos[1].intervaloReacao);
+  assert.ok(planos[1].intervaloReacao > planos[2].intervaloReacao);
+  assert.equal(new Set(planos.map(plano => `${plano.alvo.x.toFixed(2)}|${plano.alvo.z.toFixed(2)}`)).size, 4);
+
+  const ida = planejarPerseguicao({ ...dados, estrategia: "interceptadora" });
+  const volta = planejarPerseguicao({
+    ...dados,
+    estrategia: "interceptadora",
+    velocidade: { x: -14, z: 22 },
+  });
+  assert.ok(ida.alvo.z < 0 && volta.alvo.z > 0,
+    "a inteligência deve adaptar a interceptação quando o jogador inverte a rota");
 });
 
 function cenario(t) {
@@ -104,16 +178,49 @@ const modelo = { impulsoRampa: 38, saltoRampa: 17.5 };
 for (const dt of [1 / 50, 1 / 60, 1 / 90]) test(`rampa física: subir e saltar uma vez na saída (${1 / dt} Hz)`, t => {
   const { carro, fisica, controle } = rampaReal(t);
   carro.position.set(0, 0.6, 20); carro.velocity.set(0, 0, -24);
-  let saltos = 0, altura = 0, posicaoSalto;
+  let saltos = 0, altura = 0, posicaoSalto, velocidadeSalto = 0;
+  let menorVelocidadeNoVoo = Infinity, maiorAlcance = 0;
   for (let i = 0; i < Math.round(3 / dt); i++) {
     if (!saltos) carro.aplicarForcaCentral(new THREE.Vector3(0, 0, -24000));
     fisica.avancar(dt, dt, 1);
-    if (controle.atualizar(carro, fisica.contatos, dt, modelo)) { saltos++; posicaoSalto = carro.position.clone(); }
+    if (controle.atualizar(carro, fisica.contatos, dt, modelo)) {
+      saltos++;
+      posicaoSalto = carro.position.clone();
+      velocidadeSalto = Math.hypot(carro.velocity.x, carro.velocity.z);
+    } else if (saltos && controle.estaEmVoo(carro)) {
+      menorVelocidadeNoVoo = Math.min(
+        menorVelocidadeNoVoo,
+        Math.hypot(carro.velocity.x, carro.velocity.z),
+      );
+      maiorAlcance = Math.max(maiorAlcance, Math.abs(carro.position.z - posicaoSalto.z));
+    }
     altura = Math.max(altura, carro.position.y);
   }
   assert.equal(saltos, 1, JSON.stringify({ saltos, altura, posicao: carro.position }));
   assert.ok(posicaoSalto.z < -5 && posicaoSalto.y > 5);
   assert.ok(altura > 9);
+  assert.ok(velocidadeSalto > 45, `impulso horizontal insuficiente: ${velocidadeSalto}`);
+  assert.ok(menorVelocidadeNoVoo >= velocidadeSalto * 0.92,
+    JSON.stringify({ velocidadeSalto, menorVelocidadeNoVoo }));
+  assert.ok(maiorAlcance > 65, `alcance aéreo insuficiente: ${maiorAlcance}`);
+});
+
+test("rampa: impacto aéreo reduz a referência e não reimpulsiona o carro", t => {
+  const { carro, fisica, controle } = rampaReal(t);
+  carro.position.set(0, 0.6, 20);
+  carro.velocity.set(0, 0, -24);
+  let lancou = false;
+  for (let i = 0; i < 180 && !lancou; i++) {
+    carro.aplicarForcaCentral(new THREE.Vector3(0, 0, -24000));
+    fisica.avancar(1 / 60, 1 / 60, 1);
+    lancou = controle.atualizar(carro, fisica.contatos, 1 / 60, modelo);
+  }
+  assert.equal(lancou, true);
+  carro.velocity.x *= 0.45;
+  carro.velocity.z *= 0.45;
+  const aposImpacto = Math.hypot(carro.velocity.x, carro.velocity.z);
+  controle.atualizar(carro, [], 1 / 60, modelo);
+  assert.ok(Math.abs(Math.hypot(carro.velocity.x, carro.velocity.z) - aposImpacto) < 1e-8);
 });
 
 for (const caso of ["lateral", "parado no topo", "sentido contrário"]) test(`rampa: ${caso} não dispara impulso`, t => {

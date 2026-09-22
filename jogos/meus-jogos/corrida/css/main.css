@@ -142,30 +142,30 @@ canvas {
 }
 
 .em-iframe #interface {
-  left: auto;
-  right: var(--iframe-hud-right);
+  left: 50%;
+  right: auto;
   top: var(--iframe-hud-top);
-  transform: none;
+  transform: translateX(-50%);
   width: max-content;
   min-width: 0;
   max-width: min(var(--iframe-hud-width), calc(100% - 24px));
   padding: 12px 14px;
-  text-align: left;
+  text-align: center;
 }
 
 .em-iframe #barra-superior-jogo {
-  justify-content: flex-start;
-  justify-items: flex-start;
-  align-items: flex-start;
+  justify-content: center;
+  justify-items: center;
+  align-items: center;
 }
 
 .em-iframe #objetivo-hud {
-  justify-content: flex-start;
-  align-items: flex-start;
+  justify-content: center;
+  align-items: center;
 }
 
 .em-iframe #blocos-silabas {
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .em-iframe #info-lateral {
@@ -200,9 +200,9 @@ canvas {
 @media (max-width: 860px) {
   #interface {
     top: 10px;
-    right: 10px;
-    left: auto;
-    transform: none;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
     width: max-content;
     min-width: 0;
     max-width: min(340px, calc(100% - 20px));
@@ -221,8 +221,9 @@ canvas {
 
   .em-iframe #interface {
     top: var(--iframe-hud-top);
-    right: var(--iframe-hud-right);
-    left: auto;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .em-iframe #info-lateral {
@@ -252,9 +253,9 @@ canvas {
     min-width: 0;
     max-width: min(320px, calc(100% - 16px));
     top: 8px;
-    right: 8px;
-    left: auto;
-    transform: none;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
     padding: 10px 12px 12px;
   }
 
@@ -264,8 +265,10 @@ canvas {
   }
 
   #btn-respawn-manual {
-    top: 8px;
-    left: 8px;
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: auto;
     padding: 7px 10px;
     font-size: 0.76rem;
   }
@@ -302,9 +305,9 @@ canvas {
     min-width: 0;
     max-width: min(320px, calc(100% - 16px));
     top: 8px;
-    right: 8px;
-    left: auto;
-    transform: none;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .em-iframe #info-lateral {
@@ -314,5 +317,103 @@ canvas {
     top: var(--iframe-info-top);
     bottom: auto;
     display: block;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  #interface,
+  .em-iframe #interface {
+    top: 6px;
+    width: max-content;
+    max-width: min(330px, calc(100% - 16px));
+    padding: 6px 10px !important;
+    gap: 3px !important;
+    border-radius: 16px;
+  }
+
+  #fase-info {
+    font-size: 9px !important;
+    letter-spacing: 1.4px !important;
+    line-height: 1;
+  }
+
+  #objetivo-hud,
+  #interface.modo-facil #objetivo-hud,
+  #interface.modo-silabas #objetivo-hud {
+    gap: 6px !important;
+  }
+
+  #interface.modo-facil #alvo-emoji-hud,
+  #interface.modo-silabas #alvo-emoji-hud,
+  #alvo-emoji-hud.emoji-destaque,
+  #alvo-emoji-hud {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 12px !important;
+    font-size: 26px !important;
+    transform: none;
+  }
+
+  .hud-meta {
+    gap: 3px !important;
+  }
+
+  #objetivo-instrucao {
+    font-size: 0.58rem;
+    letter-spacing: 0.09em;
+  }
+
+  #objetivo-principal-hud,
+  #interface.modo-facil #objetivo-principal-hud,
+  #interface.modo-silabas #objetivo-principal-hud {
+    gap: 5px !important;
+  }
+
+  #interface.modo-facil #palavra-alvo-hud {
+    padding: 5px 8px !important;
+    border-radius: 11px;
+    font-size: 1.05rem !important;
+  }
+
+  #interface.modo-facil .bloco-silaba,
+  #interface.modo-silabas .bloco-silaba,
+  .bloco-silaba {
+    min-width: 38px !important;
+    padding: 6px 8px !important;
+    border-width: 2px;
+    border-radius: 11px !important;
+    font-size: 1rem !important;
+  }
+
+  #hud-perseguicao {
+    display: grid !important;
+    grid-template-columns: auto minmax(76px, 100px) auto;
+    align-items: center;
+    gap: 6px !important;
+  }
+
+  .hud-perseguicao-topo {
+    gap: 5px !important;
+    white-space: nowrap;
+  }
+
+  .hud-perseguicao-label {
+    font-size: 0.55rem !important;
+    letter-spacing: 0.08em;
+  }
+
+  #hud-perseguicao #info-risco {
+    font-size: 0.7rem !important;
+  }
+
+  #hud-perseguicao .barra-risco {
+    height: 8px;
+    margin: 0;
+  }
+
+  #hud-perseguicao #info-contato {
+    margin: 0;
+    font-size: 0.62rem !important;
+    white-space: nowrap;
   }
 }

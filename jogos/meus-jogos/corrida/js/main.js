@@ -1939,6 +1939,7 @@
         alvoRotaX: Number.NaN,
         alvoRotaZ: Number.NaN,
         planoAtual: null,
+        tempoPlano: 0,
         tempoCerco: 0,
         tempoSobreposicaoJogador: 0,
         tempoDesgrudeJogador: 0,
@@ -2131,6 +2132,7 @@
     const emojiVitoria = document.getElementById("emoji-vitoria");
     const mensagemDerrota = document.getElementById("mensagem-derrota");
     const palavraAlvoHud = document.getElementById("palavra-alvo-hud");
+    const objetivoInstrucao = document.getElementById("objetivo-instrucao");
     let timeoutMensagemA11y = null;
     let ultimaMensagemA11y = "";
     if (controlesTouch && !PERFIL_EXECUCAO.usarControlesTouch) {
@@ -2426,6 +2428,7 @@
       estado.tempoEstrategia = 0;
       estado.alvoPatrulha = null;
       estado.planoAtual = null;
+      estado.tempoPlano = 0;
       estado.tempoSobreposicaoJogador = 0;
       estado.tempoDesgrudeJogador = 0;
       limparRotaPolicial(estado);
@@ -2617,32 +2620,53 @@
     function criarPlanoIApolicial(policial) {
       const plano = window.CorridaJogabilidade.planejarPerseguicao({
         estrategia: policial.estrategia,
+        dificuldade: grupoFaseAtual,
         jogador: carroCorpo.position,
         velocidade: carroCorpo.velocity,
         frente: obterDirecaoFrente(carroCorpo, direcaoIAJogadorTemp),
         policial: policial.corpo.position,
       });
-      // Only the interceptor diverts toward an objective, and never during close capture.
+      // A leitura do objetivo cresce com a dificuldade. Na fácil os policiais
+      // apenas perseguem; na média o interceptor corta a rota; na difícil a
+      // moto e a flanqueadora também podem ocupar linhas de fuga.
+      const podeAtacarObjetivo =
+        policial.estrategia === "interceptadora" ||
+        (grupoFaseAtual === "dificil" &&
+          (policial.estrategia === "moto" ||
+            policial.estrategia === "flanqueadora"));
       if (!plano.modoCapturaDireta && !plano.modoCerco
-        && policial.estrategia === "interceptadora"
+        && podeAtacarObjetivo
+        && plano.influenciaObjetivo > 0
         && contextoTaticoPolicia.ativa
         && contextoTaticoPolicia.policialIndice === policial.indice) {
-        plano.alvo.x = plano.alvo.x * 0.75 + contextoTaticoPolicia.alvoX * 0.25;
-        plano.alvo.z = plano.alvo.z * 0.75 + contextoTaticoPolicia.alvoZ * 0.25;
+        plano.alvo.x = plano.alvo.x * (1 - plano.influenciaObjetivo)
+          + contextoTaticoPolicia.alvoX * plano.influenciaObjetivo;
+        plano.alvo.z = plano.alvo.z * (1 - plano.influenciaObjetivo)
+          + contextoTaticoPolicia.alvoZ * plano.influenciaObjetivo;
       }
       if (!plano.modoCapturaDireta) {
         const formacao = ajustarAlvoComFormacao(policial, plano.alvo);
-        plano.alvo.x = plano.alvo.x * 0.7 + formacao.x * 0.3;
-        plano.alvo.z = plano.alvo.z * 0.7 + formacao.z * 0.3;
+        plano.alvo.x = plano.alvo.x * (1 - plano.formacao)
+          + formacao.x * plano.formacao;
+        plano.alvo.z = plano.alvo.z * (1 - plano.formacao)
+          + formacao.z * plano.formacao;
       }
       plano.alvo = limitarPontoAoMapa(plano.alvo.x, plano.alvo.z,
         tamanhoMapa / 2 - obterLimiteNavegacao());
       return plano;
     }
 
-    function calcularAlvoPolicial(policial) {
+    function calcularAlvoPolicial(policial, delta) {
+      policial.estado.tempoPlano = Math.max(
+        0,
+        (policial.estado.tempoPlano || 0) - delta,
+      );
+      if (policial.estado.planoAtual && policial.estado.tempoPlano > 0) {
+        return policial.estado.planoAtual.alvo;
+      }
       const plano = criarPlanoIApolicial(policial);
       policial.estado.planoAtual = plano;
+      policial.estado.tempoPlano = plano.intervaloReacao;
       return plano.alvo;
     }
 
@@ -2734,7 +2758,13 @@
         palavraAlvoHud.textContent =
           grupoFaseAtual === "facil"
             ? fase.desafio || fase.palavra
-            : fase.palavra;
+            : "";
+      }
+      if (objetivoInstrucao) {
+        objetivoInstrucao.textContent =
+          grupoFaseAtual === "facil"
+            ? "QUAL É A VOGAL INICIAL?"
+            : "MONTE PELO DESENHO";
       }
     }
 
@@ -3566,6 +3596,32 @@
     const cacheTexturasSilabas = new Map();
     const geoSilaba = new THREE.BoxGeometry(3.8, 3.8, 3.8);
 
+    function criarPaletaBloco(corFundo) {
+      const original = new THREE.Color(corFundo);
+      const hsl = {};
+      original.getHSL(hsl);
+      // Limita saturação e luminosidade, especialmente nos amarelos, para
+      // preservar forma, sombra e contraste mesmo sob a luz do objetivo.
+      const saturacao = Math.min(hsl.s, 0.62);
+      const amarelo = hsl.h >= 0.1 && hsl.h <= 0.19;
+      const frente = new THREE.Color().setHSL(
+        hsl.h,
+        saturacao,
+        amarelo ? 0.72 : 0.68,
+      );
+      const topo = new THREE.Color().setHSL(
+        hsl.h,
+        Math.min(saturacao, 0.5),
+        amarelo ? 0.58 : 0.54,
+      );
+      const base = new THREE.Color().setHSL(
+        hsl.h,
+        Math.min(saturacao, 0.56),
+        amarelo ? 0.38 : 0.34,
+      );
+      return { frente, topo, base };
+    }
+
     function criarTexturaTexto(texto, corFundo) {
       const chave = `${texto}|${corFundo}`;
       if (cacheTexturasSilabas.has(chave))
@@ -3576,22 +3632,28 @@
       canvas.height = 256;
       const ctx = canvas.getContext("2d");
 
-      // Fundo da cor escolhida
-      ctx.fillStyle = corFundo;
+      const paleta = criarPaletaBloco(corFundo);
+      const gradiente = ctx.createLinearGradient(0, 0, 0, 256);
+      gradiente.addColorStop(0, paleta.frente.clone().offsetHSL(0, -0.05, 0.08).getStyle());
+      gradiente.addColorStop(1, paleta.frente.getStyle());
+      ctx.fillStyle = gradiente;
       ctx.fillRect(0, 0, 256, 256);
 
-      // Configurações da Fonte
-      ctx.font = "Bold 100px Arial";
+      ctx.strokeStyle = "rgba(15, 42, 67, 0.22)";
+      ctx.lineWidth = 10;
+      ctx.strokeRect(9, 9, 238, 238);
+
+      const tamanhoFonte = texto.length >= 4 ? 68 : texto.length === 3 ? 82 : 104;
+      ctx.font = `900 ${tamanhoFonte}px Arial`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      // CORREÇÃO: Contorno preto grosso para a letra se destacar em qualquer fundo
-      ctx.lineWidth = 10;
-      ctx.strokeStyle = "black";
-      ctx.strokeText(texto, 128, 128);
-
-      // Miolo da letra em branco
-      ctx.fillStyle = "white";
+      // Letra escura com halo claro: legível em amarelos, verdes e azuis.
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 12;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
+      ctx.strokeText(texto, 128, 132);
+      ctx.fillStyle = "#102a43";
       ctx.fillText(texto, 128, 128);
 
       const textura = configurarTexturaComoCor(
@@ -3599,6 +3661,37 @@
       );
       cacheTexturasSilabas.set(chave, textura);
       return textura;
+    }
+
+    function criarMateriaisBloco(texto, corFundo) {
+      const paleta = criarPaletaBloco(corFundo);
+      const textura = criarTexturaTexto(texto, corFundo);
+      const face = new THREE.MeshLambertMaterial({
+        map: textura,
+        color: 0xffffff,
+        emissive: paleta.base,
+        emissiveIntensity: 0.04,
+      });
+      const topo = new THREE.MeshLambertMaterial({
+        color: paleta.topo,
+        emissive: paleta.base,
+        emissiveIntensity: 0.03,
+      });
+      const base = new THREE.MeshLambertMaterial({ color: paleta.base });
+      // Texto nas quatro faces verticais; topo e base mais escuros deixam o
+      // volume evidente sem depender de amarelo neon.
+      return [face, face, topo, base, face, face];
+    }
+
+    function definirEmissaoBloco(malha, cor, intensidade) {
+      const materiais = Array.isArray(malha.material)
+        ? malha.material
+        : [malha.material];
+      for (const material of new Set(materiais)) {
+        if (!material?.emissive) continue;
+        material.emissive.set(cor);
+        material.emissiveIntensity = intensidade;
+      }
     }
 
     function embaralharFases(lista) {
@@ -3824,15 +3917,12 @@
       for (let i = 0; i < fase.silabas.length; i++) {
         const dados = fase.silabas[i];
         const pos = posicoesSilabas[i];
-        const texturaSilaba = criarTexturaTexto(dados.texto, dados.cor);
-        const materialSilaba = new THREE.MeshLambertMaterial({
-          map: texturaSilaba,
-        });
-        const malha = new THREE.Mesh(geoSilaba, materialSilaba);
+        const materiaisSilaba = criarMateriaisBloco(dados.texto, dados.cor);
+        const malha = new THREE.Mesh(geoSilaba, materiaisSilaba);
         malha.position.set(pos.x, 1.9, pos.z);
         malha.castShadow = true;
 
-        const luzSilaba = new THREE.PointLight(dados.cor, 2, 40, 1);
+        const luzSilaba = new THREE.PointLight(dados.cor, 0.9, 26, 1.4);
         luzSilaba.position.set(pos.x, 1.9, pos.z);
 
         // Só a 1ª sílaba começa visível; as demais ficam escondidas (scale 0)
@@ -3849,7 +3939,9 @@
             luz: luzSilaba,
             descartavel: false,
             aoRemover: () => {
-              materialSilaba.dispose();
+              for (const material of new Set(materiaisSilaba)) {
+                material.dispose();
+              }
             },
           }),
         );
@@ -4706,10 +4798,12 @@
           carroCorpo.angularVelocity.z = 0;
           carroCorpo.angularVelocity.y *= 0.82;
         }
-        limitarVelocidadeHorizontal(
-          carroCorpo,
-          carroAtual.velocidadeMaxima,
-        );
+        if (!controleRampas.estaEmVoo(carroCorpo)) {
+          limitarVelocidadeHorizontal(
+            carroCorpo,
+            carroAtual.velocidadeMaxima,
+          );
+        }
 
 
         if (
@@ -4738,7 +4832,7 @@
               corpo: policial.corpo,
               visual: policial.visual,
               estado: policial.estado,
-              alvo: calcularAlvoPolicial(policial),
+              alvo: calcularAlvoPolicial(policial, delta),
               delta,
               velMaxima: obterVelocidadeMaximaPolicial(
                 policial,
@@ -4796,12 +4890,12 @@
             // Pulsação de escala para chamar atenção
             const pulso = 2 + Math.sin(agora * 0.004) * 0.16;
             silaba.mesh.scale.set(pulso, pulso, pulso);
-            silaba.luz.intensity = 4.6 + Math.sin(agora * 0.005) * 0.8;
-            if (silaba.mesh.material?.emissive) {
-              silaba.mesh.material.emissive.set(silaba.corHex);
-              silaba.mesh.material.emissiveIntensity =
-                grupoFaseAtual === "facil" ? 0.55 : 0.72;
-            }
+            silaba.luz.intensity = 1.65 + Math.sin(agora * 0.005) * 0.22;
+            definirEmissaoBloco(
+              silaba.mesh,
+              silaba.corHex,
+              grupoFaseAtual === "facil" ? 0.1 : 0.14,
+            );
 
             const flutuacao = Math.sin(agora * 0.002) * 0.3;
             silaba.mesh.position.y = silaba.yBase + flutuacao;
@@ -4832,7 +4926,7 @@
               if (proximaSilaba < silabasAtivas.length) {
                 const proxima = silabasAtivas[proximaSilaba];
                 proxima.mesh.scale.set(0.01, 0.01, 0.01);
-                proxima.luz.intensity = 2;
+                proxima.luz.intensity = 0.9;
                 // Anima scale de 0 → 1 suavemente no próximo frame
                 proxima._surgindo = true;
               }
@@ -4855,9 +4949,8 @@
               silaba._surgindo = false;
             }
           }
-          if (i !== proximaSilaba && silaba.mesh.material?.emissive) {
-            silaba.mesh.material.emissive.set("#000000");
-            silaba.mesh.material.emissiveIntensity = 0;
+          if (i !== proximaSilaba) {
+            definirEmissaoBloco(silaba.mesh, "#000000", 0);
           }
         }
 
