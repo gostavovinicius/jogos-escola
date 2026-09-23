@@ -44,6 +44,20 @@ export function obterPerfilInteligencia(dificuldade = "media") {
   return PERFIS_INTELIGENCIA[dificuldade] || PERFIS_INTELIGENCIA.media;
 }
 
+export function limitarAltitudeHelicoptero(altitude, altitudeMinima = 28) {
+  return Math.max(altitudeMinima, altitude);
+}
+
+export function calcularVelocidadePerseguicao({ velocidadeJogador, fase, totalFases, fatorInicial, fatorFinal = 1.08 }) {
+  const ultimaFase = Math.max(0, totalFases - 1);
+  const inicioEscalada = Math.max(0, totalFases - 3);
+  const progresso = ultimaFase <= inicioEscalada
+    ? 1
+    : Math.max(0, Math.min(1, (fase - inicioEscalada) / (ultimaFase - inicioEscalada)));
+  const fator = fatorInicial + (fatorFinal - fatorInicial) * progresso;
+  return velocidadeJogador * fator;
+}
+
 export function planejarPerseguicao({ estrategia, dificuldade = "media", jogador, velocidade, frente, policial }) {
   const perfil = PERFIS_POLICIA[estrategia] || PERFIS_POLICIA.perseguidora;
   const inteligencia = obterPerfilInteligencia(dificuldade);

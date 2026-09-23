@@ -302,6 +302,7 @@
   border-radius: var(--hud-emoji-base-radius, 14px);
   display: grid;
   place-items: center;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   font-size: var(--hud-emoji-base-font-size, 28px);
   background:
     radial-gradient(
@@ -324,6 +325,12 @@
     font-size 0.2s ease,
     transform 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.emoji-imagem {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
 }
 
 #alvo-emoji-hud.emoji-destaque {

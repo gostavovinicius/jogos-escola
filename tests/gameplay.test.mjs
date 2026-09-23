@@ -9,9 +9,40 @@ import {
   pressaoDeCaptura,
   criarControleRampas,
   obterPerfilInteligencia,
+  calcularVelocidadePerseguicao,
+  limitarAltitudeHelicoptero,
   planejarPerseguicao,
 } from "../jogos/meus-jogos/corrida/js/gameplay.mjs";
 await RAPIER.init();
+
+test("helicóptero mantém altitude mínima para não tocar o chão", () => {
+  assert.equal(limitarAltitudeHelicoptero(0), 28);
+  assert.equal(limitarAltitudeHelicoptero(27.5), 28);
+  assert.equal(limitarAltitudeHelicoptero(34), 34);
+});
+
+test("velocidade policial: cresce com o carro nas três fases finais do grupo", () => {
+  const parametros = {
+    velocidadeJogador: 50,
+    totalFases: 12,
+    fatorInicial: 0.88,
+    fatorFinal: 1.08,
+  };
+  const antesDaEscalada = calcularVelocidadePerseguicao({ ...parametros, fase: 8 });
+  const inicioEscalada = calcularVelocidadePerseguicao({ ...parametros, fase: 9 });
+  const meioEscalada = calcularVelocidadePerseguicao({ ...parametros, fase: 10 });
+  const faseFinal = calcularVelocidadePerseguicao({ ...parametros, fase: 11 });
+  assert.equal(antesDaEscalada, 44);
+  assert.equal(inicioEscalada, 44);
+  assert.equal(meioEscalada, 49);
+  assert.equal(faseFinal, 54);
+  const escaladaComCarroRapido = calcularVelocidadePerseguicao({
+    ...parametros,
+    velocidadeJogador: 60,
+    fase: 11,
+  });
+  assert.ok(Math.abs(escaladaComCarroRapido - 64.8) < 1e-9);
+});
 
 test("táticas: viatura segue, moto aproxima pela lateral, interceptor antecipa e flanqueador cerca", () => {
   const dados = { jogador: { x: 0, z: 0 }, velocidade: { x: 0, z: -20 }, frente: { x: 0, z: -1 }, policial: { x: 0, z: 40 } };

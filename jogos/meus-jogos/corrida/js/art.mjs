@@ -16,21 +16,25 @@ export function criarArteCorrida(THREE, renderer, cena, perfil) {
   function canvas(w, h = w) {
     const c = document.createElement("canvas"); c.width = w; c.height = h; return c;
   }
-  // Small painted studio/sky cubemap: reflections work even on WebGL 1.
-  const faces = Array.from({ length: 6 }, (_, i) => {
-    const c = canvas(128), ctx = c.getContext("2d");
-    const g = ctx.createLinearGradient(0, 0, 0, 128);
-    g.addColorStop(0, "#668db6"); g.addColorStop(0.48, "#e0f1f5");
-    g.addColorStop(0.53, "#c6d4bc"); g.addColorStop(1, "#445c42");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 128);
-    ctx.fillStyle = i === 2 ? "#f7faf5" : "rgba(255,255,255,.48)";
-    ctx.fillRect(14, 12, 18, 42); ctx.fillRect(66, 18, 46, 14);
-    return c;
-  });
-  const reflexos = new THREE.CubeTexture(faces);
-  reflexos.colorSpace = THREE.SRGBColorSpace; reflexos.needsUpdate = true;
-  texturas.add(reflexos);
+  let reflexos = null;
+  if (!simples) {
+    // Small painted studio/sky cubemap: reflections work even on WebGL 1.
+    const faces = Array.from({ length: 6 }, (_, i) => {
+      const c = canvas(128), ctx = c.getContext("2d");
+      const g = ctx.createLinearGradient(0, 0, 0, 128);
+      g.addColorStop(0, "#668db6"); g.addColorStop(0.48, "#e0f1f5");
+      g.addColorStop(0.53, "#c6d4bc"); g.addColorStop(1, "#445c42");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 128);
+      ctx.fillStyle = i === 2 ? "#f7faf5" : "rgba(255,255,255,.48)";
+      ctx.fillRect(14, 12, 18, 42); ctx.fillRect(66, 18, 46, 14);
+      return c;
+    });
+    reflexos = new THREE.CubeTexture(faces);
+    reflexos.colorSpace = THREE.SRGBColorSpace; reflexos.needsUpdate = true;
+    texturas.add(reflexos);
+  }
   function material(color, brilho = 0) {
+    if (simples) return new THREE.MeshLambertMaterial({ color: cor(color) });
     return new THREE.MeshPhongMaterial({
       color: cor(color), shininess: brilho ? 95 : 12,
       specular: cor(brilho ? 0xaac4dd : 0x28313a),
@@ -130,7 +134,7 @@ export function criarArteCorrida(THREE, renderer, cena, perfil) {
       aro.rotation.y = Math.PI / 2;
       const disco = mesh(giro, new THREE.CylinderGeometry(raio * 0.53, raio * 0.53, 0.018, segmentos), p.escuro, face, 0, 0);
       disco.rotation.z = Math.PI / 2;
-      const n = simples ? 5 : 7;
+      const n = simples ? 3 : 7;
       for (let i = 0; i < n; i++) {
         const a = i * Math.PI * 2 / n;
         const spoke = caixa(giro, p.metal, 0.04, raio * 0.62, 0.065,

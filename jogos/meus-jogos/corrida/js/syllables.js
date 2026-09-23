@@ -46,9 +46,9 @@
           silabas: criarBlocos(["Á"]),
         },
         {
-          palavra: "AMIGO",
-          emoji: "😊",
-          desafio: "_MIGO",
+          palavra: "ABACAXI",
+          emoji: "🍍",
+          desafio: "_BACAXI",
           silabas: criarBlocos(["A"]),
         },
         {
@@ -94,10 +94,10 @@
           silabas: criarBlocos(["I"]),
         },
         {
-          palavra: "ÍNDIO",
-          emoji: "🏹",
-          desafio: "_NDIO",
-          silabas: criarBlocos(["Í"]),
+          palavra: "INVERNO",
+          emoji: "❄️",
+          desafio: "_NVERNO",
+          silabas: criarBlocos(["I"]),
         },
         {
           palavra: "OVO",
@@ -157,9 +157,9 @@
           silabas: criarBlocos(["VE", "LA"]),
         },
         {
-          palavra: "FADA",
-          emoji: "🧚",
-          silabas: criarBlocos(["FA", "DA"]),
+          palavra: "FOGO",
+          emoji: "🔥",
+          silabas: criarBlocos(["FO", "GO"]),
         },
         {
           palavra: "LOBO",
@@ -182,9 +182,9 @@
           silabas: criarBlocos(["RA", "TO"]),
         },
         {
-          palavra: "BONECA",
-          emoji: "🧸",
-          silabas: criarBlocos(["BO", "NE", "CA"]),
+          palavra: "BEBÊ",
+          emoji: "👶",
+          silabas: criarBlocos(["BE", "BÊ"]),
         },
         {
           palavra: "CAMA",
@@ -192,9 +192,9 @@
           silabas: criarBlocos(["CA", "MA"]),
         },
         {
-          palavra: "MESA",
-          emoji: "🪑",
-          silabas: criarBlocos(["ME", "SA"]),
+          palavra: "MEL",
+          emoji: "🍯",
+          silabas: criarBlocos(["MEL"]),
         },
         {
           palavra: "LATA",
@@ -236,9 +236,9 @@
           silabas: criarBlocos(["FLOR"]),
         },
         {
-          palavra: "FRUTA",
+          palavra: "MAÇÃ",
           emoji: "🍎",
-          silabas: criarBlocos(["FRU", "TA"]),
+          silabas: criarBlocos(["MA", "ÇÃ"]),
         },
         {
           palavra: "DRAGÃO",
@@ -257,7 +257,7 @@
         },
         {
           palavra: "PLANTA",
-          emoji: "🪴",
+          emoji: "🌱",
           silabas: criarBlocos(["PLAN", "TA"]),
         },
         {
@@ -281,9 +281,9 @@
           silabas: criarBlocos(["CHU", "VA"]),
         },
         {
-          palavra: "GRANDE",
+          palavra: "MONTANHA",
           emoji: "🏔️",
-          silabas: criarBlocos(["GRAN", "DE"]),
+          silabas: criarBlocos(["MON", "TA", "NHA"]),
         },
       ],
     },

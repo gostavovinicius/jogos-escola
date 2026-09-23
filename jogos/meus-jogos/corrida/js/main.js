@@ -125,9 +125,13 @@
     const projecaoSilabaTemp = new THREE.Vector3();
     const alvoHelicopteroTemp = new THREE.Vector3();
     const olharHelicopteroTemp = new THREE.Vector3();
+    let waypointHelicopteroValido = false;
+    let tempoWaypointHelicoptero = 0;
+    const direcaoHelicopteroTemp = new THREE.Vector3();
+    const velocidadeAlvoHelicopteroTemp = new THREE.Vector3();
+    const velocidadeHelicoptero = new THREE.Vector3();
     const direcaoTiroHelicopteroTemp = new THREE.Vector3();
     const origemTiroHelicopteroTemp = new THREE.Vector3();
-    const direcaoRecuoHelicopteroTemp = new THREE.Vector3();
     const alvoPrevistoHelicopteroTemp = new THREE.Vector3();
     let tamanhoSombraAtual = 0;
     let luzDirecional = null;
@@ -197,6 +201,18 @@
       return 1.55;
     }
 
+    function obterPixelRatioRenderizacao(largura) {
+      const limiteBase = obterPixelRatioIdeal(largura);
+      const limitePerfil = PERFIL_EXECUCAO.firefoxEconomia ||
+        PERFIL_EXECUCAO.firefoxIframe ||
+        PERFIL_EXECUCAO.pcFraco ? 1.05 : 1.5;
+      return THREE.MathUtils.clamp(
+        Math.min(window.devicePixelRatio || 1, limiteBase, limitePerfil) *
+          escalaResolucaoAdaptativa,
+        0.56,
+        limitePerfil,
+      );
+    }
     function obterTamanhoSombraIdeal(largura) {
       if (PERFIL_EXECUCAO.firefoxEconomia) return 384;
       if (PERFIL_EXECUCAO.pcFraco) return 512;
@@ -229,6 +245,10 @@
     let larguraViewport = dimensoesIniciais.largura;
     let alturaViewport = dimensoesIniciais.altura;
     let tamanhoMiniMapa = 190;
+    let escalaResolucaoAdaptativa = 1;
+    let tempoQuadroMedio = 16.7;
+    let quadrosDesdeAjusteResolucao = 0;
+    let ultimoAjusteResolucao = 0;
 
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -260,12 +280,7 @@
       !PERFIL_EXECUCAO.pcFraco &&
       !PERFIL_EXECUCAO.firefoxEconomia &&
       !PERFIL_EXECUCAO.firefoxIframe;
-    renderizador.setPixelRatio(
-      Math.min(
-        window.devicePixelRatio,
-        obterPixelRatioIdeal(larguraViewport),
-      ),
-    );
+    renderizador.setPixelRatio(obterPixelRatioRenderizacao(larguraViewport));
     renderizador.setSize(larguraViewport, alturaViewport, false);
     renderizador.shadowMap.enabled = sombrasAtivas;
     renderizador.shadowMap.type = THREE.PCFShadowMap;
@@ -835,9 +850,7 @@
         radarFundoSujo = true;
       }
 
-      renderizador.setPixelRatio(
-        Math.min(window.devicePixelRatio, obterPixelRatioIdeal(largura)),
-      );
+      renderizador.setPixelRatio(obterPixelRatioRenderizacao(largura));
       renderizador.setSize(largura, altura, false);
       camera.aspect = largura / altura;
       camera.updateProjectionMatrix();
@@ -853,6 +866,35 @@
       agendarAjusteBlocosSilabas();
     }
 
+    function atualizarResolucaoAdaptativa(duracaoFrame) {
+      if (!Number.isFinite(duracaoFrame) || duracaoFrame <= 0) return;
+      tempoQuadroMedio += (duracaoFrame - tempoQuadroMedio) * 0.08;
+      quadrosDesdeAjusteResolucao++;
+      const agora = performance.now();
+      if (quadrosDesdeAjusteResolucao < 30 || agora - ultimoAjusteResolucao < 900) return;
+
+      const limiteInferior = PERFIL_EXECUCAO.firefoxEconomia ||
+        PERFIL_EXECUCAO.firefoxIframe ||
+        PERFIL_EXECUCAO.pcFraco ? 0.7 : 0.62;
+      const escalaAnterior = escalaResolucaoAdaptativa;
+      if (tempoQuadroMedio > 21) {
+        escalaResolucaoAdaptativa = Math.max(
+          limiteInferior,
+          escalaResolucaoAdaptativa - 0.08,
+        );
+      } else if (tempoQuadroMedio < 14.5) {
+        escalaResolucaoAdaptativa = Math.min(
+          1,
+          escalaResolucaoAdaptativa + 0.04,
+        );
+      }
+      quadrosDesdeAjusteResolucao = 0;
+      ultimoAjusteResolucao = agora;
+      if (escalaResolucaoAdaptativa === escalaAnterior) return;
+
+      renderizador.setPixelRatio(obterPixelRatioRenderizacao(larguraViewport));
+      renderizador.setSize(larguraViewport, alturaViewport, false);
+    }
     atualizarLayoutResponsivo();
 
     cena.add(
@@ -908,7 +950,19 @@
     const corposDePiso = new WeakSet();
     const corposRampas = new WeakSet();
     const corposCobertura = new Set();
-    const { preverInterceptacao, pressaoDeCaptura, criarConsultasJogabilidade, criarControleRampas } = window.CorridaJogabilidade;
+    const gruposCenarioPorRegiao = Array.from({ length: 4 }, () => {
+      const grupo = new THREE.Group();
+      grupo.matrixAutoUpdate = false;
+      cena.add(grupo);
+      return grupo;
+    });
+
+    function adicionarVisualCenario(visual, x, z) {
+      const regiao = (x >= 0 ? 1 : 0) + (z >= 0 ? 2 : 0);
+      gruposCenarioPorRegiao[regiao].add(visual);
+      return visual;
+    }
+    const { preverInterceptacao, pressaoDeCaptura, criarConsultasJogabilidade, criarControleRampas, calcularVelocidadePerseguicao, limitarAltitudeHelicoptero } = window.CorridaJogabilidade;
     const consultasJogabilidade = criarConsultasJogabilidade(RAPIER, THREE, corposCobertura);
     const controleRampas = criarControleRampas(THREE, corposRampas);
     const posicaoJogadorInicioFrame = new THREE.Vector3();
@@ -922,6 +976,14 @@
 
     function criarMaterialCenarioVivo(cor, intensidadeEmissiva = 0.14) {
       const corBase = new THREE.Color(cor).convertSRGBToLinear();
+      if (PERFIL_EXECUCAO.firefoxEconomia || PERFIL_EXECUCAO.firefoxIframe || PERFIL_EXECUCAO.pcFraco) {
+        return new THREE.MeshLambertMaterial({
+          color: corBase,
+          emissive: corBase.clone().multiplyScalar(0.035),
+          emissiveIntensity: intensidadeEmissiva * 0.2,
+          flatShading: true,
+        });
+      }
       const corEmissiva = corBase.clone().multiplyScalar(0.1);
       return new THREE.MeshPhongMaterial({
         color: corBase,
@@ -1026,7 +1088,7 @@
     function removerObjetoRegistrado(item) {
       if (!item) return;
       if (item.visual) {
-        cena.remove(item.visual);
+        item.visual.parent?.remove(item.visual);
         if (item.descartavel) {
           descartarObjeto3D(item.visual, item.descartarTexturas);
         }
@@ -1039,6 +1101,18 @@
       if (typeof item.aoRemover === "function") item.aoRemover(item);
     }
 
+    function atualizarDetalhesDistantes() {
+      const distanciaMaxima = PERFIL_EXECUCAO.firefoxEconomia ||
+        PERFIL_EXECUCAO.firefoxIframe ||
+        PERFIL_EXECUCAO.pcFraco ? 132 : 190;
+      const distanciaMaxima2 = distanciaMaxima * distanciaMaxima;
+      for (const item of objetosDoMapa) {
+        if (!item.visual) continue;
+        const dx = item.visual.position.x - carroVisual.position.x;
+        const dz = item.visual.position.z - carroVisual.position.z;
+        item.visual.visible = dx * dx + dz * dz <= distanciaMaxima2;
+      }
+    }
     function limparObjetosRegistrados(lista) {
       for (const item of lista) removerObjetoRegistrado(item);
       lista.length = 0;
@@ -1165,7 +1239,7 @@
 
     function criarArvore(x, z) {
       const arvoreVisual = arte.arvore(x, z);
-      cena.add(arvoreVisual);
+      adicionarVisualCenario(arvoreVisual, x, z);
       congelarObjetoEstatico(arvoreVisual);
       const corpo = mundoFisica.criarCorpo({
         mass: 0,
@@ -1188,7 +1262,7 @@
       pedraVis.position.set(x, tamanho / 2, z);
       pedraVis.castShadow = false;
       pedraVis.receiveShadow = true;
-      cena.add(pedraVis);
+      adicionarVisualCenario(pedraVis, x, z);
       arte.decorar("pedra", pedraVis);
       congelarObjetoEstatico(pedraVis);
       const corpo = mundoFisica.criarCorpo({
@@ -1227,7 +1301,7 @@
       rampaVisual.receiveShadow = true;
       rampaVisual.position.copy(rampaCorpo.position);
       rampaVisual.quaternion.copy(rampaCorpo.quaternion);
-      cena.add(rampaVisual);
+      adicionarVisualCenario(rampaVisual, x, z);
       arte.decorar("rampa", rampaVisual);
       congelarObjetoEstatico(rampaVisual);
       registrarAreaOcupada(x, z, 14);
@@ -1249,7 +1323,7 @@
       arbusto.position.set(x, tamanho * 0.7, z);
       arbusto.castShadow = false;
       arbusto.receiveShadow = true;
-      cena.add(arbusto);
+      adicionarVisualCenario(arbusto, x, z);
       arte.decorar("arbusto", arbusto);
       congelarObjetoEstatico(arbusto);
       const corpo = mundoFisica.criarCorpo({
@@ -1274,7 +1348,7 @@
       );
       cone.position.set(x, tamanho * 1.5, z);
       cone.castShadow = false;
-      cena.add(cone);
+      adicionarVisualCenario(cone, x, z);
       arte.decorar("cone", cone);
       congelarObjetoEstatico(cone);
       const corpo = mundoFisica.criarCorpo({
@@ -1305,7 +1379,7 @@
       caixa.position.set(x, altura / 2, z);
       caixa.castShadow = false;
       caixa.receiveShadow = true;
-      cena.add(caixa);
+      adicionarVisualCenario(caixa, x, z);
       arte.decorar("caixa", caixa);
       congelarObjetoEstatico(caixa);
       const corpo = mundoFisica.criarCorpo({
@@ -1661,6 +1735,89 @@
       return melhor;
     }
 
+    function escolherWaypointHelicoptero(delta, altura) {
+      tempoWaypointHelicoptero -= delta;
+      const dxAtual = alvoHelicopteroTemp.x - helicopteroPolicia.position.x;
+      const dzAtual = alvoHelicopteroTemp.z - helicopteroPolicia.position.z;
+      const distanciaDoCarro = Math.hypot(
+        helicopteroPolicia.position.x - carroCorpo.position.x,
+        helicopteroPolicia.position.z - carroCorpo.position.z,
+      );
+      const destinoAfastaDoCarro = Math.hypot(
+        alvoHelicopteroTemp.x - carroCorpo.position.x,
+        alvoHelicopteroTemp.z - carroCorpo.position.z,
+      ) > 86;
+      if (
+        !waypointHelicopteroValido ||
+        tempoWaypointHelicoptero <= 0 ||
+        Math.hypot(dxAtual, dzAtual) < 12 ||
+        (distanciaDoCarro < 68 && destinoAfastaDoCarro)
+      ) {
+        const limite = Math.max(24, limiteMapa.limite - 18);
+        const acompanharCarro = distanciaDoCarro < 68;
+        let x = 0;
+        let z = 0;
+        for (let tentativa = 0; tentativa < 16; tentativa++) {
+          if (acompanharCarro) {
+            const angulo = Math.random() * Math.PI * 2;
+            const raio = 28 + Math.random() * 34;
+            x = THREE.MathUtils.clamp(
+              carroCorpo.position.x + Math.cos(angulo) * raio,
+              -limite,
+              limite,
+            );
+            z = THREE.MathUtils.clamp(
+              carroCorpo.position.z + Math.sin(angulo) * raio,
+              -limite,
+              limite,
+            );
+          } else {
+            x = (Math.random() * 2 - 1) * limite;
+            z = (Math.random() * 2 - 1) * limite;
+          }
+          const distanciaDoHelicoptero = Math.hypot(
+            x - helicopteroPolicia.position.x,
+            z - helicopteroPolicia.position.z,
+          );
+          if (distanciaDoHelicoptero > (acompanharCarro ? 24 : 78)) break;
+        }
+        alvoHelicopteroTemp.set(x, altura, z);
+        waypointHelicopteroValido = true;
+        tempoWaypointHelicoptero = 40 + Math.random() * 12;
+      } else {
+        alvoHelicopteroTemp.y = altura;
+      }
+      return alvoHelicopteroTemp;
+    }
+
+    function moverHelicopteroParaWaypoint(delta, velocidadeMaxima) {
+      direcaoHelicopteroTemp.subVectors(
+        alvoHelicopteroTemp,
+        helicopteroPolicia.position,
+      );
+      const distancia = direcaoHelicopteroTemp.length();
+      const velocidadeDesejada = Math.min(velocidadeMaxima, distancia * 0.48);
+      if (distancia > 0.001) {
+        velocidadeAlvoHelicopteroTemp
+          .copy(direcaoHelicopteroTemp)
+          .multiplyScalar(velocidadeDesejada / distancia);
+      } else {
+        velocidadeAlvoHelicopteroTemp.set(0, 0, 0);
+      }
+      velocidadeHelicoptero.lerp(
+        velocidadeAlvoHelicopteroTemp,
+        1 - Math.exp(-1.35 * delta),
+      );
+      velocidadeHelicoptero.clampLength(0, velocidadeMaxima);
+      helicopteroPolicia.position.addScaledVector(velocidadeHelicoptero, delta);
+      helicopteroPolicia.position.y = limitarAltitudeHelicoptero(
+        helicopteroPolicia.position.y,
+      );
+      if (helicopteroPolicia.position.y === 28) {
+        velocidadeHelicoptero.y = Math.max(0, velocidadeHelicoptero.y);
+      }
+    }
+
     function obterAlvoNavegacaoPolicial(policial, alvo, delta) {
       const estado = policial.estado;
       const origem = { x: policial.corpo.position.x, z: policial.corpo.position.z };
@@ -1918,6 +2075,7 @@
     let tempoSemColetarObjetivo = 0;
     let punicaoHelicopteroAtiva = false;
     let cooldownAtaqueHelicoptero = 0;
+    let cooldownApoioHelicoptero = 0;
     let intensidadePunicaoHelicoptero = 0;
     let projeteisHelicoptero = [];
     let carrosDesbloqueados = new Set(ESTADO_INICIAL.carrosDesbloqueados);
@@ -1931,6 +2089,7 @@
         tempoSpawn: 0,
         tempoAereo: 0,
         tempoCapotado: 0,
+                tempoReparo: 0,
         tempoEstrategia: 0,
         alvoPatrulha: null,
         rota: [],
@@ -2078,6 +2237,7 @@
     // Helicóptero visual da polícia: patrulha o cenário ao longe sem perseguir.
     function criarHelicopteroPolicia() {
       const grupo = arte.helicoptero();
+      grupo.position.y = 34;
       cena.add(grupo);
       return grupo;
     }
@@ -2140,11 +2300,25 @@
       controlesTouch.style.display = "none";
     }
 
+    function definirEmojiVisual(elemento, emoji, nome, icone = "") {
+      if (!elemento) return;
+      if (icone) {
+        const imagem = document.createElement("img");
+        imagem.className = "emoji-imagem";
+        imagem.src = icone;
+        imagem.alt = nome || "";
+        elemento.replaceChildren(imagem);
+        return;
+      }
+      elemento.textContent = emoji;
+    }
+
     function obterDicaVisualInfo(palavra) {
       const fase = fasesPorPalavra.get(palavra);
       return {
         emoji: fase?.emoji || "🎯",
         nome: fase?.palavra?.toLowerCase() || "",
+        icone: palavra === "ESCADA" ? "./corrida/assets/ui/emoji-escada.svg" : "",
       };
     }
 
@@ -2385,10 +2559,8 @@
 
       resetarCorpo(carroCorpo, spawn.x, spawn.y, spawn.z);
       carroCorpo.quaternion.setFromAxisAngle(eixoRotacaoY, yaw);
-      for (let i = 0; i < policiais.length; i++) {
-        reposicionarPolicia(policiais[i], i);
-      }
-      sincronizarVisibilidadePolicias();
+
+
       resetarContextoTaticoPolicia();
       acumuladorAnalisePolicial =
         CONFIG_OTIMIZACAO.intervaloAnalisePolicial;
@@ -2425,6 +2597,7 @@
       estado.tempoSpawn = 0;
       estado.tempoAereo = 0;
       estado.tempoCapotado = 0;
+            estado.tempoReparo = 0;
       estado.tempoEstrategia = 0;
       estado.alvoPatrulha = null;
       estado.planoAtual = null;
@@ -2706,17 +2879,24 @@
     function exibirVitoria(subtitulo, texto) {
       subtituloVitoria.textContent = subtitulo;
       textoVitoria.textContent = texto;
-      emojiVitoria.textContent =
-        niveisAtuais[
-          Math.max(0, Math.min(faseAtual, niveisAtuais.length - 1))
-        ]?.emoji || "⭐";
+      const faseVitoria = niveisAtuais[
+        Math.max(0, Math.min(faseAtual, niveisAtuais.length - 1))
+      ];
+      definirEmojiVisual(
+        emojiVitoria,
+        faseVitoria?.emoji || "⭐",
+        faseVitoria?.palavra?.toLowerCase() || "",
+        faseVitoria?.palavra === "ESCADA"
+          ? "./corrida/assets/ui/emoji-escada.svg"
+          : "",
+      );
       mensagemVitoria.style.display = "block";
       anunciarStatus(`${subtitulo} ${texto}`.trim());
     }
 
     function atualizarDicaVisual(palavra) {
       const dica = obterDicaVisualInfo(palavra);
-      alvoEmojiHud.textContent = dica.emoji;
+      definirEmojiVisual(alvoEmojiHud, dica.emoji, dica.nome, dica.icone);
       alvoEmojiHud.classList.toggle(
         "emoji-destaque",
         bancoDeFases[grupoFaseAtual]?.destaque === true,
@@ -3178,40 +3358,30 @@
       helicopteroPolicia.visible = ativo;
       if (!ativo) return;
 
+      cooldownAtaqueHelicoptero = Math.max(
+        0,
+        cooldownAtaqueHelicoptero - delta,
+      );
+      cooldownApoioHelicoptero = Math.max(
+        0,
+        cooldownApoioHelicoptero - delta,
+      );
+      const distanciaJogador = Math.hypot(
+        helicopteroPolicia.position.x - carroCorpo.position.x,
+        helicopteroPolicia.position.z - carroCorpo.position.z,
+      );
+      const faseFinal = faseAtual >= Math.max(2, niveisAtuais.length - 3);
+
       if (punicaoHelicopteroAtiva) {
         intensidadePunicaoHelicoptero = Math.min(
           1,
           intensidadePunicaoHelicoptero + delta * 1.8,
         );
-        cooldownAtaqueHelicoptero = Math.max(
-          0,
-          cooldownAtaqueHelicoptero - delta,
+        escolherWaypointHelicoptero(
+          delta,
+          30 + Math.sin(tempoAgora * 0.18) * 1.8,
         );
-        const orbitaPunicao = tempoAgora * 0.016;
-        const raioBordaX = tamanhoMapa / 2 + 28;
-        const raioBordaZ = tamanhoMapa / 2 + 18;
-        alvoHelicopteroTemp.set(
-          Math.cos(orbitaPunicao) * raioBordaX,
-          29 + Math.sin(tempoAgora * 0.18) * 1.8,
-          Math.sin(orbitaPunicao) * raioBordaZ,
-        );
-        direcaoRecuoHelicopteroTemp.set(
-          helicopteroPolicia.position.x - carroCorpo.position.x,
-          0,
-          helicopteroPolicia.position.z - carroCorpo.position.z,
-        );
-        const distanciaAtual = direcaoRecuoHelicopteroTemp.length();
-        if (distanciaAtual < 60) {
-          helicopteroPolicia.position.set(
-            alvoHelicopteroTemp.x,
-            alvoHelicopteroTemp.y,
-            alvoHelicopteroTemp.z,
-          );
-        }
-        helicopteroPolicia.position.lerp(
-          alvoHelicopteroTemp,
-          THREE.MathUtils.clamp(delta * 0.46, 0.02, 0.05),
-        );
+        moverHelicopteroParaWaypoint(delta, 9.5);
         const alvoPrevisto = calcularAlvoPrevistoHelicoptero(
           alvoPrevistoHelicopteroTemp,
         );
@@ -3242,34 +3412,28 @@
         intensidadePunicaoHelicoptero - delta * 2,
       );
 
-      const orbita = tempoAgora * 0.028;
-      const raioPrincipal = 72 + (faseAtual % 3) * 16;
-      const raioSecundario = 18 + (faseAtual % 2) * 4;
-      const centroX = Math.sin(tempoAgora * 0.009) * 10;
-      const centroZ = Math.cos(tempoAgora * 0.007) * 10;
-      alvoHelicopteroTemp.set(
-        centroX +
-          Math.cos(orbita) * raioPrincipal +
-          Math.cos(orbita * 2.1) * raioSecundario,
+      escolherWaypointHelicoptero(
+        delta,
         34 + Math.sin(tempoAgora * 0.16) * 2.2,
-        centroZ +
-          Math.sin(orbita) * raioPrincipal +
-          Math.sin(orbita * 2.1) * raioSecundario,
       );
-      helicopteroPolicia.position.lerp(
-        alvoHelicopteroTemp,
-        THREE.MathUtils.clamp(delta * 0.82, 0.025, 0.08),
-      );
+      moverHelicopteroParaWaypoint(delta, 8);
       olharHelicopteroTemp.set(
-        centroX +
-          Math.cos(orbita + 0.18) * raioPrincipal +
-          Math.cos((orbita + 0.18) * 2.1) * raioSecundario,
+        alvoHelicopteroTemp.x,
         helicopteroPolicia.position.y - 1,
-        centroZ +
-          Math.sin(orbita + 0.18) * raioPrincipal +
-          Math.sin((orbita + 0.18) * 2.1) * raioSecundario,
+        alvoHelicopteroTemp.z,
       );
       helicopteroPolicia.lookAt(olharHelicopteroTemp);
+      if (
+        faseFinal &&
+        distanciaJogador > 18 &&
+        distanciaJogador < 225 &&
+        cooldownApoioHelicoptero <= 0 &&
+        !rodadaEncerrada
+      ) {
+        dispararProjetilHelicoptero();
+        mostrarMensagemHud("Helicóptero apoiando a perseguição!", "alerta");
+        cooldownApoioHelicoptero = 6.5;
+      }
       helicopteroPolicia.userData.rotorPrincipal.rotation.y += delta * 24;
       helicopteroPolicia.userData.rotorCauda.rotation.x += delta * 32;
     }
@@ -3335,8 +3499,10 @@
         pontosJogador = Number.isFinite(pontosSalvos)
           ? Math.max(0, pontosSalvos)
           : 0;
+        const idsValidos = new Set(Object.keys(garagemCarros));
         carrosDesbloqueados = new Set(
-          Array.isArray(carrosSalvos) ? carrosSalvos : ["classico"],
+          (Array.isArray(carrosSalvos) ? carrosSalvos : ["classico"])
+            .filter((id) => idsValidos.has(id)),
         );
         carrosDesbloqueados.add("classico");
         carroSelecionado = garagemCarros[carroSalvo]
@@ -3360,11 +3526,13 @@
     }
 
     function montarCardCarro(modelo, desbloqueado, equipado, id) {
-      const meta = desbloqueado
+      const custo = modelo.custo > 0 ? `${modelo.custo} pts` : "Grátis";
+      const estado = desbloqueado
         ? equipado
           ? "Equipado"
           : "Disponível"
-        : `Desbloquear por ${modelo.custo} pts`;
+        : "Bloqueado";
+      const meta = desbloqueado ? `${estado} • Preço: ${custo}` : `Comprar por ${custo}`;
 
       return `
     <img class="carro-miniatura" src="./corrida/assets/menu/${id}.png" width="960" height="576" alt="" />
@@ -3433,9 +3601,12 @@
             "--preview-accent",
             hexParaCss(modelo.asa),
           );
+          const custoAcessivel = modelo.custo > 0
+            ? `Preço ${modelo.custo} pontos`
+            : "Grátis";
           botao.setAttribute(
             "aria-label",
-            `${modelo.nome}, velocidade ${modelo.nivelVelocidade} de 5, aceleração ${modelo.nivelAceleracao} de 5, controle ${modelo.nivelControle} de 5. ${desbloqueado ? "Disponível" : `Desbloquear por ${modelo.custo} pontos`}.`,
+            `${modelo.nome}, velocidade ${modelo.nivelVelocidade} de 5, aceleração ${modelo.nivelAceleracao} de 5, controle ${modelo.nivelControle} de 5. ${desbloqueado ? "Disponível" : `Comprar por ${custoAcessivel}`}.`,
           );
           botao.setAttribute("aria-pressed", String(carroSelecionado === id));
           botao.title = modelo.descricao;
@@ -3454,12 +3625,23 @@
     }
 
     function obterVelocidadeMaximaPolicial(policial, carroAtual) {
-      if (grupoFaseAtual === "dificil") {
-        return carroAtual.velocidadeMaxima;
-      }
       const fatorPorIndice =
         0.82 + Math.min(policial?.indice || 0, 3) * 0.025;
-      return carroAtual.velocidadeMaxima * Math.min(0.9, fatorPorIndice);
+      const fatorInicial = grupoFaseAtual === "dificil"
+        ? 0.94 + Math.min(policial?.indice || 0, 3) * 0.02
+        : Math.min(0.9, fatorPorIndice);
+      const fatorFinal = grupoFaseAtual === "dificil"
+        ? 1.12
+        : grupoFaseAtual === "media"
+          ? 1.05
+          : 0.98;
+      return calcularVelocidadePerseguicao({
+        velocidadeJogador: carroAtual.velocidadeMaxima,
+        fase: faseAtual,
+        totalFases: niveisAtuais.length || bancoDeFases[grupoFaseAtual]?.fases.length || 1,
+        fatorInicial,
+        fatorFinal,
+      });
     }
 
     function obterForcaFrentePolicial(policial) {
@@ -3522,18 +3704,7 @@
           const dx = policial.corpo.position.x - carroCorpo.position.x;
           const dz = policial.corpo.position.z - carroCorpo.position.z;
           const distancia = Math.hypot(dx, dz);
-          if (
-            policial.corpo.position.y < 0.5 ||
-            !Number.isFinite(policial.corpo.position.x) ||
-            !Number.isFinite(policial.corpo.position.z) ||
-            distancia > 90
-          ) {
-            reposicionarPolicia(policial, idx);
-          }
-          policial.corpo.position.y = Math.max(
-            policial.corpo.position.y,
-            3,
-          );
+
           if (typeof policial.corpo.wakeUp === "function")
             policial.corpo.wakeUp();
         } else {
@@ -3881,6 +4052,7 @@
       tempoContatoPolicia = 0;
       contatoVisualPolicia = 0;
       reiniciarTemporizadorDeObjetivo();
+      cooldownApoioHelicoptero = 4;
       policiais.forEach((policial) =>
         resetarEstadoPolicia(policial.estado),
       );
@@ -4068,7 +4240,12 @@
 
     function criarFogosSilaba(posicao, corHex, quantidade = 16) {
       const cor = new THREE.Color(corHex);
-      for (let i = 0; i < quantidade; i++) {
+      const quantidadeEfetiva = PERFIL_EXECUCAO.firefoxEconomia ||
+        PERFIL_EXECUCAO.firefoxIframe ||
+        PERFIL_EXECUCAO.pcFraco
+        ? Math.max(5, Math.ceil(quantidade * 0.5))
+        : quantidade;
+      for (let i = 0; i < quantidadeEfetiva; i++) {
         const escalaParticula = 0.22 + Math.random() * 0.12;
         const particula = new THREE.Mesh(
           geoParticulaFogos,
@@ -4317,10 +4494,25 @@
         delta,
       );
       if (estado.navegacaoBloqueada) {
-        corpo.velocity.x *= Math.pow(0.08, delta);
-        corpo.velocity.z *= Math.pow(0.08, delta);
-        corpo.angularVelocity.y = 0;
-        // Reuse the established safe respawn when no exit exists for a while.
+        // Static obstacle checks found no clear route, so reverse and steer
+        // in alternating directions instead of freezing against the object.
+        const tempoManobra = estado.tempoSemRota || 0;
+        const sentidoCurva =
+          (Math.floor(tempoManobra / 1.15) + (policial.indice || 0)) % 2
+            ? 1
+            : -1;
+        const faseManobra = tempoManobra % 2.3;
+        corpo.angularVelocity.y = sentidoCurva * 1.45;
+        if (faseManobra < 1.45) {
+          aplicarForcaDirecional(corpo, -forcaRe);
+          limitarVelocidadeHorizontal(corpo, Math.max(5, velMaxima * 0.38));
+        } else {
+          aplicarForcaDirecional(corpo, forcaFrente * 0.72);
+          limitarVelocidadeHorizontal(corpo, Math.max(6, velMaxima * 0.44));
+        }
+        corpo.velocity.x *= 0.994;
+        corpo.velocity.z *= 0.994;
+        if (typeof corpo.wakeUp === "function") corpo.wakeUp();
         return (estado.tempoSemRota || 0) < 3;
       }
       const policialTatico =
@@ -4397,16 +4589,22 @@
         estado.tempoDesgrudeJogador - delta,
       );
 
-      if (
+      const corpoInvalido =
         !Number.isFinite(corpo.position.x) ||
         !Number.isFinite(corpo.position.z) ||
-        corpo.position.y < -5 ||
-        corpo.position.y > 14 ||
-        estado.tempoAereo > 1.4 ||
-        estado.tempoCapotado > 0.9
-      ) {
+        corpo.position.y < -9 ||
+        corpo.position.y > 24;
+      if (corpoInvalido) return false;
+
+      if (estado.tempoAereo > 1.4 || estado.tempoCapotado > 0.9) {
+        estado.tempoReparo += delta;
+        if (estado.tempoReparo < 2.2) {
+          visual.quaternion.copy(corpo.quaternion);
+          return true;
+        }
         return false;
       }
+      estado.tempoReparo = Math.max(0, estado.tempoReparo - delta * 2);
 
       if (!orientado && velocidadeHorizontal < 1.5) {
         corpo.position.y += 3;
@@ -4611,58 +4809,21 @@
       }
     }
 
-    function garantirPresencaPolicias(delta) {
+    function garantirPresencaPolicias() {
       if (rodadaEncerrada) return;
-      tempoReforcoPolicia += delta;
-      if (tempoReforcoPolicia < 0.35) return;
-      tempoReforcoPolicia = 0;
-      const carroAtual = obterCarroAtual();
-
       policiais.forEach((policial, indice) => {
-        if (indice >= totalPoliciasAtivas) {
-          policial.visual.visible = false;
+        const ativa = indice < totalPoliciasAtivas;
+        policial.visual.visible = ativa;
+        if (!ativa) {
           if (policial.corpo.position.y > -40) {
             resetarCorpo(policial.corpo, 0, -60, 0);
           }
           resetarEstadoPolicia(policial.estado);
-          return;
+        } else if (typeof policial.corpo.wakeUp === "function") {
+          policial.corpo.wakeUp();
         }
-        policial.visual.visible = true;
-        const velocidadeLimitePolicial = obterVelocidadeMaximaPolicial(
-          policial,
-          carroAtual,
-        );
-        const dx = policial.corpo.position.x - carroCorpo.position.x;
-        const dz = policial.corpo.position.z - carroCorpo.position.z;
-        const distancia = Math.hypot(dx, dz);
-        const vetorCima = preencherVetorCima(
-          policial.corpo,
-          vetorCimaPresencaTemp,
-        );
-        const velocidadeHorizontal = Math.hypot(
-          policial.corpo.velocity.x,
-          policial.corpo.velocity.z,
-        );
-        const limiteMapa = tamanhoMapa / 2 - 10;
-        const invalida =
-          policial.corpo.position.y < -5 ||
-          policial.corpo.position.y > 14 ||
-          !Number.isFinite(policial.corpo.position.x) ||
-          !Number.isFinite(policial.corpo.position.z) ||
-          Math.abs(policial.corpo.position.x) > limiteMapa ||
-          Math.abs(policial.corpo.position.z) > limiteMapa ||
-          distancia > 180 ||
-          velocidadeHorizontal >
-            Math.max(velocidadeLimitePolicial, 18) * 1.9 ||
-          Math.abs(policial.corpo.angularVelocity.x) > 5 ||
-          Math.abs(policial.corpo.angularVelocity.z) > 5 ||
-          policial.estado.tempoAereo > 1.2 ||
-          policial.estado.tempoCapotado > 0.85 ||
-          vetorCima.y < -0.1;
-        if (invalida) reposicionarPolicia(policial, indice);
       });
     }
-
     function executarFrame() {
       const delta = Math.min(
         relogio.getDelta(),
@@ -4827,7 +4988,7 @@
               return;
             }
 
-            const iaEstavel = atualizarIApolicia({
+            atualizarIApolicia({
               policial,
               corpo: policial.corpo,
               visual: policial.visual,
@@ -4841,7 +5002,7 @@
               forcaFrente: obterForcaFrentePolicial(policial),
               forcaRe: obterForcaRePolicial(policial),
             });
-            if (!iaEstavel) reposicionarPolicia(policial, indice);
+            // A viatura mantém a posição física atual mesmo quando a IA perde um quadro.
           });
         }
 
@@ -4857,8 +5018,23 @@
           CONFIG_OTIMIZACAO.maxSubstepsFisica + (carroEmRampa ? 3 : 0),
         );
         controleRampas.atualizar(carroCorpo, mundoFisica.contatos, delta, carroAtual, CONFIG_CONFORTO_MOVIMENTO.fatorSaltoRampa);
+        policiais.forEach((policial) => {
+          if (policial.indice < totalPoliciasAtivas) {
+            const modeloRampaPolicial = policial.tipo === "moto"
+              ? { impulsoRampa: 43, saltoRampa: 19.2 }
+              : { impulsoRampa: 39, saltoRampa: 17.8 };
+            controleRampas.atualizar(
+              policial.corpo,
+              mundoFisica.contatos,
+              delta,
+              modeloRampaPolicial,
+              CONFIG_CONFORTO_MOVIMENTO.fatorSaltoRampa,
+            );
+          }
+        });
         atualizarFogos(delta);
-        garantirPresencaPolicias(delta);
+        garantirPresencaPolicias();
+        atualizarDetalhesDistantes();
         atualizarCapturaPorContato(delta);
         manterDentroDoMapa(carroCorpo);
         policiais.forEach((policial) => {
@@ -5142,7 +5318,9 @@
     function animar() {
       if (contextoPerdido || window.__corridaDoSaberErroExibido) return;
       try {
+        const inicioFrame = performance.now();
         executarFrame();
+        atualizarResolucaoAdaptativa(performance.now() - inicioFrame);
         framePendente = requestAnimationFrame(animar);
       } catch (erro) {
         console.error(erro);

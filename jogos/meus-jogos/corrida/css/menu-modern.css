@@ -53,7 +53,23 @@
 #menu-inicial .btn-serie[data-fase="media"] { --fase-acento: #bb8527; }
 #menu-inicial .btn-serie[data-fase="dificil"] { --fase-acento: #ad5941; }
 #menu-inicial .btn-serie::after { content: "↗"; position: absolute; right: 16px; top: 12px; font-size: 1.2rem; color: var(--fase-acento); }
-#menu-inicial .btn-serie:hover { transform: translateY(-2px); border-color: var(--fase-acento); filter: none; }
+#menu-inicial .btn-serie:hover { transform: translateY(-2px); border-color: var(--fase-acento); filter: none; }#menu-inicial .btn-serie:focus-visible { outline: 3px solid #156e98; outline-offset: 4px; transform: translateY(-2px); }
+#menu-inicial .fase-ajuda { font-weight: 800; color: #2f684d; }
+#menu-inicial .fase-card-acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 6px 9px;
+  border-radius: 6px;
+  background: #e1efdf;
+  color: #1e6246;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+#menu-inicial .fase-card-acao span { font-size: 0.95rem; line-height: 0.8; }
+#menu-inicial .btn-serie:first-child { box-shadow: 0 0 0 2px #d6a93b, 0 6px 0 #1e463509; }
 #menu-inicial .fase-card-titulo { font-size: 1rem; margin-bottom: 5px; letter-spacing: 0; }
 #menu-inicial .fase-card-subtitulo { color: var(--fase-acento); font-size: 0.67rem; letter-spacing: 0.08em; margin-bottom: 6px; }
 #menu-inicial .fase-card-exemplos { font-size: 0.76rem; font-weight: normal; color: #516454; }
