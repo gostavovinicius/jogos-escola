@@ -2,6 +2,82 @@
   const grid = document.querySelector("[data-random-games]");
   if (!grid) return;
 
+  const isCemei = document.body.classList.contains("cemei-page") &&
+    grid.dataset.cemeiGames === "true";
+
+  if (isCemei) {
+    const config = window.CemeiConfig;
+    const allCards = Array.from(grid.querySelectorAll(".game-card"));
+    const limit = Math.max(1, Number(grid.dataset.maxShow || "15"));
+    let previousSignature = null;
+
+    function validTrimester(value) {
+      return /^[123]$/.test(value || "") ? Number(value) : null;
+    }
+
+    function hasValidAudience(value) {
+      return value === "never" || validTrimester(value) !== null;
+    }
+
+    function isEligible(card, grade, trimester) {
+      if (card.dataset.reviewed !== "true") return false;
+      // A classificação precisa estar completa para nunca oferecer um jogo sem
+      // revisão para uma das turmas, mesmo quando a outra está em aula.
+      if (!hasValidAudience(card.dataset.pre4) || !hasValidAudience(card.dataset.pre5)) {
+        return false;
+      }
+      const minimum = validTrimester(card.dataset[grade]);
+      return minimum !== null && minimum <= trimester;
+    }
+
+    function cemeiCards(date = new Date()) {
+      if (!config) return { cards: [], active: null, trimester: null };
+      const trimester = config.currentTrimester(date);
+      const active = config.activeClass(date);
+      if (active) {
+        return {
+          cards: allCards.filter((card) =>
+            active.grade === "integral"
+              ? isEligible(card, "pre4", trimester) && isEligible(card, "pre5", trimester)
+              : isEligible(card, active.grade, trimester),
+          ),
+          active,
+          trimester,
+        };
+      }
+      return {
+        cards: allCards.filter(
+          (card) =>
+            card.dataset.category === "visual" &&
+            isEligible(card, "pre4", trimester) &&
+            isEligible(card, "pre5", trimester),
+        ),
+        active: null,
+        trimester,
+      };
+    }
+
+    function updateCemei(date = new Date(), redraw = false) {
+      const selection = cemeiCards(date);
+      const signature = `${selection.active?.grade || "common"}:${selection.trimester}:` +
+        selection.cards.map((card) => card.getAttribute("href") || "").join("|");
+      if (redraw || signature !== previousSignature) {
+        grid.replaceChildren(...shuffle(selection.cards.slice()).slice(0, limit));
+        previousSignature = signature;
+      }
+      grid.dataset.ready = "true";
+    }
+
+    window.CemeiCatalog = Object.freeze({ validTrimester, hasValidAudience, isEligible, cemeiCards, updateCemei });
+    updateCemei();
+    window.addEventListener("pageshow", () => updateCemei(new Date(), true));
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) updateCemei();
+    });
+    window.setInterval(updateCemei, 30000);
+    return;
+  }
+
   const maxShow = Math.max(1, Number(grid.dataset.maxShow || "15"));
   const usarCicloMensal = grid.dataset.monthlyRareGames === "true";
   const jogosRaros = [

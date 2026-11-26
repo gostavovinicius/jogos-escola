@@ -75,6 +75,21 @@ main {
   align-items: stretch;
 }
 
+/* CEMEI: evita que jogos sem avaliação apareçam antes do filtro automático. */
+.cemei-page main {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.cemei-page [data-cemei-games="true"] {
+  visibility: hidden;
+}
+
+.cemei-page [data-cemei-games="true"][data-ready="true"] {
+  visibility: visible;
+}
+
 /* ===== CATÁLOGO - Card de Jogo ===== */
 .game-card {
   display: flex;
